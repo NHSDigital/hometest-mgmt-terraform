@@ -57,6 +57,12 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: "eu-west-2"
+
   # TODO: More jobs or/and steps here
   # success:
   #   name: "Success notification"
