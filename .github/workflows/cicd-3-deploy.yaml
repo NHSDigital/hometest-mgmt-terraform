@@ -54,6 +54,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [metadata]
     timeout-minutes: 10
+    permissions:
+      id-token: write    # REQUIRED for OIDC token
+      contents: read     # For checkout
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v4
