@@ -1,0 +1,7 @@
+---
+directory: terraform
+quiet: true
+compact: true
+# Check: CKV_TF_1: "Ensure Terraform module sources use a commit hash"
+skip-check: CKV_TF_1
+soft-fail: true

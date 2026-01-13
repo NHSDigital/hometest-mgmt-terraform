@@ -30,6 +30,8 @@ sso_registration_scopes = sso:account:access
 aws sso login --profile Admin-PoC
 
 export AWS_PROFILE=Admin-PoC
+
+
 ```
 
 

@@ -14,27 +14,29 @@ locals {
   # Automatically load environment-level variables
   environment_vars = read_terragrunt_config(find_in_parent_folders("env.hcl"))
 
+  # Automatically load global variables
+  global_vars = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
+  # generic_vars = read_terragrunt_config("${get_parent_terragrunt_dir()}/common/generic.hcl").locals
+
   # Extract the variables we need for easy access
   account_name = local.account_vars.locals.account_name
   account_id   = local.account_vars.locals.aws_account_id
-  # aws_region   = local.region_vars.locals.aws_region
-  aws_region = "eu-west-2"
-  github_repo  = "NHSDigital/hometest-mgmt-terraform"
+
 }
 
 # Generate an AWS provider block
-generate "provider" {
-  path      = "provider.tf"
-  if_exists = "overwrite_terragrunt"
-  contents  = <<EOF
-provider "aws" {
-  region = "${local.aws_region}"
+# generate "provider" {
+#   path      = "provider.tf"
+#   if_exists = "overwrite_terragrunt"
+#   contents  = <<EOF
+# provider "aws" {
+#   region = "${local.aws_region}"
 
-  # Only these AWS Account IDs may be operated on by this template
-  allowed_account_ids = ["${local.account_id}"]
-}
-EOF
-}
+#   # Only these AWS Account IDs may be operated on by this template
+#   allowed_account_ids = ["${local.account_id}"]
+# }
+# EOF
+# }
 
 # Configure Terragrunt to automatically store tfstate files in an S3 bucket
 # remote_state {
@@ -73,8 +75,5 @@ inputs = merge(
   local.account_vars.locals,
   # local.region_vars.locals,
   local.environment_vars.locals,
-  {
-    aws_region = local.aws_region,
-    github_repo = local.github_repo
-  }
+  local.global_vars.locals
 )

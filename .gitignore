@@ -58,4 +58,59 @@ terraform.rc
 # Uncomment the line below if you want to ignore planout files.
 # planout
 
-.terragrunt-cache
+# https://github.com/github/gitignore/blob/main/Global/macOS.gitignore
+# General
+.DS_Store
+__MACOSX/
+.AppleDouble
+.LSOverride
+Icon[]
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+### Custom
+# Ignore plan output files
+tfplan
+*.tfplan
+
+# Ignore VSCode settings
+# .vscode/
+
+# Ignore IntelliJ IDEA settings
+.idea/
+
+# Ignore Windows files
+Thumbs.db
+
+# Ignore tfenv local version file
+.terraform-version
+
+# Ignore any local environment variables
+*.env
+
+# Ignore ansible retry files
+*.retry
+
+# Ignore Python virtual environments
+.venv/
+venv/
+
+# Ignore Terragrunt cache directories
+.terragrunt-cache/
