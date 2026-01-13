@@ -101,13 +101,13 @@ async def root():
         <div class="container">
             <h1>🚀 {APP_NAME}</h1>
             <span class="status">Running on Lambda</span>
-            
+
             <div class="info">
                 <p><strong>Environment:</strong> {ENVIRONMENT}</p>
                 <p><strong>Timestamp:</strong> {datetime.utcnow().isoformat()}Z</p>
                 <p><strong>Runtime:</strong> AWS Lambda (Container)</p>
             </div>
-            
+
             <div class="endpoints">
                 <h3>Available Endpoints:</h3>
                 <a href="/health">Health Check</a>

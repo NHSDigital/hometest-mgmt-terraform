@@ -39,14 +39,14 @@ locals {
 
 resource "aws_ecr_repository" "app" {
   name                 = "${local.resource_prefix}-${var.app_name}"
-  image_tag_mutability = "MUTABLE"  # Use IMMUTABLE for production
+  image_tag_mutability = "MUTABLE" # Use IMMUTABLE for production
 
   image_scanning_configuration {
     scan_on_push = true
   }
 
   encryption_configuration {
-    encryption_type = "AES256"  # Or use KMS for stricter requirements
+    encryption_type = "AES256" # Or use KMS for stricter requirements
   }
 
   tags = merge(local.common_tags, {
@@ -203,8 +203,8 @@ resource "aws_lambda_function" "app" {
   package_type  = "Image"
   image_uri     = local.container_image_uri
 
-  memory_size = var.lambda_memory_size
-  timeout     = var.lambda_timeout
+  memory_size   = var.lambda_memory_size
+  timeout       = var.lambda_timeout
   architectures = [var.lambda_architecture]
 
   reserved_concurrent_executions = var.lambda_reserved_concurrent_executions
@@ -351,15 +351,15 @@ resource "aws_apigatewayv2_stage" "app" {
     content {
       destination_arn = aws_cloudwatch_log_group.api_gateway[0].arn
       format = jsonencode({
-        requestId         = "$context.requestId"
-        ip                = "$context.identity.sourceIp"
-        requestTime       = "$context.requestTime"
-        httpMethod        = "$context.httpMethod"
-        routeKey          = "$context.routeKey"
-        status            = "$context.status"
-        protocol          = "$context.protocol"
-        responseLength    = "$context.responseLength"
-        integrationError  = "$context.integrationErrorMessage"
+        requestId          = "$context.requestId"
+        ip                 = "$context.identity.sourceIp"
+        requestTime        = "$context.requestTime"
+        httpMethod         = "$context.httpMethod"
+        routeKey           = "$context.routeKey"
+        status             = "$context.status"
+        protocol           = "$context.protocol"
+        responseLength     = "$context.responseLength"
+        integrationError   = "$context.integrationErrorMessage"
         integrationLatency = "$context.integrationLatency"
       })
     }

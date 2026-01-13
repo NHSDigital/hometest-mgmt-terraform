@@ -129,10 +129,10 @@ output "docker_push_commands" {
 output "github_actions_ecr_config" {
   description = "GitHub Actions configuration for ECR push"
   value = {
-    registry       = "${local.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com"
-    repository     = aws_ecr_repository.app.name
-    image_tag      = "latest"
-    function_name  = aws_lambda_function.app.function_name
-    aws_region     = var.aws_region
+    registry      = "${local.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com"
+    repository    = aws_ecr_repository.app.name
+    image_tag     = "latest"
+    function_name = aws_lambda_function.app.function_name
+    aws_region    = var.aws_region
   }
 }

@@ -3,9 +3,7 @@ locals{
   aws_region = "eu-west-2"
 
   # Project Configuration
-  project_name = "hometest"
-  environment  = "mgmt"
-  account_name = "hometest-mgmt"
+  project_name = "nhs-hometest"
 
   # GitHub Configuration
   github_repo  = "NHSDigital/hometest-mgmt-terraform"
@@ -19,9 +17,13 @@ locals{
   # GitHub environments allowed to run Terraform
   github_environments = [
     "dev",
-    "staging",
-    "prod"
+    # "staging",
+    # "prod"
   ]
+
+  # Allow all branches to assume the OIDC role (disables branch/environment restrictions)
+  # WARNING: Set to true only for development/testing. Keep false for production.
+  github_allow_all_branches = false
 
   # Security and Logging Settings
   enable_state_bucket_logging            = true

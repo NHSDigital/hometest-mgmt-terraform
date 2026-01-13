@@ -8,6 +8,13 @@
   - containers: https://addons.mozilla.org/en-US/firefox/addon/multi-account-containers/
   - aws sso containers: https://addons.mozilla.org/en-US/firefox/addon/aws-sso-containers/
 
+## Docs
+
+- https://github.com/gruntwork-io/terragrunt-infrastructure-live-stacks-example/blob/main/root.hcl
+- https://github.com/gruntwork-io/terragrunt-infrastructure-catalog-example/blob/main/stacks/ec2-asg-stateful-service/terragrunt.stack.hcl
+- https://github.com/jdx/mise
+-
+
 ## Init
 
 ```
@@ -59,6 +66,7 @@ Make use of this repository template to expedite your project setup and enhance 
 
 - [Repository Template](#repository-template)
   - [Prerequistes](#prerequistes)
+  - [Docs](#docs)
   - [Init](#init)
   - [OLD](#old)
   - [Changes comparing to repository-template](#changes-comparing-to-repository-template)

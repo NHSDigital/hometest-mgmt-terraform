@@ -27,6 +27,9 @@ resource "aws_iam_openid_connect_provider" "github" {
 
 # Build the list of allowed subjects for the trust policy
 locals {
+  # Allow all branches wildcard
+  all_branches_subject = ["repo:${var.github_repo}:*"]
+
   # Allow specific branches
   branch_subjects = [for branch in var.github_branches : "repo:${var.github_repo}:ref:refs/heads/${branch}"]
 
@@ -36,15 +39,17 @@ locals {
   # Allow pull requests (for plan only - consider separate role for PRs)
   pr_subjects = ["repo:${var.github_repo}:pull_request"]
 
-  # Combine all allowed subjects
-  all_allowed_subjects = concat(
+  # Combine all allowed subjects based on flag
+  # If github_allow_all_branches is true, allow all branches from the repo
+  # Otherwise, restrict to specific branches and environments
+  all_allowed_subjects = var.github_allow_all_branches ? local.all_branches_subject : concat(
     local.branch_subjects,
     local.environment_subjects
   )
 }
 
 resource "aws_iam_role" "gha_oidc_role" {
-  name        = "${var.account_name}-gha-terraform-role"
+  name        = "${local.resource_prefix}-gha-terraform-role"
   description = "IAM role for GitHub Actions to run Terraform/Terragrunt"
 
   # Maximum session duration (1 hour for security)
@@ -73,7 +78,7 @@ resource "aws_iam_role" "gha_oidc_role" {
   })
 
   tags = merge(local.common_tags, {
-    Name = "${var.account_name}-gha-terraform-role"
+    Name = "${local.resource_prefix}-gha-terraform-role"
   })
 }
 
@@ -82,7 +87,7 @@ resource "aws_iam_role" "gha_oidc_role" {
 ################################################################################
 
 resource "aws_iam_role_policy" "gha_tfstate" {
-  name   = "terraform-state-access"
+  name   = "${local.resource_prefix}-terraform-state-access"
   role   = aws_iam_role.gha_oidc_role.id
   policy = data.aws_iam_policy_document.tfstate_policy.json
 }
@@ -147,7 +152,7 @@ data "aws_iam_policy_document" "tfstate_policy" {
 ################################################################################
 
 resource "aws_iam_role_policy" "gha_infrastructure" {
-  name   = "terraform-infrastructure-access"
+  name   = "${local.resource_prefix}-terraform-infrastructure-access"
   role   = aws_iam_role.gha_oidc_role.id
   policy = data.aws_iam_policy_document.infrastructure_policy.json
 }
@@ -429,7 +434,7 @@ resource "aws_iam_role_policy_attachment" "additional_policies" {
 ################################################################################
 
 resource "aws_iam_policy" "gha_permissions_boundary" {
-  name        = "${var.account_name}-gha-permissions-boundary"
+  name        = "${local.resource_prefix}-gha-permissions-boundary"
   description = "Permissions boundary for GitHub Actions role"
 
   policy = jsonencode({
@@ -498,7 +503,7 @@ resource "aws_iam_policy" "gha_permissions_boundary" {
   })
 
   tags = merge(local.common_tags, {
-    Name = "${var.account_name}-gha-permissions-boundary"
+    Name = "${local.resource_prefix}-gha-permissions-boundary"
   })
 }
 

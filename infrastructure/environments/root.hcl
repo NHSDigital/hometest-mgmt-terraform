@@ -19,14 +19,14 @@ locals {
   # generic_vars = read_terragrunt_config("${get_parent_terragrunt_dir()}/common/generic.hcl").locals
 
   # Extract the variables we need for easy access
-  account_name = local.account_vars.locals.account_name
+  account_name = local.account_vars.locals.aws_account_name
   account_id   = local.account_vars.locals.aws_account_id
 
 }
 
 # Generate an AWS provider block
 # generate "provider" {
-#   path      = "provider.tf"
+#   path      = "providers.tf"
 #   if_exists = "overwrite_terragrunt"
 #   contents  = <<EOF
 # provider "aws" {
@@ -53,6 +53,22 @@ locals {
 #     if_exists = "overwrite_terragrunt"
 #   }
 # }
+
+remote_state {
+  backend = "s3"
+  config = {
+    bucket = "hometest-mgmt-tfstate-781863586270"
+    dynamodb_table = "hometest-mgmt-tfstate-lock"
+    key            = "${path_relative_to_include()}/tf.tfstate"
+    encrypt = true
+    kms_key_id = "arn:aws:kms:eu-west-2:781863586270:key/e53f5420-a3b8-43d8-b8ab-87b65997fff7"
+    region = "eu-west-2"
+  }
+  generate = {
+    path      = "backend.tf"
+    if_exists = "overwrite_terragrunt"
+  }
+}
 
 # Configure what repos to search when you run 'terragrunt catalog'
 # catalog {

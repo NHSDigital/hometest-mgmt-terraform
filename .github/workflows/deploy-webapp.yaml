@@ -176,7 +176,7 @@ jobs:
     name: "Smoke Test"
     runs-on: ubuntu-latest
     needs: [update-lambda]
-    
+
     steps:
       - name: "Wait for Lambda to warm up"
         run: sleep 10

@@ -28,7 +28,7 @@ inputs = {
   # Dev-specific overrides
   lambda_memory_size = 512
   lambda_timeout     = 30
-  
+
   # Dev throttling limits (lower for cost control)
   throttling_burst_limit = 50
   throttling_rate_limit  = 25

@@ -13,6 +13,15 @@ variable "aws_account_id" {
   type        = string
   # default     = "123456789012"
 }
+variable "aws_account_name" {
+  description = "AWS account name/alias for resource naming"
+  type        = string
+}
+
+variable "aws_account_shortname" {
+  description = "AWS account short name/alias for resource naming"
+  type        = string
+}
 
 variable "project_name" {
   description = "Project name used for resource naming"
@@ -35,10 +44,6 @@ variable "environment" {
   }
 }
 
-variable "account_name" {
-  description = "AWS account name/alias for resource naming"
-  type        = string
-}
 
 variable "github_repo" {
   description = "GitHub repository in format 'owner/repo-name'"
@@ -60,6 +65,12 @@ variable "github_environments" {
   description = "List of GitHub environments allowed to assume the OIDC role"
   type        = list(string)
   default     = ["dev", "staging", "prod"]
+}
+
+variable "github_allow_all_branches" {
+  description = "Allow all branches to assume the OIDC role (disables branch restrictions). Use with caution in production."
+  type        = bool
+  default     = false
 }
 
 variable "enable_state_bucket_logging" {

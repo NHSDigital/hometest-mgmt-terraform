@@ -21,6 +21,15 @@ terraform {
   #   dynamodb_table = "your-table-name-tfstate-lock"
   #   encrypt        = true
   # }
+
+  # https://wikijs.cloudnative.quest/en/aws/common-aws-services-and-acronyms
+  # backend_config = {
+  #   "bucket" = "hometest-mgmt-tfstate-781863586270"
+  #   "dynamodb_table" = "hometest-mgmt-tfstate-lock"
+  #   "encrypt" = true
+  #   "kms_key_id" = "arn:aws:kms:eu-west-2:781863586270:key/e53f5420-a3b8-43d8-b8ab-87b65997fff7"
+  #   "region" = "eu-west-2"
+  # }
 }
 
 provider "aws" {
