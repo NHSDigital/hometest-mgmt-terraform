@@ -2,6 +2,10 @@
 # KMS Key for State Encryption (Security Best Practice)
 ################################################################################
 
+locals {
+  tfstate_kms_key_name = "${local.resource_prefix}-kms-tfstate-key"
+}
+
 resource "aws_kms_key" "tfstate" {
   description             = "KMS key for Terraform state encryption"
   deletion_window_in_days = var.kms_key_deletion_window_days
@@ -39,11 +43,11 @@ resource "aws_kms_key" "tfstate" {
   })
 
   tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-kms-tfstate-key"
+    Name = local.tfstate_kms_key_name
   })
 }
 
 resource "aws_kms_alias" "tfstate" {
-  name          = "alias/${local.resource_prefix}-kms-tfstate-key"
+  name          = "alias/${local.tfstate_kms_key_name}"
   target_key_id = aws_kms_key.tfstate.key_id
 }

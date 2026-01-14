@@ -13,6 +13,8 @@
 - https://github.com/gruntwork-io/terragrunt-infrastructure-live-stacks-example/blob/main/root.hcl
 - https://github.com/gruntwork-io/terragrunt-infrastructure-catalog-example/blob/main/stacks/ec2-asg-stateful-service/terragrunt.stack.hcl
 - https://github.com/jdx/mise
+- nhsd-confluence.digital.nhs.uk/spaces/AWS/pages/592551759/AWS+Single+Sign+on+SSO+User+Access
+- https://nhsd-confluence.digital.nhs.uk/pages/viewpage.action?pageId=529502405&spaceKey=AWS&title=AWS%2BSingle%2BSign%2BOn#AWSSingleSignOn-Setupanewprogramme
 -
 
 ## Init

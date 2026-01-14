@@ -7,7 +7,7 @@ locals {
 }
 
 resource "aws_dynamodb_table" "tfstate_lock" {
-  name         = "${local.resource_prefix}-dynamodb-tfstate-lock"
+  name         = local.tfstate_dynamodb_name
   billing_mode = "PAY_PER_REQUEST" # Cost-effective for variable workloads
   hash_key     = "LockID"
 
@@ -35,6 +35,6 @@ resource "aws_dynamodb_table" "tfstate_lock" {
   # }
 
   tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-tfstate-lock"
+    Name = local.tfstate_dynamodb_name
   })
 }
