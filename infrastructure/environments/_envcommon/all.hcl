@@ -38,10 +38,4 @@ locals{
   #   "arn:aws:iam::aws:policy/AmazonS3FullAccess"
   # ]
 
-  # Additional tags
-  tags = {
-    Owner       = "platform-team"
-    CostCenter  = "infrastructure"
-    Application = "hometest"
-  }
 }

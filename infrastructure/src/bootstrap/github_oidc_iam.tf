@@ -22,6 +22,8 @@ locals {
     local.branch_subjects,
     local.environment_subjects
   )
+
+  gha_iam_role_name = "${local.resource_prefix}-iam-role-gha-terraform"
 }
 
 resource "aws_iam_openid_connect_provider" "github" {
@@ -47,7 +49,7 @@ resource "aws_iam_openid_connect_provider" "github" {
 # IAM Role for GitHub Actions (with strict OIDC conditions)
 ################################################################################
 resource "aws_iam_role" "gha_oidc_role" {
-  name        = "${local.resource_prefix}-iam-role-gha-terraform"
+  name        = local.gha_iam_role_name
   description = "IAM role for GitHub Actions to run Terraform/Terragrunt"
 
   # Maximum session duration (1 hour for security)
@@ -76,6 +78,6 @@ resource "aws_iam_role" "gha_oidc_role" {
   })
 
   tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-iam-role-gha-terraform"
+    Name = local.gha_iam_role_name
   })
 }

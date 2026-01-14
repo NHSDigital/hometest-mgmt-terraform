@@ -38,10 +38,10 @@ variable "environment" {
   type        = string
   default     = "mgmt"
 
-  validation {
-    condition     = contains(["mgmt", "dev", "staging", "prod"], var.environment)
-    error_message = "Environment must be one of: mgmt, dev, staging, prod."
-  }
+  # validation {
+  #   condition     = contains(["mgmt", "dev", "staging", "prod"], var.environment)
+  #   error_message = "Environment must be one of: mgmt, dev, staging, prod."
+  # }
 }
 
 

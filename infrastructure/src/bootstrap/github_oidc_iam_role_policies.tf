@@ -3,7 +3,7 @@
 ################################################################################
 
 resource "aws_iam_role_policy" "gha_tfstate" {
-  name   = "${local.resource_prefix}-terraform-state-access"
+  name   = "${local.gha_iam_role_name}-policy-tfstate-access"
   role   = aws_iam_role.gha_oidc_role.id
   policy = data.aws_iam_policy_document.tfstate_policy.json
 }
@@ -68,7 +68,7 @@ data "aws_iam_policy_document" "tfstate_policy" {
 ################################################################################
 
 resource "aws_iam_role_policy" "gha_infrastructure" {
-  name   = "${local.resource_prefix}-terraform-infrastructure-access"
+  name   = "${local.gha_iam_role_name}-policy-infrastructure-access"
   role   = aws_iam_role.gha_oidc_role.id
   policy = data.aws_iam_policy_document.infrastructure_policy.json
 }
@@ -350,7 +350,7 @@ resource "aws_iam_role_policy_attachment" "additional_policies" {
 ################################################################################
 
 resource "aws_iam_policy" "gha_permissions_boundary" {
-  name        = "${local.resource_prefix}-gha-permissions-boundary"
+  name        = "${local.gha_iam_role_name}-policy-gha-permissions-boundary"
   description = "Permissions boundary for GitHub Actions role"
 
   policy = jsonencode({
@@ -419,7 +419,7 @@ resource "aws_iam_policy" "gha_permissions_boundary" {
   })
 
   tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-gha-permissions-boundary"
+    Name = "${local.gha_iam_role_name}-policy-gha-permissions-boundary"
   })
 }
 

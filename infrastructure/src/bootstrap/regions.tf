@@ -34,9 +34,9 @@ locals {
   default_regions = [
     # US Regions
     # "us-east-1",      # US East (N. Virginia) - DO NOT ADD: Required for global services
-    "us-east-2",      # US East (Ohio)
-    "us-west-1",      # US West (N. California)
-    "us-west-2",      # US West (Oregon)
+    "us-east-2", # US East (Ohio)
+    "us-west-1", # US West (N. California)
+    "us-west-2", # US West (Oregon)
 
     # Asia Pacific Regions
     "ap-south-1",     # Asia Pacific (Mumbai)
@@ -47,17 +47,17 @@ locals {
     "ap-southeast-2", # Asia Pacific (Sydney)
 
     # Canada
-    "ca-central-1",   # Canada (Central)
+    "ca-central-1", # Canada (Central)
 
     # Europe Regions
-    "eu-central-1",   # Europe (Frankfurt)
+    "eu-central-1", # Europe (Frankfurt)
     # "eu-west-1",      # Europe (Ireland) - DO NOT ADD: Secondary region
     # "eu-west-2",      # Europe (London) - DO NOT ADD: Primary region
-    "eu-west-3",      # Europe (Paris)
-    "eu-north-1",     # Europe (Stockholm)
+    "eu-west-3",  # Europe (Paris)
+    "eu-north-1", # Europe (Stockholm)
 
     # South America
-    "sa-east-1",      # South America (São Paulo)
+    "sa-east-1", # South America (São Paulo)
   ]
 
   # Combine all regions and filter out allowed ones for IAM deny policy
@@ -73,6 +73,8 @@ locals {
     for region in local.opt_in_regions : region
     if !contains(local.allowed_regions, region)
   ]
+
+  regions_block_iam_role_name = "${local.resource_prefix}-iam-role-deny-non-allowed-regions"
 }
 
 ################################################################################
@@ -92,7 +94,7 @@ resource "aws_account_region" "disabled" {
 ################################################################################
 
 resource "aws_iam_policy" "deny_regions" {
-  name        = "${var.project_name}-deny-non-allowed-regions"
+  name        = local.regions_block_iam_role_name
   description = "Denies access to all AWS regions except ${join(", ", local.allowed_regions)}"
 
   policy = jsonencode({
@@ -153,7 +155,7 @@ resource "aws_iam_policy" "deny_regions" {
   })
 
   tags = merge(local.common_tags, {
-    Name = "${var.project_name}-deny-non-allowed-regions"
+    Name = local.regions_block_iam_role_name
   })
 }
 

@@ -66,6 +66,29 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: "eu-west-2"
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ needs.metadata.outputs.terraform_version }}
+          terraform_wrapper: false
+
+      - name: Setup Terragrunt
+        uses: autero1/action-terragrunt@v3
+        with:
+          terragrunt-version: latest
+
+      - name: Terragrunt Bootstrap Init
+        working-directory: infrastructure/src/bootstrap
+        run: terragrunt init
+
+      - name: Terragrunt Bootstrap Plan
+        working-directory: infrastructure/src/bootstrap
+        run: terragrunt plan -out=tfplan
+
+      - name: Terragrunt Bootstrap Apply
+        working-directory: infrastructure/src/bootstrap
+        run: terragrunt apply -auto-approve tfplan
+
   # TODO: More jobs or/and steps here
   # success:
   #   name: "Success notification"

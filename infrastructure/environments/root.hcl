@@ -19,9 +19,11 @@ locals {
   # generic_vars = read_terragrunt_config("${get_parent_terragrunt_dir()}/common/generic.hcl").locals
 
   # Extract the variables we need for easy access
+  region   = local.global_vars.locals.aws_region
   account_name = local.account_vars.locals.aws_account_name
   account_id   = local.account_vars.locals.aws_account_id
 
+  environment  = local.environment_vars.locals.environment
 }
 
 # Generate an AWS provider block
@@ -54,21 +56,24 @@ locals {
 #   }
 # }
 
-remote_state {
-  backend = "s3"
-  config = {
-    bucket = "hometest-mgmt-tfstate-781863586270"
-    dynamodb_table = "hometest-mgmt-tfstate-lock"
-    key            = "${path_relative_to_include()}/tf.tfstate"
-    encrypt = true
-    kms_key_id = "arn:aws:kms:eu-west-2:781863586270:key/e53f5420-a3b8-43d8-b8ab-87b65997fff7"
-    region = "eu-west-2"
-  }
-  generate = {
-    path      = "backend.tf"
-    if_exists = "overwrite_terragrunt"
-  }
-}
+# remote_state {
+#   backend = "s3"
+#   config = {
+#     bucket = "nhs-hometest-poc-s3-tfstate"
+#     dynamodb_table = "nhs-hometest-poc-dynamodb-tfstate-lock"
+#     # key            = "${path_relative_to_include()}/tf.tfstate"
+#     key = "${local.account_name}-${local.environment}-${basename(path_relative_to_include())}.tfstate"
+#     encrypt = true
+#     kms_key_id = "arn:aws:kms:eu-west-2:781863586270:key/70337c97-e78e-4bfa-b4be-61ea6bcfa5c8"
+#     # kms_key_id = "arn:aws:kms:eu-west-2:781863586270:alias/nhs-hometest-poc-kms-tfstate-key"
+#     region = local.region
+#   }
+#   generate = {
+#     path      = "backend.tf"
+#     if_exists = "overwrite_terragrunt"
+#   }
+# }
+
 
 # Configure what repos to search when you run 'terragrunt catalog'
 # catalog {
@@ -91,5 +96,15 @@ inputs = merge(
   local.account_vars.locals,
   # local.region_vars.locals,
   local.environment_vars.locals,
-  local.global_vars.locals
+  local.global_vars.locals,
+  {
+    tags = {
+      Owner       = "platform-team"
+      CostCenter  = "infrastructure"
+      Project     = local.global_vars.locals.project_name
+      Environment = local.environment
+      ManagedBy   = "terraform"
+      Repository  = local.global_vars.locals.github_repo
+    }
+  }
 )
