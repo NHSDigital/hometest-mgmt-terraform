@@ -19,7 +19,7 @@ resource "aws_kms_key" "tfstate" {
         Sid    = "Enable IAM User Permissions"
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::${local.account_id}:root"
+          AWS = "arn:aws:iam::${var.aws_account_id}:root"
         }
         Action   = "kms:*"
         Resource = "*"

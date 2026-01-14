@@ -8,8 +8,12 @@ locals {
 }
 
 resource "aws_resourcegroups_group" "bootstrap" {
-  name        = local.rg_name
+  for_each = toset(local.allowed_regions)
+
+  name        = "${local.rg_name}-${each.key}"
   description = "Resource group containing all Terraform bootstrap infrastructure"
+
+  region = each.key
 
   resource_query {
     query = jsonencode({
