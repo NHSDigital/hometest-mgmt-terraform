@@ -56,23 +56,23 @@ locals {
 #   }
 # }
 
-# remote_state {
-#   backend = "s3"
-#   config = {
-#     bucket = "nhs-hometest-poc-s3-tfstate"
-#     dynamodb_table = "nhs-hometest-poc-dynamodb-tfstate-lock"
-#     # key            = "${path_relative_to_include()}/tf.tfstate"
-#     key = "${local.account_name}-${local.environment}-${basename(path_relative_to_include())}.tfstate"
-#     encrypt = true
-#     kms_key_id = "arn:aws:kms:eu-west-2:781863586270:key/70337c97-e78e-4bfa-b4be-61ea6bcfa5c8"
-#     # kms_key_id = "arn:aws:kms:eu-west-2:781863586270:alias/nhs-hometest-poc-kms-tfstate-key"
-#     region = local.region
-#   }
-#   generate = {
-#     path      = "backend.tf"
-#     if_exists = "overwrite_terragrunt"
-#   }
-# }
+remote_state {
+  backend = "s3"
+  config = {
+    bucket = "nhs-hometest-poc-core-s3-tfstate"
+    dynamodb_table = "nhs-hometest-poc-core-dynamodb-tfstate-lock"
+    # key            = "${path_relative_to_include()}/tf.tfstate"
+    key = "${local.account_name}-${local.environment}-${basename(path_relative_to_include())}.tfstate"
+    encrypt = true
+    kms_key_id = "arn:aws:kms:eu-west-2:781863586270:key/3e87d63f-febc-4dd4-a771-92c3c07a51f5"
+    # kms_key_id = "arn:aws:kms:eu-west-2:781863586270:alias/nhs-hometest-poc-kms-tfstate-key"
+    region = local.region
+  }
+  generate = {
+    path      = "backend.tf"
+    if_exists = "overwrite_terragrunt"
+  }
+}
 
 
 # Configure what repos to search when you run 'terragrunt catalog'
