@@ -14,9 +14,14 @@ This repository template aims to foster a user-friendly development environment 
 
 Make use of this repository template to expedite your project setup and enhance your productivity right from the get-go. Enjoy the advantage of having a well-structured, self-documented project that reduces overhead and increases focus on what truly matters - coding!
 
+## Changes comparing to repository-template
+
+1. Gitleaks - scan only current branch
+
 ## Table of Contents
 
 - [Repository Template](#repository-template)
+  - [Changes comparing to repository-template](#changes-comparing-to-repository-template)
   - [Table of Contents](#table-of-contents)
   - [Setup](#setup)
     - [Prerequisites](#prerequisites)
