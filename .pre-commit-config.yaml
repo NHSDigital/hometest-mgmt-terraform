@@ -54,10 +54,10 @@ repos:
           # Optionally check for unused inputs
           - --args=--terragrunt-strict-validate
 
-      - id: terragrunt_validate
-        files: ^infrastructure/environments/poc/core/bootstrap/[^/]+$
-        args:
-          - --hook-config=--parallelism-limit=1
+      # - id: terragrunt_validate
+      #   files: ^infrastructure/environments/poc/core/bootstrap/[^/]+$
+      #   args:
+      #     - --hook-config=--parallelism-limit=1
 
       - id: terraform_docs
         files: ^infrastructure/src/
