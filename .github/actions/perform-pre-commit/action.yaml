@@ -31,7 +31,7 @@ runs:
 
     - name: Install tgswitch
       run: |
-        curl -L https://raw.githubusercontent.com/warrensbox/tgswitch/release/install.sh | bash | bash -s -- -b ~/.local/bin latest
+        curl -L https://raw.githubusercontent.com/warrensbox/tgswitch/release/install.sh | bash -s -- -b ~/.local/bin latest
         echo "$HOME/.local/bin" >> $GITHUB_PATH
         tgswitch
       working-directory: infrastructure/environments/poc/core/bootstrap/
