@@ -1,4 +1,4 @@
-locals{
+locals {
   # AWS Configuration
   aws_region = "eu-west-2"
 
@@ -6,7 +6,7 @@ locals{
   project_name = "nhs-hometest"
 
   # GitHub Configuration
-  github_repo  = "NHSDigital/hometest-mgmt-terraform"
+  github_repo = "NHSDigital/hometest-mgmt-terraform"
 
   # Branches allowed to run Terraform apply
   github_branches = [

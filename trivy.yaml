@@ -1,0 +1,92 @@
+---
+# Trivy configuration file
+# https://aquasecurity.github.io/trivy/latest/docs/references/configuration/config-file/
+
+# Scan configuration
+scan:
+  # Security checks to perform
+  scanners:
+    - vuln
+    - misconfig
+    - secret
+
+  # Severity levels to report
+  severity:
+    - CRITICAL
+    - HIGH
+    - MEDIUM
+
+# Vulnerability scanning options
+vulnerability:
+  # Ignore unfixed vulnerabilities
+  ignore-unfixed: false
+
+  # Vulnerability types to scan
+  type:
+    - os
+    - library
+
+# Misconfiguration scanning options
+misconfiguration:
+  # Include non-failure results
+  include-non-failures: false
+
+  # Terraform-specific settings
+  terraform:
+    exclude-downloaded-modules: true
+
+  # Policy settings
+  check:
+    # Builtin checks
+    - aws-*
+    - azure-*
+    - general-*
+
+# Secret scanning options
+secret:
+  # Enable secret scanning
+  config: ""
+
+# Output configuration
+format: table
+output: ""
+
+# Exit code configuration
+exit-code: 1
+
+# Cache configuration
+cache:
+  dir: .trivy-cache
+  ttl: 168h  # 1 week
+
+# Skip directories
+skip-dirs:
+  - .terraform
+  - .terragrunt-cache
+  - node_modules
+  - .git
+  - vendor
+  - "**/.terraform"
+  - "**/test"
+  - "**/tests"
+
+# Skip files
+skip-files:
+  - "**/*_test.go"
+  - "**/test_*.tf"
+
+# Ignore file for suppressing specific findings
+ignorefile: .trivyignore
+
+# Severity threshold for misconfiguration
+misconfig:
+  severity:
+    - CRITICAL
+    - HIGH
+    - MEDIUM
+
+# Rego policy settings
+rego:
+  trace: false
+  config-policy: []
+  policy-namespaces: []

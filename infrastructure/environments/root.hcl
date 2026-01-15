@@ -19,11 +19,11 @@ locals {
   # generic_vars = read_terragrunt_config("${get_parent_terragrunt_dir()}/common/generic.hcl").locals
 
   # Extract the variables we need for easy access
-  region   = local.global_vars.locals.aws_region
+  region       = local.global_vars.locals.aws_region
   account_name = local.account_vars.locals.aws_account_name
   account_id   = local.account_vars.locals.aws_account_id
 
-  environment  = local.environment_vars.locals.environment
+  environment = local.environment_vars.locals.environment
 }
 
 # Generate an AWS provider block
@@ -59,11 +59,11 @@ locals {
 remote_state {
   backend = "s3"
   config = {
-    bucket = "nhs-hometest-poc-core-s3-tfstate"
+    bucket         = "nhs-hometest-poc-core-s3-tfstate"
     dynamodb_table = "nhs-hometest-poc-core-dynamodb-tfstate-lock"
     # key            = "${path_relative_to_include()}/tf.tfstate"
-    key = "${local.account_name}-${local.environment}-${basename(path_relative_to_include())}.tfstate"
-    encrypt = true
+    key        = "${local.account_name}-${local.environment}-${basename(path_relative_to_include())}.tfstate"
+    encrypt    = true
     kms_key_id = "arn:aws:kms:eu-west-2:781863586270:key/3e87d63f-febc-4dd4-a771-92c3c07a51f5"
     # kms_key_id = "arn:aws:kms:eu-west-2:781863586270:alias/nhs-hometest-poc-kms-tfstate-key"
     region = local.region

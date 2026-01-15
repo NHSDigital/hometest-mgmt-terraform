@@ -36,9 +36,9 @@ inputs = {
   app_port = 8080
 
   # Lambda Configuration
-  lambda_memory_size   = 512
-  lambda_timeout       = 30
-  lambda_architecture  = "arm64"
+  lambda_memory_size  = 512
+  lambda_timeout      = 30
+  lambda_architecture = "arm64"
 
   # API Gateway Configuration
   enable_api_gateway             = true
