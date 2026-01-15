@@ -5,21 +5,20 @@
 - terraform >= v1.14
 - terragrunt >= v0.97
 - firefox
-  - containers: https://addons.mozilla.org/en-US/firefox/addon/multi-account-containers/
-  - aws sso containers: https://addons.mozilla.org/en-US/firefox/addon/aws-sso-containers/
+  - containers: <https://addons.mozilla.org/en-US/firefox/addon/multi-account-containers/>
+  - aws sso containers: <https://addons.mozilla.org/en-US/firefox/addon/aws-sso-containers/>
 
 ## Docs
 
-- https://github.com/gruntwork-io/terragrunt-infrastructure-live-stacks-example/blob/main/root.hcl
-- https://github.com/gruntwork-io/terragrunt-infrastructure-catalog-example/blob/main/stacks/ec2-asg-stateful-service/terragrunt.stack.hcl
-- https://github.com/jdx/mise
-- nhsd-confluence.digital.nhs.uk/spaces/AWS/pages/592551759/AWS+Single+Sign+on+SSO+User+Access
-- https://nhsd-confluence.digital.nhs.uk/pages/viewpage.action?pageId=529502405&spaceKey=AWS&title=AWS%2BSingle%2BSign%2BOn#AWSSingleSignOn-Setupanewprogramme
--
+- <https://github.com/gruntwork-io/terragrunt-infrastructure-live-stacks-example/blob/main/root.hcl>
+- <https://github.com/gruntwork-io/terragrunt-infrastructure-catalog-example/blob/main/stacks/ec2-asg-stateful-service/terragrunt.stack.hcl>
+- <https://github.com/jdx/mise>
+- <https://nhsd-confluence.digital.nhs.uk/spaces/AWS/pages/592551759/AWS+Single+Sign+on+SSO+User+Access>
+- <https://nhsd-confluence.digital.nhs.uk/pages/viewpage.action?pageId=529502405&spaceKey=AWS&title=AWS%2BSingle%2BSign%2BOn#AWSSingleSignOn-Setupanewprogramme>
 
 ## Init
 
-```
+```bash
 aws configure sso
 
 # cat $AWS_CONFIG_FILE
@@ -39,10 +38,7 @@ sso_registration_scopes = sso:account:access
 aws sso login --profile Admin-PoC
 
 export AWS_PROFILE=Admin-PoC
-
-
 ```
-
 
 ## OLD
 

@@ -13,10 +13,6 @@ variable "aws_account_id" {
   type        = string
   # default     = "123456789012"
 }
-variable "aws_account_name" {
-  description = "AWS account name/alias for resource naming"
-  type        = string
-}
 
 variable "aws_account_shortname" {
   description = "AWS account short name/alias for resource naming"
