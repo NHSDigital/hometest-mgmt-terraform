@@ -27,8 +27,8 @@ runs:
     - name: Install pre-commit
       shell: bash
       run: |
-        whereis pre-commit
-        pre-commit
+        # whereis pre-commit
+        # pre-commit
         sudo pipx install --global pre-commit
         git config --global --add safe.directory '*'
         pre-commit install --install-hooks
