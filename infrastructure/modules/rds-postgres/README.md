@@ -29,12 +29,12 @@ module "rds_postgres" {
 
   instance_class    = "db.t3.micro"
   allocated_storage = 20
-  
+
   db_name  = "myapp"
   username = "dbadmin"
-  
+
   allowed_security_group_ids = [module.app.security_group_id]
-  
+
   tags = {
     Environment = "dev"
     Project     = "myapp"
@@ -57,38 +57,38 @@ module "rds_postgres" {
   allocated_storage     = 100
   max_allocated_storage = 1000
   storage_type          = "gp3"
-  
+
   # High availability
   multi_az = true
-  
+
   # Database configuration
   db_name  = "production_db"
   username = "dbadmin"
   manage_master_user_password = true  # Use Secrets Manager
-  
+
   # Enhanced security
   storage_encrypted = true
   kms_key_id        = "arn:aws:kms:eu-west-2:xxxxx:key/xxxxx"
-  
+
   # Network access
   allowed_security_group_ids = [
     module.app.security_group_id,
     module.lambda.security_group_id
   ]
-  
+
   # Backup configuration
   backup_retention_period = 30
   backup_window          = "03:00-04:00"
   maintenance_window     = "Mon:04:00-Mon:05:00"
   skip_final_snapshot    = false
   deletion_protection    = true
-  
+
   # Monitoring
   performance_insights_enabled          = true
   performance_insights_retention_period = 7
   monitoring_interval                   = 60
   enabled_cloudwatch_logs_exports       = ["postgresql", "upgrade"]
-  
+
   # Parameter group customization
   parameters = [
     {
@@ -100,7 +100,7 @@ module "rds_postgres" {
       value = "{DBInstanceClassMemory/32768}"
     }
   ]
-  
+
   tags = {
     Environment = "prod"
     Project     = "myapp"
@@ -120,7 +120,7 @@ module "rds_postgres" {
   db_subnet_group_name = "existing-db-subnet-group"
 
   allowed_cidr_blocks = ["10.0.0.0/16"]
-  
+
   tags = {
     Environment = "dev"
   }

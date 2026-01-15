@@ -9,17 +9,17 @@ locals {
     {
       # Resource identification
       Name = var.identifier
-      
+
       # Technical metadata
       Service       = "rds"
       Engine        = "postgresql"
       EngineVersion = var.engine_version
       InstanceClass = var.instance_class
-      
+
       # Management metadata
       ManagedBy = "terraform"
       Module    = "rds-postgres"
-      
+
       # Cost allocation
       CostCenter = try(var.tags["CostCenter"], "")
       Owner      = try(var.tags["Owner"], "")
@@ -106,27 +106,27 @@ module "db" {
   subnet_ids             = var.subnet_ids
 
   # Multi-AZ and availability
-  multi_az               = var.multi_az
-  availability_zone      = var.multi_az ? null : var.availability_zone
+  multi_az          = var.multi_az
+  availability_zone = var.multi_az ? null : var.availability_zone
 
   # Backup configuration
   backup_retention_period = var.backup_retention_period
-  backup_window          = var.backup_window
-  maintenance_window     = var.maintenance_window
-  skip_final_snapshot    = var.skip_final_snapshot
-  copy_tags_to_snapshot  = true
+  backup_window           = var.backup_window
+  maintenance_window      = var.maintenance_window
+  skip_final_snapshot     = var.skip_final_snapshot
+  copy_tags_to_snapshot   = true
 
   # Deletion protection
   deletion_protection = var.deletion_protection
 
   # Performance Insights
-  enabled_cloudwatch_logs_exports = var.enabled_cloudwatch_logs_exports
-  performance_insights_enabled    = var.performance_insights_enabled
+  enabled_cloudwatch_logs_exports       = var.enabled_cloudwatch_logs_exports
+  performance_insights_enabled          = var.performance_insights_enabled
   performance_insights_retention_period = var.performance_insights_enabled ? var.performance_insights_retention_period : null
 
   # Monitoring
-  monitoring_interval = var.monitoring_interval
-  monitoring_role_arn = var.monitoring_interval > 0 ? var.monitoring_role_arn : null
+  monitoring_interval    = var.monitoring_interval
+  monitoring_role_arn    = var.monitoring_interval > 0 ? var.monitoring_role_arn : null
   create_monitoring_role = var.monitoring_interval > 0 && var.monitoring_role_arn == null
 
   # Parameter group
@@ -149,8 +149,8 @@ module "db" {
   blue_green_update = var.blue_green_update
 
   # Tags - applied to RDS instance, subnet group, parameter group, option group
-  tags                      = local.db_instance_tags
-  db_subnet_group_tags      = local.db_subnet_group_tags
-  db_parameter_group_tags   = local.db_parameter_group_tags
-  db_option_group_tags      = local.db_parameter_group_tags  # Reuse parameter group tags
+  tags                    = local.db_instance_tags
+  db_subnet_group_tags    = local.db_subnet_group_tags
+  db_parameter_group_tags = local.db_parameter_group_tags
+  db_option_group_tags    = local.db_parameter_group_tags # Reuse parameter group tags
 }

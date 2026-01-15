@@ -91,10 +91,10 @@ module "rds_postgres" {
   subnet_ids = local.subnet_ids
 
   # Engine configuration
-  engine_version          = var.postgres_engine_version
-  parameter_group_family  = var.postgres_parameter_group_family
-  major_engine_version    = var.postgres_major_engine_version
-  instance_class          = var.instance_class
+  engine_version         = var.postgres_engine_version
+  parameter_group_family = var.postgres_parameter_group_family
+  major_engine_version   = var.postgres_major_engine_version
+  instance_class         = var.instance_class
 
   # Storage configuration
   allocated_storage     = var.allocated_storage
@@ -119,10 +119,10 @@ module "rds_postgres" {
 
   # Backup configuration
   backup_retention_period = var.backup_retention_period
-  backup_window          = var.backup_window
-  maintenance_window     = var.maintenance_window
-  skip_final_snapshot    = var.skip_final_snapshot
-  deletion_protection    = var.deletion_protection
+  backup_window           = var.backup_window
+  maintenance_window      = var.maintenance_window
+  skip_final_snapshot     = var.skip_final_snapshot
+  deletion_protection     = var.deletion_protection
 
   # Monitoring
   enabled_cloudwatch_logs_exports       = var.enabled_cloudwatch_logs_exports
