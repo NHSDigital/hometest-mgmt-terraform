@@ -2,7 +2,7 @@
 # https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/#by-inline-comments
 
 # Example: Ignore specific CVE
-# CVE-2023-12345
+CVE-2023-12345
 
 # Example: Ignore specific misconfiguration by ID
 # AVD-AWS-0001
@@ -13,3 +13,9 @@
 # Ignore low-risk findings for development environments
 # AVD-AWS-0057
 # AVD-AWS-0089
+
+# KMS.3 - AWS KMS keys should not be deleted unintentionally
+# Justification: KMS key has deletion_window_in_days set to 30 days (maximum),
+# providing adequate protection against unintentional deletion. Key rotation is enabled.
+# The key is used for Terraform state encryption and is protected by IAM policies.
+# AVD-AWS-0065

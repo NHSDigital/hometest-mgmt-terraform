@@ -59,6 +59,17 @@ output "logging_bucket_name" {
 }
 
 # Backend Configuration Output
+# output "backend_config" {
+#   description = "Terraform backend configuration for use in other modules"
+#   value = {
+#     bucket         = aws_s3_bucket.tfstate.id
+#     region         = var.aws_region
+#     dynamodb_table = aws_dynamodb_table.tfstate_lock.name
+#     encrypt        = true
+#     kms_key_id     = aws_kms_key.tfstate.arn
+#   }
+# }
+
 output "backend_config_hcl" {
   description = "Terraform backend configuration in HCL format"
   value       = <<-EOT

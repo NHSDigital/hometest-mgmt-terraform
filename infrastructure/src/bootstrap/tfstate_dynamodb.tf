@@ -30,9 +30,9 @@ resource "aws_dynamodb_table" "tfstate_lock" {
   # Deletion protection
   deletion_protection_enabled = true
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 
   tags = merge(local.common_tags, {
     Name = local.tfstate_dynamodb_name

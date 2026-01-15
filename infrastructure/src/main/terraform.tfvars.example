@@ -1,0 +1,65 @@
+################################################################################
+# Example Terraform Variables for Lambda Web App
+# Copy this file to terraform.tfvars and update with your values
+################################################################################
+
+# AWS Configuration
+aws_region     = "eu-west-2"
+aws_account_id = "123456789012"
+
+# Project Configuration
+project_name = "hometest"
+environment  = "dev"
+account_name = "hometest-poc"
+
+# Application Configuration
+app_name = "webapp"
+app_port = 8080
+
+# Lambda Configuration
+lambda_memory_size   = 512
+lambda_timeout       = 30
+lambda_architecture  = "arm64"  # Use arm64 for better price/performance
+
+# Container Configuration (optional - leave empty to use ECR placeholder)
+# container_image_uri = "123456789012.dkr.ecr.eu-west-2.amazonaws.com/hometest-dev-webapp:latest"
+
+# Environment Variables
+environment_variables = {
+  # Add your custom environment variables here
+  # DATABASE_URL = "postgresql://..."
+}
+
+# Secrets Manager ARNs (optional)
+# secrets_arns = [
+#   "arn:aws:secretsmanager:eu-west-2:123456789012:secret:my-secret"
+# ]
+
+# API Gateway Configuration
+enable_api_gateway             = true
+enable_api_gateway_access_logs = true
+throttling_burst_limit         = 100
+throttling_rate_limit          = 50
+
+# Lambda Function URL (alternative to API Gateway)
+enable_function_url    = false
+function_url_auth_type = "NONE"
+
+# VPC Configuration (optional)
+vpc_enabled = false
+# vpc_subnet_ids         = ["subnet-xxx", "subnet-yyy"]
+# vpc_security_group_ids = ["sg-xxx"]
+
+# Observability
+enable_xray_tracing      = true
+log_retention_days       = 30
+enable_cloudwatch_alarms = true
+alarm_error_threshold    = 5
+alarm_duration_threshold = 5000
+
+# Tags
+tags = {
+  Owner       = "platform-team"
+  CostCenter  = "infrastructure"
+  Application = "hometest"
+}

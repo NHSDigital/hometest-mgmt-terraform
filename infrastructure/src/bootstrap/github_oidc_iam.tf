@@ -13,7 +13,7 @@ locals {
   environment_subjects = [for env in var.github_environments : "repo:${var.github_repo}:environment:${env}"]
 
   # Allow pull requests (for plan only - consider separate role for PRs)
-  # pr_subjects = ["repo:${var.github_repo}:pull_request"]
+  pr_subjects = ["repo:${var.github_repo}:pull_request"]
 
   # Combine all allowed subjects based on flag
   # If github_allow_all_branches is true, allow all branches from the repo

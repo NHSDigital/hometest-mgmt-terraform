@@ -10,9 +10,20 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
-# terraform_version_constraint = ">= 0.13, < 0.14"
-# terragrunt_version_constraint = ">= 0.97.0"
+# # Include the envcommon configuration for the component. The envcommon configuration contains settings that are common
+# # for the component across all environments.
+# include "envcommon" {
+#   path = "${dirname(find_in_parent_folders("root.hcl"))}/environments/mysql.hcl"
+#   # We want to reference the variables from the included config in this configuration, so we expose it.
+#   expose = true
+# }
 
+# Configure the version of the module to use in this environment. This allows you to promote new versions one
+# environment at a time (e.g., qa -> stage -> prod).
 terraform {
   source = "../../../..//src/bootstrap"
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# We don't need to override any of the common parameters for this environment, so we don't specify any inputs.
+# ---------------------------------------------------------------------------------------------------------------------

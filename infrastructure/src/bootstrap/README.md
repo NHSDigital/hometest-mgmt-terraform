@@ -37,13 +37,11 @@ This bootstrap module creates the foundational infrastructure required to run Te
 ### Initial Bootstrap (First Time)
 
 1. Copy the example variables file:
-
    ```bash
    cp terraform.tfvars.example terraform.tfvars
    ```
 
 2. Edit `terraform.tfvars` with your values:
-
    ```hcl
    project_name = "hometest"
    environment  = "mgmt"
@@ -52,7 +50,6 @@ This bootstrap module creates the foundational infrastructure required to run Te
    ```
 
 3. Initialize and apply:
-
    ```bash
    terraform init
    terraform plan -out=tfplan
@@ -60,7 +57,6 @@ This bootstrap module creates the foundational infrastructure required to run Te
    ```
 
 4. Note the outputs for GitHub configuration:
-
    ```bash
    terraform output gha_oidc_role_arn
    terraform output backend_config_hcl
@@ -270,6 +266,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_additional_iam_policy_arns"></a> [additional\_iam\_policy\_arns](#input\_additional\_iam\_policy\_arns) | List of additional IAM policy ARNs to attach to the GitHub Actions role | `list(string)` | `[]` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account ID for resources | `string` | n/a | yes |
+| <a name="input_aws_account_name"></a> [aws\_account\_name](#input\_aws\_account\_name) | AWS account name/alias for resource naming | `string` | n/a | yes |
 | <a name="input_aws_account_shortname"></a> [aws\_account\_shortname](#input\_aws\_account\_shortname) | AWS account short name/alias for resource naming | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region for resources | `string` | n/a | yes |
 | <a name="input_enable_dynamodb_point_in_time_recovery"></a> [enable\_dynamodb\_point\_in\_time\_recovery](#input\_enable\_dynamodb\_point\_in\_time\_recovery) | Enable point-in-time recovery for DynamoDB lock table | `bool` | `true` | no |

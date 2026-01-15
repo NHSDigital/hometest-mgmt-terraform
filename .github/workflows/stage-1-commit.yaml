@@ -55,6 +55,31 @@ jobs:
           fetch-depth: 0 # Full history is needed to compare branches
       - name: "Check file format"
         uses: ./.github/actions/check-file-format
+<<<<<<< HEAD
+  check-markdown-format:
+    name: "Check Markdown format"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history is needed to compare branches
+      - name: "Check Markdown format"
+        uses: ./.github/actions/check-markdown-format
+  check-english-usage:
+    name: "Check English usage"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history is needed to compare branches
+      - name: "Check English usage"
+        uses: ./.github/actions/check-english-usage
+  # Done using pre-commit
+=======
   # Replaced by pre-commit
   # check-markdown-format:
   #   name: "Check Markdown format"
@@ -80,13 +105,18 @@ jobs:
   #     - name: "Check English usage"
   #       uses: ./.github/actions/check-english-usage
   # Replaced by pre-commit
+>>>>>>> 135826ea5075b02065b189c0333cbd019640d810
   # lint-terraform:
   #   name: "Lint Terraform"
   #   runs-on: ubuntu-latest
   #   timeout-minutes: 2
   #   steps:
   #     - name: "Checkout code"
+<<<<<<< HEAD
+  #       uses: actions/checkout@v4
+=======
   #       uses: actions/checkout@v6
+>>>>>>> 135826ea5075b02065b189c0333cbd019640d810
   #     - name: "Lint Terraform"
   #       uses: ./.github/actions/lint-terraform
   count-lines-of-code:
@@ -129,6 +159,42 @@ jobs:
           idp_aws_report_upload_bucket_endpoint: "${{ secrets.IDP_AWS_REPORT_UPLOAD_BUCKET_ENDPOINT }}"
   pre-commit:
     runs-on: ubuntu-latest
+<<<<<<< HEAD
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pre-commit dependencies
+        working-directory: /tmp
+        run: |
+          echo "Install terraform_docs ${{ vars.TERRAFORM_DOCS_VERSION }}"
+          curl -sL https://github.com/terraform-docs/terraform-docs/releases/download/v${{ vars.TERRAFORM_DOCS_VERSION }}/terraform-docs-v${{ vars.TERRAFORM_DOCS_VERSION }}-linux-amd64.tar.gz -O
+          tar -xf terraform-docs-v${{ vars.TERRAFORM_DOCS_VERSION }}-linux-amd64.tar.gz -C /tmp
+          sudo mv /tmp/terraform-docs /usr/bin/
+          rm -rf terraform-docs-v${{ vars.TERRAFORM_DOCS_VERSION }}-linux-amd64.tar.gz
+          terraform-docs --version
+
+          echo "Install pipx checkov"
+          sudo pipx install --global checkov
+          checkov --version
+
+      - name: Install pre-commit
+        run: |
+          whereis pre-commit
+
+          pre-commit
+
+          sudo pipx install --global pre-commit
+
+          git config --global --add safe.directory '*'
+
+          pre-commit install --install-hooks
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files --show-diff-on-failure --color=always
+        env:
+          PRE_COMMIT_COLOR: always
+=======
     # permissions:
     #   id-token: write    # REQUIRED for OIDC token
     #   contents: read     # For checkout
@@ -142,3 +208,4 @@ jobs:
       #     aws-region: "eu-west-2"
       - name: Run pre-commit checks
         uses: ./.github/actions/perform-pre-commit
+>>>>>>> 135826ea5075b02065b189c0333cbd019640d810

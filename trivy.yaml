@@ -10,11 +10,11 @@ scan:
     - misconfig
     - secret
 
-# Severity levels to report
-severity:
-  - CRITICAL
-  # - HIGH
-  # - MEDIUM
+  # Severity levels to report
+  severity:
+    - CRITICAL
+    - HIGH
+    - MEDIUM
 
 # Vulnerability scanning options
 vulnerability:
@@ -83,8 +83,8 @@ skip-files:
 misconfig:
   severity:
     - CRITICAL
-    # - HIGH
-    # - MEDIUM
+    - HIGH
+    - MEDIUM
 
 # Rego policy settings
 rego:

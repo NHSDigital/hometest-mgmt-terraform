@@ -17,8 +17,8 @@ locals {
   # GitHub environments allowed to run Terraform
   github_environments = [
     "dev",
-    "staging",
-    "prod"
+    # "staging",
+    # "prod"
   ]
 
   # Allow all branches to assume the OIDC role (disables branch/environment restrictions)
