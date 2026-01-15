@@ -124,3 +124,39 @@ jobs:
           idp_aws_report_upload_region: "${{ secrets.IDP_AWS_REPORT_UPLOAD_REGION }}"
           idp_aws_report_upload_role_name: "${{ secrets.IDP_AWS_REPORT_UPLOAD_ROLE_NAME }}"
           idp_aws_report_upload_bucket_endpoint: "${{ secrets.IDP_AWS_REPORT_UPLOAD_BUCKET_ENDPOINT }}"
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pre-commit dependencies
+        working-directory: /tmp
+        run: |
+          echo "Install terraform_docs ${{ vars.TERRAFORM_DOCS_VERSION }}"
+          curl -sL https://github.com/terraform-docs/terraform-docs/releases/download/v${{ vars.TERRAFORM_DOCS_VERSION }}/terraform-docs-v${{ vars.TERRAFORM_DOCS_VERSION }}-linux-amd64.tar.gz -O
+          tar -xf terraform-docs-v${{ vars.TERRAFORM_DOCS_VERSION }}-linux-amd64.tar.gz -C /tmp
+          sudo mv /tmp/terraform-docs /usr/bin/
+          rm -rf terraform-docs-v${{ vars.TERRAFORM_DOCS_VERSION }}-linux-amd64.tar.gz
+          terraform-docs --version
+
+          echo "Install pipx checkov"
+          sudo pipx install --global checkov
+          checkov --version
+
+      - name: Install pre-commit
+        run: |
+          whereis pre-commit
+
+          pre-commit
+
+          sudo pipx install --global pre-commit
+
+          git config --global --add safe.directory '*'
+
+          pre-commit install --install-hooks
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files --show-diff-on-failure --color=always
+        env:
+          PRE_COMMIT_COLOR: always
