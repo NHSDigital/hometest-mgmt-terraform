@@ -67,10 +67,6 @@ Make use of this repository template to expedite your project setup and enhance 
 ## Table of Contents
 
 - [Repository Template](#repository-template)
-  - [Prerequistes](#prerequistes)
-  - [Docs](#docs)
-  - [Init](#init)
-  - [OLD](#old)
   - [Changes comparing to repository-template](#changes-comparing-to-repository-template)
   - [Table of Contents](#table-of-contents)
   - [Setup](#setup)
