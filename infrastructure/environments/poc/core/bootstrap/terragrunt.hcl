@@ -10,8 +10,6 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
-terragrunt_version_constraint = ">= 0.97.0"
-
 terraform {
   source = "../../../..//src/bootstrap"
 }

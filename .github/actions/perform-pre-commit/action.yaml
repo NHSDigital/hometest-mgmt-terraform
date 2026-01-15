@@ -34,7 +34,7 @@ runs:
         curl -L https://raw.githubusercontent.com/warrensbox/tgswitch/release/install.sh | bash -s -- -b ~/.local/bin latest
         echo "$HOME/.local/bin" >> $GITHUB_PATH
         tgswitch
-      working-directory: infrastructure/environments/poc/core/bootstrap/
+      working-directory: infrastructure/environments/
       shell: bash
 
     - name: Install pre-commit dependencies
