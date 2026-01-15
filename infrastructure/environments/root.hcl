@@ -4,9 +4,6 @@
 # remote state, and locking: https://github.com/gruntwork-io/terragrunt
 # ---------------------------------------------------------------------------------------------------------------------
 
-# terraform_version_constraint = ">= 0.13, < 0.14"
-terragrunt_version_constraint = ">= 0.97.0"
-
 locals {
   # Automatically load account-level variables
   account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
