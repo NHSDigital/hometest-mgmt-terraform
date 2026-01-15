@@ -41,6 +41,8 @@ remote_state {
   }
 }
 
+terragrunt_version_constraint = ">= 0.97.0"
+
 # ---------------------------------------------------------------------------------------------------------------------
 # GLOBAL PARAMETERS
 # These variables apply to all configurations in this subfolder. These are automatically merged into the child
