@@ -14,34 +14,6 @@ repos:
       - id: detect-private-key
       - id: check-executables-have-shebangs
 
-      # - id: trailing-whitespace
-      #   args: [--markdown-linebreak-ext=md]
-      # - id: end-of-file-fixer
-      # - id: check-yaml
-      #   args: [--unsafe]
-      # - id: check-json
-      # - id: check-toml
-      # - id: check-xml
-      # - id: check-added-large-files
-      #   args: [--maxkb=1024]
-      # - id: check-case-conflict
-      # - id: check-merge-conflict
-      # - id: check-symlinks
-      # - id: check-vcs-permalinks
-      # - id: destroyed-symlinks
-      # - id: detect-private-key
-      # - id: detect-aws-credentials
-      #   args: [--allow-missing-credentials]
-      # - id: check-executables-have-shebangs
-      # - id: check-shebang-scripts-are-executable
-      # - id: mixed-line-ending
-      #   args: [--fix=lf]
-      # - id: no-commit-to-branch
-      #   args: [--branch, main, --branch, master]
-      # - id: pretty-format-json
-      #   args: [--autofix, --no-sort-keys]
-      # - id: fix-byte-order-marker
-
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.38.0
     hooks:
@@ -62,14 +34,6 @@ repos:
 
       - id: terragrunt_fmt
         files: ^infrastructure/environments/
-        # args:
-        #   - --args=-recursive
-      # - id: terraform_validate
-      #   name: Terraform Validate Core
-      #   files: ^terraform/components/core/[^/]+$
-      #   args:
-      #     - --tf-init-args=-backend-config=environments/backends/nonprod/core.tfbackend
-      #     - --tf-init-args=-get=true
 
       - id: terraform_tflint
         files: ^infrastructure/src
@@ -80,26 +44,21 @@ repos:
 
       - id: terraform_trivy
         files: ^infrastructure/src
-        # args:
-        #   - --args=--severity=HIGH,CRITICAL
-        #   - --args=--skip-dirs=**/.terraform
-        #   - --args=--tf-exclude-downloaded-modules
         args:
           - --args=--config=__GIT_WORKING_DIR__/trivy.yaml
 
       - id: terragrunt_validate_inputs
         name: Terragrunt validate inputs
         files: ^infrastructure/environments/poc/core/bootstrap/[^/]+$
-        # files: ^infrastructure/environments/
         args:
           # Optionally check for unused inputs
           - --args=--terragrunt-strict-validate
 
       - id: terragrunt_validate
         files: ^infrastructure/environments/poc/core/bootstrap/[^/]+$
-        # files: ^infrastructure/environments/
         args:
           - --hook-config=--parallelism-limit=1
+
       - id: terraform_docs
         files: ^infrastructure/src/
         args:

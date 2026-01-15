@@ -1,13 +1,4 @@
 ---
-# directory: terraform
-# quiet: true
-# compact: true
-# # Check: CKV_TF_1: "Ensure Terraform module sources use a commit hash"
-# skip-check: CKV_TF_1
-# soft-fail: true
-# Checkov configuration file
-# https://www.checkov.io/2.Basics/CLI%20Command%20Reference.html
-
 # Framework to scan
 framework:
   - terraform
@@ -17,10 +8,6 @@ framework:
 # Output format
 output:
   - cli
-  # - json
-
-# Output file for JSON results (optional)
-# output-file-path: checkov-results
 
 # Soft fail - don't return error code on failures
 soft-fail: false
@@ -33,10 +20,6 @@ quiet: true
 
 # Download external modules
 download-external-modules: true
-
-# Directory to scan
-# directory:
-#   - infrastructure/src
 
 # Skip directories
 skip-path:
@@ -51,9 +34,6 @@ skip-path:
 
 # Skip specific checks (use sparingly)
 skip-check:
-  # - MEDIUM
-  # - LOW
-  # - INFO
   # Example: Skip checks that may not apply to your environment
   # - CKV_AWS_144  # S3 bucket cross-region replication
   # - CKV_AWS_145  # S3 bucket default encryption with KMS
@@ -63,59 +43,15 @@ skip-check:
   # - CKV2_AWS_61  # S3 lifecycle configuration
   # - CKV2_AWS_6   # S3 bucket public access block
 
-# Run only specific checks (use instead of skip-check for stricter control)
-# check:
-#   - CKV_AWS_1
-#   - CKV_AWS_2
 
-# External checks directory
-# external-checks-dir:
-#   - ./custom-checks
-
-# Severity threshold - only fail on HIGH and CRITICAL
-# check:
-#   - CRITICAL
-#   - HIGH
-#   - MEDIUM
-#   - LOW
-# check-severity:
-#   - CRITICAL
-#   - HIGH
 
 # Severity threshold - only fail on HIGH and CRITICAL
 hard-fail-on:
   - CRITICAL
   - HIGH
-#   - MEDIUM
-#   - LOW
-
-# # Or use soft-fail-on to allow certain severities to pass
-# soft-fail-on:
-#   - MEDIUM
-#   - LOW
-
 
 # Evaluate variables
 evaluate-variables: true
-
-# Enable all checks from specific category
-# run-all-external-checks: true
-
-# Baseline file for suppressing known issues
-# baseline: .checkov.baseline
-
-# Policy metadata filter
-# policy-metadata-filter:
-#   - category:general
-#   - category:networking
-
-# Custom policies directory
-# external-checks-dir:
-#   - custom_policies/
-
-# Block list config - resources to skip
-# block-list-secret-scan:
-#   - "*.tfvars"
 
 # Secrets scanning
 enable-secret-scan-all-files: true
@@ -123,9 +59,3 @@ enable-secret-scan-all-files: true
 # Repo root for relative paths
 repo-root-for-plan-enrichment:
   - infrastructure
-
-# Use enforcement rules
-# use-enforcement-rules: true
-
-# Config file for enforcement rules
-# enforcement-rules: .checkov.enforcement.yaml
