@@ -75,8 +75,9 @@ skip-files:
   - "**/*_test.go"
   - "**/test_*.tf"
 
+# TODO: fixme: add paths to skip
 # Ignore file for suppressing specific findings
-ignorefile: .trivyignore
+# ignorefile: .trivyignore
 
 # Severity threshold for misconfiguration
 misconfig:

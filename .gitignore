@@ -114,3 +114,6 @@ venv/
 
 # Ignore Terragrunt cache directories
 .terragrunt-cache/
+
+# Ignore Trivy cache directory
+.trivy-cache/

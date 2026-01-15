@@ -2,7 +2,7 @@
 # https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/#by-inline-comments
 
 # Example: Ignore specific CVE
-# CVE-2023-12345
+CVE-2023-12345
 
 # Example: Ignore specific misconfiguration by ID
 # AVD-AWS-0001

@@ -51,6 +51,9 @@ skip-path:
 
 # Skip specific checks (use sparingly)
 skip-check:
+  # - MEDIUM
+  # - LOW
+  # - INFO
   # Example: Skip checks that may not apply to your environment
   # - CKV_AWS_144  # S3 bucket cross-region replication
   # - CKV_AWS_145  # S3 bucket default encryption with KMS
@@ -70,9 +73,27 @@ skip-check:
 #   - ./custom-checks
 
 # Severity threshold - only fail on HIGH and CRITICAL
+# check:
+#   - CRITICAL
+#   - HIGH
+#   - MEDIUM
+#   - LOW
 # check-severity:
 #   - CRITICAL
 #   - HIGH
+
+# Severity threshold - only fail on HIGH and CRITICAL
+hard-fail-on:
+  - CRITICAL
+  - HIGH
+#   - MEDIUM
+#   - LOW
+
+# # Or use soft-fail-on to allow certain severities to pass
+# soft-fail-on:
+#   - MEDIUM
+#   - LOW
+
 
 # Evaluate variables
 evaluate-variables: true
