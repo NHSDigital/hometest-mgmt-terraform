@@ -1,6 +1,13 @@
 ---
+# SEE: https://github.com/DavidAnson/markdownlint/blob/main/schema/.markdownlint.yaml
 # Default state for all rules
 default: true
+
+# https://github.com/DavidAnson/markdownlint/blob/main/doc/md010.md
+MD010: # no-hard-tabs
+  ignore_code_languages:
+    - make
+    - console
 
 # MD013 - Line length
 MD013:
@@ -14,11 +21,9 @@ MD024:
   siblings_only: true
 
 # MD033 - Inline HTML
-# MD033:
-#   allowed_elements:
-#     - br
-#     - details
-#     - summary
+# https://github.com/DavidAnson/markdownlint/blob/main/doc/md033.md
+MD033: false
+
 
 # MD041 - First line should be a top-level heading
 MD041: false
@@ -27,22 +32,10 @@ MD041: false
 MD046:
   style: fenced
 
-# SEE: https://github.com/DavidAnson/markdownlint/blob/main/schema/.markdownlint.yaml
-
-# https://github.com/DavidAnson/markdownlint/blob/main/doc/md010.md
-MD010: # no-hard-tabs
-  ignore_code_languages:
-    - make
-    - console
-
-# MD033 - Inline HTML
-# https://github.com/DavidAnson/markdownlint/blob/main/doc/md033.md
-MD033: false
+# MD059 - Link text should be descriptive
+# https://github.com/DavidAnson/markdownlint/blob/main/doc/md059.md
+MD059: false
 
 # MD060 - Table column style
 # https://github.com/DavidAnson/markdownlint/blob/main/doc/md060.md
 MD060: false
-
-# MD059 - Link text should be descriptive
-# https://github.com/DavidAnson/markdownlint/blob/main/doc/md059.md
-MD059: false

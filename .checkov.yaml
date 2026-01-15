@@ -43,8 +43,6 @@ skip-check:
   # - CKV2_AWS_61  # S3 lifecycle configuration
   # - CKV2_AWS_6   # S3 bucket public access block
 
-
-
 # Severity threshold - only fail on HIGH and CRITICAL
 hard-fail-on:
   - CRITICAL
