@@ -1,0 +1,219 @@
+################################################################################
+# Network Module - Example Configuration
+################################################################################
+# Copy this file to terraform.tfvars and update the values for your environment
+
+#------------------------------------------------------------------------------
+# Required Variables
+#------------------------------------------------------------------------------
+
+aws_region            = "eu-west-2"
+aws_account_id        = "123456789012"
+aws_account_shortname = "hometest"
+project_name          = "hometest"
+environment           = "dev"
+
+#------------------------------------------------------------------------------
+# VPC Configuration
+#------------------------------------------------------------------------------
+
+# VPC CIDR - Use /16 for maximum flexibility
+# Ensure this doesn't overlap with other VPCs if using VPC peering or Transit Gateway
+vpc_cidr = "10.0.0.0/16"
+
+# Number of Availability Zones (2-3 for high availability)
+az_count = 3
+
+# Enable IPv6 dual-stack (optional)
+enable_ipv6 = false
+
+#------------------------------------------------------------------------------
+# NAT Gateway Configuration
+#------------------------------------------------------------------------------
+
+# For production: set to false for high availability (one NAT per AZ)
+# For dev/staging: set to true to reduce costs (single NAT Gateway)
+single_nat_gateway = false
+
+#------------------------------------------------------------------------------
+# VPC Flow Logs
+#------------------------------------------------------------------------------
+
+# Retention period for VPC Flow Logs in CloudWatch
+# Valid values: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653
+flow_logs_retention_days = 90
+
+#------------------------------------------------------------------------------
+# VPC Endpoints
+#------------------------------------------------------------------------------
+
+# Enable Interface VPC Endpoints (recommended for Lambda in VPC)
+# Note: Interface endpoints have hourly costs
+enable_interface_endpoints = true
+
+# List of AWS services for Interface VPC Endpoints
+# Customize based on which AWS services your Lambda functions access
+interface_endpoints = [
+  "lambda",           # Required for Lambda in VPC
+  "execute-api",      # API Gateway
+  "secretsmanager",   # If using Secrets Manager
+  "ssm",              # Systems Manager Parameter Store
+  "logs",             # CloudWatch Logs
+  "sqs",              # If using SQS
+  "sns",              # If using SNS
+  "kms",              # If using KMS
+  "sts",              # Required for IAM role assumption
+  "ecr.api",          # If pulling container images
+  "ecr.dkr"           # If pulling container images
+]
+
+#------------------------------------------------------------------------------
+# Security Group Flags
+#------------------------------------------------------------------------------
+
+create_db_subnet_group = true
+create_lambda_rds_sg   = true
+create_rds_sg          = true
+create_elasticache_sg  = true
+
+#------------------------------------------------------------------------------
+# Network Firewall & Egress Filtering
+#------------------------------------------------------------------------------
+
+# Enable AWS Network Firewall for egress filtering (additional cost ~$0.395/hour per endpoint)
+enable_network_firewall = true
+
+# Retention period for firewall logs
+firewall_logs_retention_days = 90
+
+# Enable default deny - drops all traffic not explicitly allowed
+# CAUTION: Ensure all required destinations are in allowed lists before enabling
+firewall_default_deny = true
+
+# Specific IP addresses/CIDRs allowed for egress (external APIs, partner networks, etc.)
+allowed_egress_ips = [
+  {
+    ip          = "203.0.113.10/32"
+    port        = "443"
+    protocol    = "TCP"
+    description = "External Payment API"
+  },
+  {
+    ip          = "198.51.100.0/24"
+    port        = "443"
+    protocol    = "TCP"
+    description = "Partner Healthcare Network"
+  },
+  {
+    ip          = "192.0.2.50/32"
+    port        = "8443"
+    protocol    = "TCP"
+    description = "Third-party Integration Endpoint"
+  }
+]
+
+# Domains allowed for egress (HTTPS/TLS traffic) - supports wildcards
+# Note: AWS service domains (.amazonaws.com) are automatically allowed
+allowed_egress_domains = [
+  ".nhs.uk",                    # NHS domains
+  ".gov.uk",                    # Government domains
+  ".github.com",                # GitHub (for webhook callbacks, etc.)
+  ".githubusercontent.com",     # GitHub content
+  "api.stripe.com",             # Payment processing
+  "api.sendgrid.com",           # Email service
+  ".datadoghq.com",             # Monitoring (if using Datadog)
+  ".sentry.io"                  # Error tracking (if using Sentry)
+]
+
+#------------------------------------------------------------------------------
+# Tags
+#------------------------------------------------------------------------------
+
+tags = {
+  Project     = "hometest"
+  ManagedBy   = "terraform"
+  Owner       = "platform-team"
+  CostCenter  = "engineering"
+}
+
+#------------------------------------------------------------------------------
+# Route 53 Configuration
+#------------------------------------------------------------------------------
+
+# Public hosted zone for the service
+route53_zone_name = "hometest.service.nhs.org"
+
+# Create a private hosted zone for internal DNS resolution within the VPC
+create_private_hosted_zone = true
+private_zone_name          = "hometest.internal"
+
+# Enable DNSSEC for enhanced security (recommended for production)
+enable_dnssec = true
+
+# Health check configuration
+create_health_check            = true
+health_check_fqdn              = "api.hometest.service.nhs.org"
+health_check_port              = 443
+health_check_type              = "HTTPS"
+health_check_path              = "/health"
+health_check_failure_threshold = 3
+health_check_request_interval  = 30
+
+#------------------------------------------------------------------------------
+# WAF Configuration - Web Application Firewall
+#------------------------------------------------------------------------------
+
+# Create WAF for API Gateway protection (highly recommended)
+create_waf = true
+waf_scope  = "REGIONAL" # REGIONAL for API Gateway, CLOUDFRONT for CloudFront
+
+# Rate limiting - requests per 5-minute period per IP
+waf_rate_limit = 2000
+
+# Retention for WAF logs
+waf_logs_retention_days = 90
+
+# Block anonymous IPs (VPNs, Tor, proxies) - may impact legitimate users
+waf_block_anonymous_ips = false
+
+# Geo-restriction - only allow UK for NHS services (optional)
+# waf_allowed_countries = ["GB"]
+
+# IP allowlist - restrict to specific IPs only (optional, for admin endpoints)
+waf_ip_allowlist_enabled = false
+# waf_ip_allowlist = ["203.0.113.0/24"]
+
+# Exclude specific rules from blocking (for tuning false positives)
+# waf_common_rules_excluded = ["SizeRestrictions_BODY", "CrossSiteScripting_BODY"]
+
+#------------------------------------------------------------------------------
+# ACM Certificate Configuration
+#------------------------------------------------------------------------------
+
+# Create SSL/TLS certificate for custom domain
+create_acm_certificate = true
+
+# Additional domain names (SANs) for the certificate
+acm_subject_alternative_names = [
+  "*.hometest.service.nhs.org",    # Wildcard for all subdomains
+  "api.hometest.service.nhs.org",  # API subdomain
+  "www.hometest.service.nhs.org"   # WWW subdomain
+]
+
+#------------------------------------------------------------------------------
+# API Gateway Security Configuration
+#------------------------------------------------------------------------------
+
+# Create security group for API Gateway VPC Link
+create_api_gateway_sg = true
+
+# Create VPC Link for private Lambda integration
+create_vpc_link = true
+
+# CIDR blocks allowed to access API Gateway
+api_gateway_allowed_cidrs = ["0.0.0.0/0"]
+
+# Resource policy for additional API Gateway restrictions (optional)
+create_api_gateway_resource_policy = false
+api_gateway_allow_from_vpc         = true
+# api_gateway_allowed_ips = ["203.0.113.0/24"]
