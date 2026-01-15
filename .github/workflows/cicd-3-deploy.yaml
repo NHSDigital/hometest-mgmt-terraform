@@ -24,7 +24,7 @@ jobs:
       tag: ${{ steps.variables.outputs.tag }}
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Set CI/CD variables"
         id: variables
         run: |
@@ -59,6 +59,7 @@ jobs:
       contents: read     # For checkout
     steps:
       - name: "Checkout code"
+<<<<<<< HEAD
         uses: actions/checkout@v4
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -89,6 +90,9 @@ jobs:
         working-directory: infrastructure/src/bootstrap
         run: terragrunt apply -auto-approve tfplan
 
+=======
+        uses: actions/checkout@v6
+>>>>>>> 135826ea5075b02065b189c0333cbd019640d810
   # TODO: More jobs or/and steps here
   # success:
   #   name: "Success notification"

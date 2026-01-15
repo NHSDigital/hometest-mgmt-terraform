@@ -117,3 +117,6 @@ venv/
 
 # Ignore Trivy cache directory
 .trivy-cache/
+
+# Ignore Terraform lock file
+.terraform.lock.hcl
