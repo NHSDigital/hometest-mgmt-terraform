@@ -132,36 +132,5 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Install pre-commit dependencies
-        working-directory: /tmp
-        with:
-          TERRAFORM_DOCS_VERSION: "0.21.0"
-        run: |
-          echo "Install terraform_docs ${{ vars.TERRAFORM_DOCS_VERSION }}"
-          curl -sL https://github.com/terraform-docs/terraform-docs/releases/download/v${{ vars.TERRAFORM_DOCS_VERSION }}/terraform-docs-v${{ vars.TERRAFORM_DOCS_VERSION }}-linux-amd64.tar.gz -O
-          tar -xf terraform-docs-v${{ vars.TERRAFORM_DOCS_VERSION }}-linux-amd64.tar.gz -C /tmp
-          sudo mv /tmp/terraform-docs /usr/bin/
-          rm -rf terraform-docs-v${{ vars.TERRAFORM_DOCS_VERSION }}-linux-amd64.tar.gz
-          terraform-docs --version
-
-          echo "Install pipx checkov"
-          sudo pipx install --global checkov
-          checkov --version
-
-      - name: Install pre-commit
-        run: |
-          whereis pre-commit
-
-          pre-commit
-
-          sudo pipx install --global pre-commit
-
-          git config --global --add safe.directory '*'
-
-          pre-commit install --install-hooks
-
-      - name: Run pre-commit
-        run: pre-commit run --all-files --show-diff-on-failure --color=always
-        env:
-          PRE_COMMIT_COLOR: always
+      - name: Run pre-commit checks
+        uses: ./.github/actions/perform-pre-commit
