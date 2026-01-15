@@ -1,0 +1,59 @@
+---
+# Framework to scan
+framework:
+  - terraform
+  - terraform_plan
+  - secrets
+
+# Output format
+output:
+  - cli
+
+# Soft fail - don't return error code on failures
+soft-fail: false
+
+# Compact output
+compact: true
+
+# Quiet mode - show only failed checks
+quiet: true
+
+# Download external modules
+download-external-modules: true
+
+# Skip directories
+skip-path:
+  - .terraform
+  - .terragrunt-cache
+  - .git
+  - node_modules
+  - "**/.terraform/**"
+  - "**/test/**"
+  - "**/tests/**"
+  - "**/examples/**"
+
+# Skip specific checks (use sparingly)
+skip-check:
+  # Example: Skip checks that may not apply to your environment
+  # - CKV_AWS_144  # S3 bucket cross-region replication
+  # - CKV_AWS_145  # S3 bucket default encryption with KMS
+  # - CKV2_AWS_62  # S3 bucket event notifications
+  # - CKV_AWS_18   # S3 bucket logging (if using centralized logging)
+  # - CKV_AWS_21   # S3 versioning (if not required)
+  # - CKV2_AWS_61  # S3 lifecycle configuration
+  # - CKV2_AWS_6   # S3 bucket public access block
+
+# Severity threshold - only fail on HIGH and CRITICAL
+hard-fail-on:
+  - CRITICAL
+  - HIGH
+
+# Evaluate variables
+evaluate-variables: true
+
+# Secrets scanning
+enable-secret-scan-all-files: true
+
+# Repo root for relative paths
+repo-root-for-plan-enrichment:
+  - infrastructure

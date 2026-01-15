@@ -1,5 +1,47 @@
 # Repository Template
 
+## Prerequistes
+
+- terraform >= v1.14
+- terragrunt >= v0.97
+- firefox
+  - containers: <https://addons.mozilla.org/en-US/firefox/addon/multi-account-containers/>
+  - aws sso containers: <https://addons.mozilla.org/en-US/firefox/addon/aws-sso-containers/>
+
+## Docs
+
+- <https://github.com/gruntwork-io/terragrunt-infrastructure-live-stacks-example/blob/main/root.hcl>
+- <https://github.com/gruntwork-io/terragrunt-infrastructure-catalog-example/blob/main/stacks/ec2-asg-stateful-service/terragrunt.stack.hcl>
+- <https://github.com/jdx/mise>
+- <https://nhsd-confluence.digital.nhs.uk/spaces/AWS/pages/592551759/AWS+Single+Sign+on+SSO+User+Access>
+- <https://nhsd-confluence.digital.nhs.uk/pages/viewpage.action?pageId=529502405&spaceKey=AWS&title=AWS%2BSingle%2BSign%2BOn#AWSSingleSignOn-Setupanewprogramme>
+
+## Init
+
+```bash
+aws configure sso
+
+# cat $AWS_CONFIG_FILE
+## cat ~/.aws/config
+
+[profile Admin-PoC]
+sso_session = nhs
+sso_account_id = 781863586270
+sso_role_name = Admin
+region = eu-west-2
+
+[sso-session nhs]
+sso_start_url = https://d-9c67018f89.awsapps.com/start/#
+sso_region = eu-west-2
+sso_registration_scopes = sso:account:access
+
+aws sso login --profile Admin-PoC
+
+export AWS_PROFILE=Admin-PoC
+```
+
+## OLD
+
 [![CI/CD Pull Request](https://github.com/nhs-england-tools/repository-template/actions/workflows/cicd-1-pull-request.yaml/badge.svg)](https://github.com/nhs-england-tools/repository-template/actions/workflows/cicd-1-pull-request.yaml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=repository-template&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=repository-template)
 
@@ -21,6 +63,10 @@ Make use of this repository template to expedite your project setup and enhance 
 ## Table of Contents
 
 - [Repository Template](#repository-template)
+  - [Prerequistes](#prerequistes)
+  - [Docs](#docs)
+  - [Init](#init)
+  - [OLD](#old)
   - [Changes comparing to repository-template](#changes-comparing-to-repository-template)
   - [Table of Contents](#table-of-contents)
   - [Setup](#setup)
