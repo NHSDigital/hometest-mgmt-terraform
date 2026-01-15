@@ -11,6 +11,7 @@ runs:
   steps:
     - name: Install pre-commit dependencies
       working-directory: /tmp
+      shell: bash
       run: |
         echo "Install terraform_docs ${{ inputs.terraform_docs_version }}"
         curl -sL https://github.com/terraform-docs/terraform-docs/releases/download/v${{ inputs.terraform_docs_version }}/terraform-docs-v${{ inputs.terraform_docs_version }}-linux-amd64.tar.gz -O
@@ -24,18 +25,17 @@ runs:
         checkov --version
 
     - name: Install pre-commit
+      shell: bash
       run: |
         whereis pre-commit
-
         pre-commit
-
         sudo pipx install --global pre-commit
-
         git config --global --add safe.directory '*'
-
         pre-commit install --install-hooks
 
     - name: Run pre-commit
-      run: pre-commit run --all-files --show-diff-on-failure --color=always
+      shell: bash
+      run: |
+        pre-commit run --all-files --show-diff-on-failure --color=always
       env:
         PRE_COMMIT_COLOR: always
