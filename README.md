@@ -62,7 +62,7 @@ Make use of this repository template to expedite your project setup and enhance 
 
 ## Changes comparing to repository-template
 
-1. gitleaks - scan only current branch
+1. Gitleaks - scan only current branch
 
 ## Table of Contents
 
