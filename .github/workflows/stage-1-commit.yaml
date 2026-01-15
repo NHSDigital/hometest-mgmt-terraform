@@ -27,10 +27,6 @@ on:
         description: "Terraform version, set by the CI/CD pipeline workflow"
         required: true
         type: string
-      terraform_docs_version:
-        description: "Terraform Docs version, set by the CI/CD pipeline workflow"
-        required: true
-        type: string
       version:
         description: "Version of the software, set by the CI/CD pipeline workflow"
         required: true
@@ -71,17 +67,18 @@ jobs:
   #         fetch-depth: 0 # Full history is needed to compare branches
   #     - name: "Check Markdown format"
   #       uses: ./.github/actions/check-markdown-format
-  check-english-usage:
-    name: "Check English usage"
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Full history is needed to compare branches
-      - name: "Check English usage"
-        uses: ./.github/actions/check-english-usage
+  # Will be migrated to pre-commit in near future
+  # check-english-usage:
+  #   name: "Check English usage"
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 2
+  #   steps:
+  #     - name: "Checkout code"
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0 # Full history is needed to compare branches
+  #     - name: "Check English usage"
+  #       uses: ./.github/actions/check-english-usage
   # Replaced by pre-commit
   # lint-terraform:
   #   name: "Lint Terraform"
@@ -138,6 +135,8 @@ jobs:
 
       - name: Install pre-commit dependencies
         working-directory: /tmp
+        with:
+          TERRAFORM_DOCS_VERSION: "0.21.0"
         run: |
           echo "Install terraform_docs ${{ vars.TERRAFORM_DOCS_VERSION }}"
           curl -sL https://github.com/terraform-docs/terraform-docs/releases/download/v${{ vars.TERRAFORM_DOCS_VERSION }}/terraform-docs-v${{ vars.TERRAFORM_DOCS_VERSION }}-linux-amd64.tar.gz -O

@@ -77,7 +77,6 @@ jobs:
       nodejs_version: "${{ needs.metadata.outputs.nodejs_version }}"
       python_version: "${{ needs.metadata.outputs.python_version }}"
       terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
-      terraform_docs_version: "0.21.0"
       version: "${{ needs.metadata.outputs.version }}"
     secrets: inherit
   test-stage: # Recommended maximum execution time is 5 minutes
