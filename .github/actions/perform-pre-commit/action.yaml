@@ -2,6 +2,7 @@
 name: "Perform pre-commit checks"
 description: "Perform pre-commit checks"
 inputs:
+
   # https://github.com/terraform-docs/terraform-docs/releases
   terraform_docs_version:
     description: "Version of terraform-docs to install"
@@ -26,6 +27,14 @@ runs:
         echo "$HOME/.local/bin" >> $GITHUB_PATH
         tfswitch
       working-directory: infrastructure/src/bootstrap/
+      shell: bash
+
+    - name: Install tgswitch
+      run: |
+        curl -L https://raw.githubusercontent.com/warrensbox/tgswitch/release/install.sh | bash | bash -s -- -b ~/.local/bin latest
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        tgswitch
+      working-directory: infrastructure/environments/poc/core/bootstrap/
       shell: bash
 
     - name: Install pre-commit dependencies
