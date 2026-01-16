@@ -17,19 +17,7 @@ resource "aws_vpc_endpoint" "s3" {
   })
 }
 
-resource "aws_vpc_endpoint" "dynamodb" {
-  vpc_id            = aws_vpc.main.id
-  service_name      = "com.amazonaws.${var.aws_region}.dynamodb"
-  vpc_endpoint_type = "Gateway"
-  route_table_ids = concat(
-    aws_route_table.private[*].id,
-    [aws_route_table.data.id]
-  )
-
-  tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-dynamodb-endpoint"
-  })
-}
+# DynamoDB not used in this deployment - only RDS PostgreSQL, Lambda, API Gateway, WAF, SQS, S3
 
 # Security Group for Interface Endpoints
 resource "aws_security_group" "vpc_endpoints" {

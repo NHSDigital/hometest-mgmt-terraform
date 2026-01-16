@@ -61,14 +61,6 @@ resource "aws_security_group" "lambda_rds" {
   }
 
   egress {
-    description = "MySQL to RDS"
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
-    cidr_blocks = local.data_subnets
-  }
-
-  egress {
     description = "HTTPS for AWS API calls"
     from_port   = 443
     to_port     = 443
@@ -104,14 +96,6 @@ resource "aws_security_group" "rds" {
     security_groups = compact([aws_security_group.lambda.id, try(aws_security_group.lambda_rds[0].id, "")])
   }
 
-  ingress {
-    description     = "MySQL from Lambda"
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = compact([aws_security_group.lambda.id, try(aws_security_group.lambda_rds[0].id, "")])
-  }
-
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-rds-sg"
   })
@@ -121,30 +105,4 @@ resource "aws_security_group" "rds" {
   }
 }
 
-################################################################################
-# Security Group for ElastiCache/Redis
-################################################################################
-
-resource "aws_security_group" "elasticache" {
-  count = var.create_elasticache_sg ? 1 : 0
-
-  name        = "${local.resource_prefix}-elasticache-sg"
-  description = "Security group for ElastiCache"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description     = "Redis from Lambda"
-    from_port       = 6379
-    to_port         = 6379
-    protocol        = "tcp"
-    security_groups = [aws_security_group.lambda.id]
-  }
-
-  tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-elasticache-sg"
-  })
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
+# ElastiCache not used in this deployment - only RDS PostgreSQL, Lambda, API Gateway, WAF, SQS, S3
