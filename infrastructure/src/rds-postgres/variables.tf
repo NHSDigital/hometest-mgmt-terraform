@@ -2,6 +2,16 @@
 # AWS Configuration
 ################################################################################
 
+variable "aws_region" {
+  description = "AWS region for resources"
+  type        = string
+}
+
+variable "aws_account_id" {
+  description = "AWS account ID"
+  type        = string
+}
+
 variable "aws_account_shortname" {
   description = "AWS account short name/alias for resource naming"
   type        = string
@@ -85,19 +95,19 @@ variable "allowed_security_group_ids" {
 variable "postgres_engine_version" {
   description = "PostgreSQL engine version"
   type        = string
-  default     = "17.2"
+  default     = "18.1"
 }
 
 variable "postgres_parameter_group_family" {
   description = "The family of the DB parameter group"
   type        = string
-  default     = "postgres17"
+  default     = "postgres18"
 }
 
 variable "postgres_major_engine_version" {
   description = "Major version of the DB engine"
   type        = string
-  default     = "17"
+  default     = "18"
 }
 
 variable "instance_class" {
@@ -216,7 +226,7 @@ variable "deletion_protection" {
 variable "enabled_cloudwatch_logs_exports" {
   description = "List of log types to enable for exporting to CloudWatch logs"
   type        = list(string)
-  default     = ["postgresql", "upgrade"]
+  default     = ["postgresql"]
 }
 
 variable "performance_insights_enabled" {

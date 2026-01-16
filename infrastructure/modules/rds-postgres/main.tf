@@ -68,7 +68,7 @@ locals {
 
 module "db" {
   source  = "terraform-aws-modules/rds/aws"
-  version = "~> 6.0"
+  version = "~> 7.1.0" # https://github.com/terraform-aws-modules/terraform-aws-rds/releases
 
   identifier = var.identifier
 
@@ -94,7 +94,6 @@ module "db" {
 
   # Password management
   manage_master_user_password = var.manage_master_user_password
-  password                    = var.manage_master_user_password ? null : var.password
 
   # Network configuration
   db_subnet_group_name   = var.db_subnet_group_name
