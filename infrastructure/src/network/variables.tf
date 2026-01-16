@@ -115,15 +115,15 @@ variable "interface_endpoints" {
     "lambda",           # Lambda service endpoint
     "execute-api",      # API Gateway
     "secretsmanager",   # Secrets Manager
-    "ssm",              # Systems Manager
-    "ssmmessages",      # SSM Messages
-    "ec2messages",      # EC2 Messages
+    # "ssm",              # Systems Manager
+    # "ssmmessages",      # SSM Messages
+    # "ec2messages",      # EC2 Messages
     "logs",             # CloudWatch Logs
     "monitoring",       # CloudWatch Monitoring
     "sqs",              # SQS
-    "sns",              # SNS
+    # "sns",              # SNS
     "kms",              # KMS
-    "sts",              # STS
+    "sts",              # STS, IAM
     "ecr.api",          # ECR API
     "ecr.dkr"           # ECR Docker Registry
   ]
@@ -147,12 +147,6 @@ variable "create_lambda_rds_sg" {
 
 variable "create_rds_sg" {
   description = "Create a security group for RDS databases"
-  type        = bool
-  default     = true
-}
-
-variable "create_elasticache_sg" {
-  description = "Create a security group for ElastiCache"
   type        = bool
   default     = true
 }
@@ -243,7 +237,7 @@ variable "tags" {
 variable "route53_zone_name" {
   description = "The domain name for the Route 53 hosted zone"
   type        = string
-  default     = "hometest.service.nhs.org"
+  default     = "hometest.service.nhs.uk"
 }
 
 variable "create_private_hosted_zone" {
