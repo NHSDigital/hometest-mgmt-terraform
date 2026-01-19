@@ -311,6 +311,50 @@ variable "health_check_request_interval" {
 }
 
 #------------------------------------------------------------------------------
+# DNS Query Logging Configuration
+#------------------------------------------------------------------------------
+
+variable "enable_dns_query_logging" {
+  description = "Enable DNS query logging for Route 53 with near real-time delivery to S3"
+  type        = bool
+  default     = true
+}
+
+variable "dns_query_logs_retention_days" {
+  description = "Number of days to retain DNS query logs in S3 before expiration"
+  type        = number
+  default     = 90
+}
+
+variable "dns_query_logs_cloudwatch_retention_days" {
+  description = "Number of days to retain DNS query logs in CloudWatch (before S3 delivery)"
+  type        = number
+  default     = 7
+}
+
+variable "dns_query_logs_buffer_size" {
+  description = "Buffer size in MB for Kinesis Firehose (1-128 MB). Smaller = more real-time"
+  type        = number
+  default     = 5
+
+  validation {
+    condition     = var.dns_query_logs_buffer_size >= 1 && var.dns_query_logs_buffer_size <= 128
+    error_message = "Buffer size must be between 1 and 128 MB."
+  }
+}
+
+variable "dns_query_logs_buffer_interval" {
+  description = "Buffer interval in seconds for Kinesis Firehose (60-900 seconds). Smaller = more real-time"
+  type        = number
+  default     = 60
+
+  validation {
+    condition     = var.dns_query_logs_buffer_interval >= 60 && var.dns_query_logs_buffer_interval <= 900
+    error_message = "Buffer interval must be between 60 and 900 seconds."
+  }
+}
+
+#------------------------------------------------------------------------------
 # WAF Configuration
 #------------------------------------------------------------------------------
 

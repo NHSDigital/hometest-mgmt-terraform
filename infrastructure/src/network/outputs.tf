@@ -136,10 +136,10 @@ output "rds_security_group_id" {
   value       = var.create_rds_sg ? aws_security_group.rds[0].id : null
 }
 
-output "elasticache_security_group_id" {
-  description = "Security group ID for ElastiCache"
-  value       = var.create_elasticache_sg ? aws_security_group.elasticache[0].id : null
-}
+# output "elasticache_security_group_id" {
+#   description = "Security group ID for ElastiCache"
+#   value       = var.create_elasticache_sg ? aws_security_group.elasticache[0].id : null
+# }
 
 output "vpc_endpoints_security_group_id" {
   description = "Security group ID for VPC Interface Endpoints"
@@ -155,10 +155,10 @@ output "s3_vpc_endpoint_id" {
   value       = aws_vpc_endpoint.s3.id
 }
 
-output "dynamodb_vpc_endpoint_id" {
-  description = "ID of the DynamoDB Gateway VPC Endpoint"
-  value       = aws_vpc_endpoint.dynamodb.id
-}
+# output "dynamodb_vpc_endpoint_id" {
+#   description = "ID of the DynamoDB Gateway VPC Endpoint"
+#   value       = aws_vpc_endpoint.dynamodb.id
+# }
 
 output "interface_vpc_endpoint_ids" {
   description = "Map of Interface VPC Endpoint IDs"
@@ -330,6 +330,69 @@ output "dnssec_enabled" {
 output "dnssec_kms_key_arn" {
   description = "The ARN of the KMS key used for DNSSEC signing"
   value       = var.enable_dnssec ? aws_kms_key.dnssec[0].arn : null
+}
+
+#------------------------------------------------------------------------------
+# DNS Query Logging Outputs
+#------------------------------------------------------------------------------
+
+output "dns_query_logging_enabled" {
+  description = "Whether DNS query logging is enabled"
+  value       = var.enable_dns_query_logging
+}
+
+output "dns_query_logs_s3_bucket_id" {
+  description = "The ID of the S3 bucket for DNS query logs"
+  value       = var.enable_dns_query_logging ? aws_s3_bucket.dns_query_logs[0].id : null
+}
+
+output "dns_query_logs_s3_bucket_arn" {
+  description = "The ARN of the S3 bucket for DNS query logs"
+  value       = var.enable_dns_query_logging ? aws_s3_bucket.dns_query_logs[0].arn : null
+}
+
+output "dns_query_logs_cloudwatch_log_group_arn" {
+  description = "The ARN of the CloudWatch Log Group for DNS query logs (us-east-1)"
+  value       = var.enable_dns_query_logging ? aws_cloudwatch_log_group.dns_query_logs[0].arn : null
+}
+
+output "dns_query_logs_firehose_arn" {
+  description = "The ARN of the Kinesis Firehose delivery stream for DNS query logs"
+  value       = var.enable_dns_query_logging ? aws_kinesis_firehose_delivery_stream.dns_query_logs[0].arn : null
+}
+
+output "dns_query_logs_kms_key_arn" {
+  description = "The ARN of the KMS key used to encrypt DNS query logs"
+  value       = var.enable_dns_query_logging ? aws_kms_key.dns_query_logs[0].arn : null
+}
+
+output "dns_query_log_config_id" {
+  description = "The ID of the Route 53 query log configuration"
+  value       = var.enable_dns_query_logging ? aws_route53_query_log.main[0].id : null
+}
+
+output "private_dns_query_log_config_id" {
+  description = "The ID of the Route 53 Resolver query log configuration for private zones"
+  value       = var.enable_dns_query_logging && var.create_private_hosted_zone ? aws_route53_resolver_query_log_config.private[0].id : null
+}
+
+output "dns_query_logging_config" {
+  description = "Summary of DNS query logging configuration"
+  value = var.enable_dns_query_logging ? {
+    enabled                = true
+    s3_bucket              = aws_s3_bucket.dns_query_logs[0].id
+    firehose_stream        = aws_kinesis_firehose_delivery_stream.dns_query_logs[0].name
+    buffer_interval_seconds = var.dns_query_logs_buffer_interval
+    buffer_size_mb         = var.dns_query_logs_buffer_size
+    retention_days         = var.dns_query_logs_retention_days
+  } : {
+    enabled                = false
+    s3_bucket              = null
+    firehose_stream        = null
+    buffer_interval_seconds = null
+    buffer_size_mb         = null
+    retention_days         = null
+  }
 }
 
 # #------------------------------------------------------------------------------
