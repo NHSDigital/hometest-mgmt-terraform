@@ -498,3 +498,233 @@ resource "aws_lambda_function" "example" {
 |------|---------|
 | terraform | >= 1.14.0 |
 | aws | ~> 6.28.0 |
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 6.28.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.28.0 |
+| <a name="provider_aws.us_east_1"></a> [aws.us\_east\_1](#provider\_aws.us\_east\_1) | ~> 6.28.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_cloudwatch_log_group.dns_query_firehose](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_group.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_group.network_firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_group.vpc_flow_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_resource_policy.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_resource_policy) | resource |
+| [aws_cloudwatch_log_stream.dns_query_firehose](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_stream) | resource |
+| [aws_cloudwatch_log_subscription_filter.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_subscription_filter) | resource |
+| [aws_db_subnet_group.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_subnet_group) | resource |
+| [aws_eip.nat](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip) | resource |
+| [aws_flow_log.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/flow_log) | resource |
+| [aws_iam_role.dns_logs_subscription](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role.dns_query_firehose](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role.vpc_flow_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy.dns_logs_subscription](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.dns_query_firehose](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.vpc_flow_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_internet_gateway.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway) | resource |
+| [aws_kinesis_firehose_delivery_stream.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kinesis_firehose_delivery_stream) | resource |
+| [aws_kms_alias.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
+| [aws_kms_alias.dnssec](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
+| [aws_kms_alias.network_firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
+| [aws_kms_alias.vpc_flow_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
+| [aws_kms_key.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_kms_key.dnssec](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_kms_key.network_firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_kms_key.vpc_flow_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_nat_gateway.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/nat_gateway) | resource |
+| [aws_network_acl.data](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_acl) | resource |
+| [aws_network_acl.private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_acl) | resource |
+| [aws_networkfirewall_firewall.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall) | resource |
+| [aws_networkfirewall_firewall_policy.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall_policy) | resource |
+| [aws_networkfirewall_logging_configuration.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_logging_configuration) | resource |
+| [aws_networkfirewall_rule_group.allow_aws_services](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_rule_group) | resource |
+| [aws_networkfirewall_rule_group.drop_all](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_rule_group) | resource |
+| [aws_networkfirewall_rule_group.egress_domain_filter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_rule_group) | resource |
+| [aws_networkfirewall_rule_group.egress_ip_filter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_rule_group) | resource |
+| [aws_route.firewall_internet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.igw_to_firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.private_nat](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.private_to_firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.public_firewall_internet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.public_firewall_private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.public_internet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route53_health_check.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_health_check) | resource |
+| [aws_route53_hosted_zone_dnssec.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_hosted_zone_dnssec) | resource |
+| [aws_route53_key_signing_key.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_key_signing_key) | resource |
+| [aws_route53_query_log.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_query_log) | resource |
+| [aws_route53_resolver_query_log_config.private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_resolver_query_log_config) | resource |
+| [aws_route53_resolver_query_log_config_association.private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_resolver_query_log_config_association) | resource |
+| [aws_route53_zone.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_zone) | resource |
+| [aws_route53_zone.private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_zone) | resource |
+| [aws_route_table.data](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
+| [aws_route_table.firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
+| [aws_route_table.igw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
+| [aws_route_table.private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
+| [aws_route_table.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
+| [aws_route_table.public_firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
+| [aws_route_table_association.data](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
+| [aws_route_table_association.firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
+| [aws_route_table_association.igw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
+| [aws_route_table_association.private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
+| [aws_route_table_association.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
+| [aws_s3_bucket.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
+| [aws_s3_bucket_lifecycle_configuration.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_lifecycle_configuration) | resource |
+| [aws_s3_bucket_policy.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
+| [aws_s3_bucket_public_access_block.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
+| [aws_s3_bucket_server_side_encryption_configuration.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
+| [aws_s3_bucket_versioning.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
+| [aws_security_group.lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_security_group.lambda_rds](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_security_group.rds](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_security_group.vpc_endpoints](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+| [aws_subnet.data](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
+| [aws_subnet.firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
+| [aws_subnet.private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
+| [aws_subnet.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
+| [aws_vpc.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) | resource |
+| [aws_vpc_endpoint.interface_endpoints](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
+| [aws_vpc_endpoint.s3](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
+| [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_acm_subject_alternative_names"></a> [acm\_subject\_alternative\_names](#input\_acm\_subject\_alternative\_names) | Additional domain names for the ACM certificate | `list(string)` | `[]` | no |
+| <a name="input_allowed_egress_domains"></a> [allowed\_egress\_domains](#input\_allowed\_egress\_domains) | List of allowed egress domains (for HTTPS/TLS traffic). Supports wildcards like '.example.com'. | `list(string)` | `[]` | no |
+| <a name="input_allowed_egress_ips"></a> [allowed\_egress\_ips](#input\_allowed\_egress\_ips) | List of allowed egress IP addresses with port and protocol. These IPs will be permitted through the firewall. | <pre>list(object({<br/>    ip          = string # IP address or CIDR (e.g., "203.0.113.10/32")<br/>    port        = string # Port number or "ANY"<br/>    protocol    = string # Protocol: TCP, UDP, or IP<br/>    description = string # Description for documentation<br/>  }))</pre> | `[]` | no |
+| <a name="input_api_gateway_allow_from_vpc"></a> [api\_gateway\_allow\_from\_vpc](#input\_api\_gateway\_allow\_from\_vpc) | Allow API Gateway access from within the VPC | `bool` | `true` | no |
+| <a name="input_api_gateway_allowed_cidrs"></a> [api\_gateway\_allowed\_cidrs](#input\_api\_gateway\_allowed\_cidrs) | CIDR blocks allowed to access API Gateway (for VPC Link) | `list(string)` | <pre>[<br/>  "0.0.0.0/0"<br/>]</pre> | no |
+| <a name="input_api_gateway_allowed_ips"></a> [api\_gateway\_allowed\_ips](#input\_api\_gateway\_allowed\_ips) | List of IP addresses allowed to access API Gateway (for resource policy) | `list(string)` | `[]` | no |
+| <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account ID for resources | `string` | n/a | yes |
+| <a name="input_aws_account_shortname"></a> [aws\_account\_shortname](#input\_aws\_account\_shortname) | AWS account short name/alias for resource naming | `string` | n/a | yes |
+| <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region for resources | `string` | n/a | yes |
+| <a name="input_az_count"></a> [az\_count](#input\_az\_count) | Number of Availability Zones to use (2-3 recommended for high availability) | `number` | `3` | no |
+| <a name="input_create_acm_certificate"></a> [create\_acm\_certificate](#input\_create\_acm\_certificate) | Create ACM certificate for the Route 53 domain | `bool` | `true` | no |
+| <a name="input_create_api_gateway_resource_policy"></a> [create\_api\_gateway\_resource\_policy](#input\_create\_api\_gateway\_resource\_policy) | Create a resource policy for API Gateway to restrict access | `bool` | `false` | no |
+| <a name="input_create_api_gateway_sg"></a> [create\_api\_gateway\_sg](#input\_create\_api\_gateway\_sg) | Create security group for API Gateway VPC Link | `bool` | `true` | no |
+| <a name="input_create_db_subnet_group"></a> [create\_db\_subnet\_group](#input\_create\_db\_subnet\_group) | Create a DB subnet group for RDS | `bool` | `true` | no |
+| <a name="input_create_health_check"></a> [create\_health\_check](#input\_create\_health\_check) | Create a Route 53 health check for the domain | `bool` | `false` | no |
+| <a name="input_create_lambda_rds_sg"></a> [create\_lambda\_rds\_sg](#input\_create\_lambda\_rds\_sg) | Create a dedicated security group for Lambda to RDS access | `bool` | `true` | no |
+| <a name="input_create_private_hosted_zone"></a> [create\_private\_hosted\_zone](#input\_create\_private\_hosted\_zone) | Create a private hosted zone associated with the VPC for internal DNS resolution | `bool` | `false` | no |
+| <a name="input_create_rds_sg"></a> [create\_rds\_sg](#input\_create\_rds\_sg) | Create a security group for RDS databases | `bool` | `true` | no |
+| <a name="input_create_vpc_link"></a> [create\_vpc\_link](#input\_create\_vpc\_link) | Create VPC Link for private API Gateway integration with Lambda | `bool` | `true` | no |
+| <a name="input_create_waf"></a> [create\_waf](#input\_create\_waf) | Create AWS WAF Web ACL for API Gateway protection | `bool` | `true` | no |
+| <a name="input_dns_query_logs_buffer_interval"></a> [dns\_query\_logs\_buffer\_interval](#input\_dns\_query\_logs\_buffer\_interval) | Buffer interval in seconds for Kinesis Firehose (60-900 seconds). Smaller = more real-time | `number` | `60` | no |
+| <a name="input_dns_query_logs_buffer_size"></a> [dns\_query\_logs\_buffer\_size](#input\_dns\_query\_logs\_buffer\_size) | Buffer size in MB for Kinesis Firehose (1-128 MB). Smaller = more real-time | `number` | `5` | no |
+| <a name="input_dns_query_logs_cloudwatch_retention_days"></a> [dns\_query\_logs\_cloudwatch\_retention\_days](#input\_dns\_query\_logs\_cloudwatch\_retention\_days) | Number of days to retain DNS query logs in CloudWatch (before S3 delivery) | `number` | `7` | no |
+| <a name="input_dns_query_logs_retention_days"></a> [dns\_query\_logs\_retention\_days](#input\_dns\_query\_logs\_retention\_days) | Number of days to retain DNS query logs in S3 before expiration | `number` | `90` | no |
+| <a name="input_enable_dns_query_logging"></a> [enable\_dns\_query\_logging](#input\_enable\_dns\_query\_logging) | Enable DNS query logging for Route 53 with near real-time delivery to S3 | `bool` | `true` | no |
+| <a name="input_enable_dnssec"></a> [enable\_dnssec](#input\_enable\_dnssec) | Enable DNSSEC signing for the hosted zone (recommended for security) | `bool` | `false` | no |
+| <a name="input_enable_interface_endpoints"></a> [enable\_interface\_endpoints](#input\_enable\_interface\_endpoints) | Enable VPC Interface Endpoints for AWS services (incurs costs) | `bool` | `true` | no |
+| <a name="input_enable_ipv6"></a> [enable\_ipv6](#input\_enable\_ipv6) | Enable IPv6 CIDR block assignment for the VPC (dual-stack) | `bool` | `false` | no |
+| <a name="input_enable_network_firewall"></a> [enable\_network\_firewall](#input\_enable\_network\_firewall) | Enable AWS Network Firewall for egress filtering and deep packet inspection | `bool` | `false` | no |
+| <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., mgmt, dev, staging, prod) | `string` | n/a | yes |
+| <a name="input_firewall_default_deny"></a> [firewall\_default\_deny](#input\_firewall\_default\_deny) | Enable default deny rule - drops all traffic not explicitly allowed. CAUTION: Ensure all required destinations are in allowed lists before enabling. | `bool` | `true` | no |
+| <a name="input_firewall_logs_retention_days"></a> [firewall\_logs\_retention\_days](#input\_firewall\_logs\_retention\_days) | Number of days to retain Network Firewall logs in CloudWatch | `number` | `90` | no |
+| <a name="input_flow_logs_retention_days"></a> [flow\_logs\_retention\_days](#input\_flow\_logs\_retention\_days) | Number of days to retain VPC Flow Logs in CloudWatch | `number` | `90` | no |
+| <a name="input_health_check_failure_threshold"></a> [health\_check\_failure\_threshold](#input\_health\_check\_failure\_threshold) | The number of consecutive health check failures required before considering the endpoint unhealthy | `number` | `3` | no |
+| <a name="input_health_check_fqdn"></a> [health\_check\_fqdn](#input\_health\_check\_fqdn) | The FQDN to health check (defaults to route53\_zone\_name if not specified) | `string` | `""` | no |
+| <a name="input_health_check_path"></a> [health\_check\_path](#input\_health\_check\_path) | The path for HTTP/HTTPS health checks | `string` | `"/health"` | no |
+| <a name="input_health_check_port"></a> [health\_check\_port](#input\_health\_check\_port) | The port for the health check | `number` | `443` | no |
+| <a name="input_health_check_request_interval"></a> [health\_check\_request\_interval](#input\_health\_check\_request\_interval) | The number of seconds between health checks (10 or 30) | `number` | `30` | no |
+| <a name="input_health_check_type"></a> [health\_check\_type](#input\_health\_check\_type) | The type of health check (HTTP, HTTPS, HTTP\_STR\_MATCH, HTTPS\_STR\_MATCH, TCP) | `string` | `"HTTPS"` | no |
+| <a name="input_interface_endpoints"></a> [interface\_endpoints](#input\_interface\_endpoints) | List of AWS services to create Interface VPC Endpoints for | `list(string)` | <pre>[<br/>  "lambda",<br/>  "execute-api",<br/>  "secretsmanager",<br/>  "logs",<br/>  "monitoring",<br/>  "sqs",<br/>  "kms",<br/>  "sts",<br/>  "ecr.api",<br/>  "ecr.dkr"<br/>]</pre> | no |
+| <a name="input_private_zone_name"></a> [private\_zone\_name](#input\_private\_zone\_name) | The domain name for the private hosted zone (defaults to route53\_zone\_name if not specified) | `string` | `""` | no |
+| <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Project name used for resource naming | `string` | n/a | yes |
+| <a name="input_route53_zone_name"></a> [route53\_zone\_name](#input\_route53\_zone\_name) | The domain name for the Route 53 hosted zone | `string` | `"hometest.service.nhs.uk"` | no |
+| <a name="input_single_nat_gateway"></a> [single\_nat\_gateway](#input\_single\_nat\_gateway) | Use a single NAT Gateway for all AZs (cost savings, but less HA). Set to false for production. | `bool` | `false` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Additional tags to apply to all resources | `map(string)` | `{}` | no |
+| <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | CIDR block for the VPC. Recommended /16 for full subnet allocation. | `string` | `"10.0.0.0/16"` | no |
+| <a name="input_waf_allowed_countries"></a> [waf\_allowed\_countries](#input\_waf\_allowed\_countries) | List of allowed country codes (ISO 3166-1 alpha-2). Empty list allows all countries. | `list(string)` | `[]` | no |
+| <a name="input_waf_block_anonymous_ips"></a> [waf\_block\_anonymous\_ips](#input\_waf\_block\_anonymous\_ips) | Block requests from VPNs, Tor, proxies, and hosting providers | `bool` | `false` | no |
+| <a name="input_waf_common_rules_excluded"></a> [waf\_common\_rules\_excluded](#input\_waf\_common\_rules\_excluded) | List of AWS managed common rules to set to COUNT instead of BLOCK (for tuning) | `list(string)` | `[]` | no |
+| <a name="input_waf_ip_allowlist"></a> [waf\_ip\_allowlist](#input\_waf\_ip\_allowlist) | List of IP addresses/CIDRs to allow (when waf\_ip\_allowlist\_enabled is true) | `list(string)` | `[]` | no |
+| <a name="input_waf_ip_allowlist_enabled"></a> [waf\_ip\_allowlist\_enabled](#input\_waf\_ip\_allowlist\_enabled) | Enable IP allowlist - only allow specific IP addresses | `bool` | `false` | no |
+| <a name="input_waf_logs_retention_days"></a> [waf\_logs\_retention\_days](#input\_waf\_logs\_retention\_days) | Number of days to retain WAF logs | `number` | `90` | no |
+| <a name="input_waf_rate_limit"></a> [waf\_rate\_limit](#input\_waf\_rate\_limit) | Maximum requests per 5-minute period per IP before blocking (DDoS protection) | `number` | `2000` | no |
+| <a name="input_waf_scope"></a> [waf\_scope](#input\_waf\_scope) | WAF scope - REGIONAL for API Gateway/ALB, CLOUDFRONT for CloudFront | `string` | `"REGIONAL"` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_availability_zones"></a> [availability\_zones](#output\_availability\_zones) | List of availability zones used |
+| <a name="output_data_nacl_id"></a> [data\_nacl\_id](#output\_data\_nacl\_id) | ID of the data subnet Network ACL |
+| <a name="output_data_route_table_id"></a> [data\_route\_table\_id](#output\_data\_route\_table\_id) | ID of the data route table |
+| <a name="output_data_subnet_arns"></a> [data\_subnet\_arns](#output\_data\_subnet\_arns) | List of data/database subnet ARNs |
+| <a name="output_data_subnet_cidrs"></a> [data\_subnet\_cidrs](#output\_data\_subnet\_cidrs) | List of data/database subnet CIDR blocks |
+| <a name="output_data_subnet_ids"></a> [data\_subnet\_ids](#output\_data\_subnet\_ids) | List of data/database subnet IDs |
+| <a name="output_db_subnet_group_arn"></a> [db\_subnet\_group\_arn](#output\_db\_subnet\_group\_arn) | ARN of the DB subnet group |
+| <a name="output_db_subnet_group_name"></a> [db\_subnet\_group\_name](#output\_db\_subnet\_group\_name) | Name of the DB subnet group |
+| <a name="output_dns_query_log_config_id"></a> [dns\_query\_log\_config\_id](#output\_dns\_query\_log\_config\_id) | The ID of the Route 53 query log configuration |
+| <a name="output_dns_query_logging_config"></a> [dns\_query\_logging\_config](#output\_dns\_query\_logging\_config) | Summary of DNS query logging configuration |
+| <a name="output_dns_query_logging_enabled"></a> [dns\_query\_logging\_enabled](#output\_dns\_query\_logging\_enabled) | Whether DNS query logging is enabled |
+| <a name="output_dns_query_logs_cloudwatch_log_group_arn"></a> [dns\_query\_logs\_cloudwatch\_log\_group\_arn](#output\_dns\_query\_logs\_cloudwatch\_log\_group\_arn) | The ARN of the CloudWatch Log Group for DNS query logs (us-east-1) |
+| <a name="output_dns_query_logs_firehose_arn"></a> [dns\_query\_logs\_firehose\_arn](#output\_dns\_query\_logs\_firehose\_arn) | The ARN of the Kinesis Firehose delivery stream for DNS query logs |
+| <a name="output_dns_query_logs_kms_key_arn"></a> [dns\_query\_logs\_kms\_key\_arn](#output\_dns\_query\_logs\_kms\_key\_arn) | The ARN of the KMS key used to encrypt DNS query logs |
+| <a name="output_dns_query_logs_s3_bucket_arn"></a> [dns\_query\_logs\_s3\_bucket\_arn](#output\_dns\_query\_logs\_s3\_bucket\_arn) | The ARN of the S3 bucket for DNS query logs |
+| <a name="output_dns_query_logs_s3_bucket_id"></a> [dns\_query\_logs\_s3\_bucket\_id](#output\_dns\_query\_logs\_s3\_bucket\_id) | The ID of the S3 bucket for DNS query logs |
+| <a name="output_dnssec_enabled"></a> [dnssec\_enabled](#output\_dnssec\_enabled) | Whether DNSSEC is enabled for the hosted zone |
+| <a name="output_dnssec_kms_key_arn"></a> [dnssec\_kms\_key\_arn](#output\_dnssec\_kms\_key\_arn) | The ARN of the KMS key used for DNSSEC signing |
+| <a name="output_egress_filtering_config"></a> [egress\_filtering\_config](#output\_egress\_filtering\_config) | Summary of egress filtering configuration |
+| <a name="output_firewall_subnet_ids"></a> [firewall\_subnet\_ids](#output\_firewall\_subnet\_ids) | List of firewall subnet IDs |
+| <a name="output_interface_vpc_endpoint_ids"></a> [interface\_vpc\_endpoint\_ids](#output\_interface\_vpc\_endpoint\_ids) | Map of Interface VPC Endpoint IDs |
+| <a name="output_lambda_rds_security_group_id"></a> [lambda\_rds\_security\_group\_id](#output\_lambda\_rds\_security\_group\_id) | Security group ID for Lambda functions accessing RDS |
+| <a name="output_lambda_security_group_arn"></a> [lambda\_security\_group\_arn](#output\_lambda\_security\_group\_arn) | Security group ARN for Lambda functions |
+| <a name="output_lambda_security_group_id"></a> [lambda\_security\_group\_id](#output\_lambda\_security\_group\_id) | Security group ID for Lambda functions (use for Lambda VPC configuration) |
+| <a name="output_lambda_vpc_config"></a> [lambda\_vpc\_config](#output\_lambda\_vpc\_config) | VPC configuration for Lambda functions (ready to use) |
+| <a name="output_nat_gateway_ids"></a> [nat\_gateway\_ids](#output\_nat\_gateway\_ids) | List of NAT Gateway IDs |
+| <a name="output_nat_gateway_public_ips"></a> [nat\_gateway\_public\_ips](#output\_nat\_gateway\_public\_ips) | List of NAT Gateway public IP addresses |
+| <a name="output_network_firewall_arn"></a> [network\_firewall\_arn](#output\_network\_firewall\_arn) | ARN of the Network Firewall |
+| <a name="output_network_firewall_enabled"></a> [network\_firewall\_enabled](#output\_network\_firewall\_enabled) | Whether Network Firewall is enabled |
+| <a name="output_network_firewall_endpoint_ids"></a> [network\_firewall\_endpoint\_ids](#output\_network\_firewall\_endpoint\_ids) | Map of AZ to Network Firewall endpoint IDs |
+| <a name="output_network_firewall_id"></a> [network\_firewall\_id](#output\_network\_firewall\_id) | ID of the Network Firewall |
+| <a name="output_network_firewall_kms_key_arn"></a> [network\_firewall\_kms\_key\_arn](#output\_network\_firewall\_kms\_key\_arn) | ARN of the KMS key used to encrypt Network Firewall logs |
+| <a name="output_network_firewall_log_group_arn"></a> [network\_firewall\_log\_group\_arn](#output\_network\_firewall\_log\_group\_arn) | ARN of the CloudWatch Log Group for Network Firewall logs |
+| <a name="output_network_firewall_policy_arn"></a> [network\_firewall\_policy\_arn](#output\_network\_firewall\_policy\_arn) | ARN of the Network Firewall Policy |
+| <a name="output_private_dns_query_log_config_id"></a> [private\_dns\_query\_log\_config\_id](#output\_private\_dns\_query\_log\_config\_id) | The ID of the Route 53 Resolver query log configuration for private zones |
+| <a name="output_private_nacl_id"></a> [private\_nacl\_id](#output\_private\_nacl\_id) | ID of the private subnet Network ACL |
+| <a name="output_private_route_table_ids"></a> [private\_route\_table\_ids](#output\_private\_route\_table\_ids) | List of private route table IDs |
+| <a name="output_private_subnet_arns"></a> [private\_subnet\_arns](#output\_private\_subnet\_arns) | List of private subnet ARNs |
+| <a name="output_private_subnet_cidrs"></a> [private\_subnet\_cidrs](#output\_private\_subnet\_cidrs) | List of private subnet CIDR blocks |
+| <a name="output_private_subnet_ids"></a> [private\_subnet\_ids](#output\_private\_subnet\_ids) | List of private subnet IDs (use for Lambda VPC configuration) |
+| <a name="output_public_route_table_id"></a> [public\_route\_table\_id](#output\_public\_route\_table\_id) | ID of the public route table |
+| <a name="output_public_subnet_arns"></a> [public\_subnet\_arns](#output\_public\_subnet\_arns) | List of public subnet ARNs |
+| <a name="output_public_subnet_cidrs"></a> [public\_subnet\_cidrs](#output\_public\_subnet\_cidrs) | List of public subnet CIDR blocks |
+| <a name="output_public_subnet_ids"></a> [public\_subnet\_ids](#output\_public\_subnet\_ids) | List of public subnet IDs |
+| <a name="output_rds_security_group_id"></a> [rds\_security\_group\_id](#output\_rds\_security\_group\_id) | Security group ID for RDS databases |
+| <a name="output_route53_health_check_id"></a> [route53\_health\_check\_id](#output\_route53\_health\_check\_id) | The ID of the Route 53 health check |
+| <a name="output_route53_name_servers"></a> [route53\_name\_servers](#output\_route53\_name\_servers) | The name servers for the Route 53 hosted zone (delegate to these from parent domain) |
+| <a name="output_route53_private_zone_arn"></a> [route53\_private\_zone\_arn](#output\_route53\_private\_zone\_arn) | The ARN of the private Route 53 hosted zone |
+| <a name="output_route53_private_zone_id"></a> [route53\_private\_zone\_id](#output\_route53\_private\_zone\_id) | The ID of the private Route 53 hosted zone |
+| <a name="output_route53_zone_arn"></a> [route53\_zone\_arn](#output\_route53\_zone\_arn) | The ARN of the Route 53 hosted zone |
+| <a name="output_route53_zone_id"></a> [route53\_zone\_id](#output\_route53\_zone\_id) | The ID of the Route 53 hosted zone |
+| <a name="output_route53_zone_name"></a> [route53\_zone\_name](#output\_route53\_zone\_name) | The name of the Route 53 hosted zone |
+| <a name="output_s3_vpc_endpoint_id"></a> [s3\_vpc\_endpoint\_id](#output\_s3\_vpc\_endpoint\_id) | ID of the S3 Gateway VPC Endpoint |
+| <a name="output_vpc_arn"></a> [vpc\_arn](#output\_vpc\_arn) | The ARN of the VPC |
+| <a name="output_vpc_cidr_block"></a> [vpc\_cidr\_block](#output\_vpc\_cidr\_block) | The CIDR block of the VPC |
+| <a name="output_vpc_endpoints_security_group_id"></a> [vpc\_endpoints\_security\_group\_id](#output\_vpc\_endpoints\_security\_group\_id) | Security group ID for VPC Interface Endpoints |
+| <a name="output_vpc_flow_log_group_arn"></a> [vpc\_flow\_log\_group\_arn](#output\_vpc\_flow\_log\_group\_arn) | ARN of the CloudWatch Log Group for VPC Flow Logs |
+| <a name="output_vpc_flow_log_id"></a> [vpc\_flow\_log\_id](#output\_vpc\_flow\_log\_id) | ID of the VPC Flow Log |
+| <a name="output_vpc_flow_log_kms_key_arn"></a> [vpc\_flow\_log\_kms\_key\_arn](#output\_vpc\_flow\_log\_kms\_key\_arn) | ARN of the KMS key used to encrypt VPC Flow Logs |
+| <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | The ID of the VPC |
+<!-- END_TF_DOCS -->

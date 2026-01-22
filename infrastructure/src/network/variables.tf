@@ -112,20 +112,20 @@ variable "interface_endpoints" {
   description = "List of AWS services to create Interface VPC Endpoints for"
   type        = list(string)
   default = [
-    "lambda",           # Lambda service endpoint
-    "execute-api",      # API Gateway
-    "secretsmanager",   # Secrets Manager
+    "lambda",         # Lambda service endpoint
+    "execute-api",    # API Gateway
+    "secretsmanager", # Secrets Manager
     # "ssm",              # Systems Manager
     # "ssmmessages",      # SSM Messages
     # "ec2messages",      # EC2 Messages
-    "logs",             # CloudWatch Logs
-    "monitoring",       # CloudWatch Monitoring
-    "sqs",              # SQS
+    "logs",       # CloudWatch Logs
+    "monitoring", # CloudWatch Monitoring
+    "sqs",        # SQS
     # "sns",              # SNS
-    "kms",              # KMS
-    "sts",              # STS, IAM
-    "ecr.api",          # ECR API
-    "ecr.dkr"           # ECR Docker Registry
+    "kms",     # KMS
+    "sts",     # STS, IAM
+    "ecr.api", # ECR API
+    "ecr.dkr"  # ECR Docker Registry
   ]
 }
 
@@ -181,10 +181,10 @@ variable "firewall_default_deny" {
 variable "allowed_egress_ips" {
   description = "List of allowed egress IP addresses with port and protocol. These IPs will be permitted through the firewall."
   type = list(object({
-    ip          = string      # IP address or CIDR (e.g., "203.0.113.10/32")
-    port        = string      # Port number or "ANY"
-    protocol    = string      # Protocol: TCP, UDP, or IP
-    description = string      # Description for documentation
+    ip          = string # IP address or CIDR (e.g., "203.0.113.10/32")
+    port        = string # Port number or "ANY"
+    protocol    = string # Protocol: TCP, UDP, or IP
+    description = string # Description for documentation
   }))
   default = []
 
