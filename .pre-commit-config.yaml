@@ -46,6 +46,7 @@ repos:
         files: ^infrastructure/src
         args:
           - --args=--config=__GIT_WORKING_DIR__/trivy.yaml
+          - --args=--skip-dirs=.external_modules
 
       - id: terragrunt_validate_inputs
         name: Terragrunt validate inputs
