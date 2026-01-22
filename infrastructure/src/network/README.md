@@ -608,26 +608,17 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_acm_subject_alternative_names"></a> [acm\_subject\_alternative\_names](#input\_acm\_subject\_alternative\_names) | Additional domain names for the ACM certificate | `list(string)` | `[]` | no |
 | <a name="input_allowed_egress_domains"></a> [allowed\_egress\_domains](#input\_allowed\_egress\_domains) | List of allowed egress domains (for HTTPS/TLS traffic). Supports wildcards like '.example.com'. | `list(string)` | `[]` | no |
 | <a name="input_allowed_egress_ips"></a> [allowed\_egress\_ips](#input\_allowed\_egress\_ips) | List of allowed egress IP addresses with port and protocol. These IPs will be permitted through the firewall. | <pre>list(object({<br/>    ip          = string # IP address or CIDR (e.g., "203.0.113.10/32")<br/>    port        = string # Port number or "ANY"<br/>    protocol    = string # Protocol: TCP, UDP, or IP<br/>    description = string # Description for documentation<br/>  }))</pre> | `[]` | no |
-| <a name="input_api_gateway_allow_from_vpc"></a> [api\_gateway\_allow\_from\_vpc](#input\_api\_gateway\_allow\_from\_vpc) | Allow API Gateway access from within the VPC | `bool` | `true` | no |
-| <a name="input_api_gateway_allowed_cidrs"></a> [api\_gateway\_allowed\_cidrs](#input\_api\_gateway\_allowed\_cidrs) | CIDR blocks allowed to access API Gateway (for VPC Link) | `list(string)` | <pre>[<br/>  "0.0.0.0/0"<br/>]</pre> | no |
-| <a name="input_api_gateway_allowed_ips"></a> [api\_gateway\_allowed\_ips](#input\_api\_gateway\_allowed\_ips) | List of IP addresses allowed to access API Gateway (for resource policy) | `list(string)` | `[]` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account ID for resources | `string` | n/a | yes |
 | <a name="input_aws_account_shortname"></a> [aws\_account\_shortname](#input\_aws\_account\_shortname) | AWS account short name/alias for resource naming | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region for resources | `string` | n/a | yes |
 | <a name="input_az_count"></a> [az\_count](#input\_az\_count) | Number of Availability Zones to use (2-3 recommended for high availability) | `number` | `3` | no |
-| <a name="input_create_acm_certificate"></a> [create\_acm\_certificate](#input\_create\_acm\_certificate) | Create ACM certificate for the Route 53 domain | `bool` | `true` | no |
-| <a name="input_create_api_gateway_resource_policy"></a> [create\_api\_gateway\_resource\_policy](#input\_create\_api\_gateway\_resource\_policy) | Create a resource policy for API Gateway to restrict access | `bool` | `false` | no |
-| <a name="input_create_api_gateway_sg"></a> [create\_api\_gateway\_sg](#input\_create\_api\_gateway\_sg) | Create security group for API Gateway VPC Link | `bool` | `true` | no |
 | <a name="input_create_db_subnet_group"></a> [create\_db\_subnet\_group](#input\_create\_db\_subnet\_group) | Create a DB subnet group for RDS | `bool` | `true` | no |
 | <a name="input_create_health_check"></a> [create\_health\_check](#input\_create\_health\_check) | Create a Route 53 health check for the domain | `bool` | `false` | no |
 | <a name="input_create_lambda_rds_sg"></a> [create\_lambda\_rds\_sg](#input\_create\_lambda\_rds\_sg) | Create a dedicated security group for Lambda to RDS access | `bool` | `true` | no |
 | <a name="input_create_private_hosted_zone"></a> [create\_private\_hosted\_zone](#input\_create\_private\_hosted\_zone) | Create a private hosted zone associated with the VPC for internal DNS resolution | `bool` | `false` | no |
 | <a name="input_create_rds_sg"></a> [create\_rds\_sg](#input\_create\_rds\_sg) | Create a security group for RDS databases | `bool` | `true` | no |
-| <a name="input_create_vpc_link"></a> [create\_vpc\_link](#input\_create\_vpc\_link) | Create VPC Link for private API Gateway integration with Lambda | `bool` | `true` | no |
-| <a name="input_create_waf"></a> [create\_waf](#input\_create\_waf) | Create AWS WAF Web ACL for API Gateway protection | `bool` | `true` | no |
 | <a name="input_dns_query_logs_buffer_interval"></a> [dns\_query\_logs\_buffer\_interval](#input\_dns\_query\_logs\_buffer\_interval) | Buffer interval in seconds for Kinesis Firehose (60-900 seconds). Smaller = more real-time | `number` | `60` | no |
 | <a name="input_dns_query_logs_buffer_size"></a> [dns\_query\_logs\_buffer\_size](#input\_dns\_query\_logs\_buffer\_size) | Buffer size in MB for Kinesis Firehose (1-128 MB). Smaller = more real-time | `number` | `5` | no |
 | <a name="input_dns_query_logs_cloudwatch_retention_days"></a> [dns\_query\_logs\_cloudwatch\_retention\_days](#input\_dns\_query\_logs\_cloudwatch\_retention\_days) | Number of days to retain DNS query logs in CloudWatch (before S3 delivery) | `number` | `7` | no |
@@ -654,14 +645,6 @@ No modules.
 | <a name="input_single_nat_gateway"></a> [single\_nat\_gateway](#input\_single\_nat\_gateway) | Use a single NAT Gateway for all AZs (cost savings, but less HA). Set to false for production. | `bool` | `false` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags to apply to all resources | `map(string)` | `{}` | no |
 | <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | CIDR block for the VPC. Recommended /16 for full subnet allocation. | `string` | `"10.0.0.0/16"` | no |
-| <a name="input_waf_allowed_countries"></a> [waf\_allowed\_countries](#input\_waf\_allowed\_countries) | List of allowed country codes (ISO 3166-1 alpha-2). Empty list allows all countries. | `list(string)` | `[]` | no |
-| <a name="input_waf_block_anonymous_ips"></a> [waf\_block\_anonymous\_ips](#input\_waf\_block\_anonymous\_ips) | Block requests from VPNs, Tor, proxies, and hosting providers | `bool` | `false` | no |
-| <a name="input_waf_common_rules_excluded"></a> [waf\_common\_rules\_excluded](#input\_waf\_common\_rules\_excluded) | List of AWS managed common rules to set to COUNT instead of BLOCK (for tuning) | `list(string)` | `[]` | no |
-| <a name="input_waf_ip_allowlist"></a> [waf\_ip\_allowlist](#input\_waf\_ip\_allowlist) | List of IP addresses/CIDRs to allow (when waf\_ip\_allowlist\_enabled is true) | `list(string)` | `[]` | no |
-| <a name="input_waf_ip_allowlist_enabled"></a> [waf\_ip\_allowlist\_enabled](#input\_waf\_ip\_allowlist\_enabled) | Enable IP allowlist - only allow specific IP addresses | `bool` | `false` | no |
-| <a name="input_waf_logs_retention_days"></a> [waf\_logs\_retention\_days](#input\_waf\_logs\_retention\_days) | Number of days to retain WAF logs | `number` | `90` | no |
-| <a name="input_waf_rate_limit"></a> [waf\_rate\_limit](#input\_waf\_rate\_limit) | Maximum requests per 5-minute period per IP before blocking (DDoS protection) | `number` | `2000` | no |
-| <a name="input_waf_scope"></a> [waf\_scope](#input\_waf\_scope) | WAF scope - REGIONAL for API Gateway/ALB, CLOUDFRONT for CloudFront | `string` | `"REGIONAL"` | no |
 
 ## Outputs
 

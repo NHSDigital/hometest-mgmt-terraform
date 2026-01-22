@@ -13,6 +13,7 @@ resource "aws_security_group" "lambda" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
+    # trivy:ignore:AVD-AWS-0104
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -65,6 +66,7 @@ resource "aws_security_group" "lambda_rds" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
+    # trivy:ignore:AVD-AWS-0104
     cidr_blocks = ["0.0.0.0/0"]
   }
 

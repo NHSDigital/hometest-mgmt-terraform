@@ -67,7 +67,7 @@ resource "aws_networkfirewall_rule_group" "egress_ip_filter" {
           }
           rule_option {
             keyword  = "sid"
-            settings = ["${stateful_rule.key + 1}"]
+            settings = [stateful_rule.key + 1]
           }
         }
       }
