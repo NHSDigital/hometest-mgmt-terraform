@@ -14,15 +14,15 @@ repos:
       - id: detect-private-key
       - id: check-executables-have-shebangs
 
-  # - repo: https://github.com/adrienverge/yamllint
-  #   rev: v1.38.0
-  #   hooks:
-  #     - id: yamllint
-  #       name: yamllint
-  #       description: This hook runs yamllint.
-  #       entry: yamllint
-  #       language: python
-  #       types: [file, yaml]
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        name: yamllint
+        description: This hook runs yamllint.
+        entry: yamllint
+        language: python
+        types: [file, yaml]
 
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.105.0

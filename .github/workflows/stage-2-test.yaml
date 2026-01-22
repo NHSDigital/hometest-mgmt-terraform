@@ -1,3 +1,4 @@
+---
 name: "Test stage"
 
 on:
@@ -85,7 +86,7 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0 # Full history is needed to improving relevancy of reporting
+          fetch-depth: 0  # Full history is needed to improving relevancy of reporting
       - name: "Perform static analysis"
         uses: ./.github/actions/perform-static-analysis
         with:

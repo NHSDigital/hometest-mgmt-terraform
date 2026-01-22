@@ -5,3 +5,4 @@ rules:
   line-length: disable
   document-start:
     level: error
+  truthy: false

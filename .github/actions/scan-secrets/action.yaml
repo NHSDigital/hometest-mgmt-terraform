@@ -1,3 +1,4 @@
+---
 name: "Scan secrets"
 description: "Scan secrets"
 runs:
