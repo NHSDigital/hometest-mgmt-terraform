@@ -271,15 +271,15 @@ output "network_firewall_kms_key_arn" {
 output "egress_filtering_config" {
   description = "Summary of egress filtering configuration"
   value = var.enable_network_firewall ? {
-    firewall_enabled   = true
-    default_deny       = var.firewall_default_deny
-    allowed_ips_count  = length(var.allowed_egress_ips)
-    allowed_domains    = var.allowed_egress_domains
-  } : {
-    firewall_enabled   = false
-    default_deny       = false
-    allowed_ips_count  = 0
-    allowed_domains    = []
+    firewall_enabled  = true
+    default_deny      = var.firewall_default_deny
+    allowed_ips_count = length(var.allowed_egress_ips)
+    allowed_domains   = var.allowed_egress_domains
+    } : {
+    firewall_enabled  = false
+    default_deny      = false
+    allowed_ips_count = 0
+    allowed_domains   = []
   }
 }
 
@@ -379,19 +379,19 @@ output "private_dns_query_log_config_id" {
 output "dns_query_logging_config" {
   description = "Summary of DNS query logging configuration"
   value = var.enable_dns_query_logging ? {
-    enabled                = true
-    s3_bucket              = aws_s3_bucket.dns_query_logs[0].id
-    firehose_stream        = aws_kinesis_firehose_delivery_stream.dns_query_logs[0].name
+    enabled                 = true
+    s3_bucket               = aws_s3_bucket.dns_query_logs[0].id
+    firehose_stream         = aws_kinesis_firehose_delivery_stream.dns_query_logs[0].name
     buffer_interval_seconds = var.dns_query_logs_buffer_interval
-    buffer_size_mb         = var.dns_query_logs_buffer_size
-    retention_days         = var.dns_query_logs_retention_days
-  } : {
-    enabled                = false
-    s3_bucket              = null
-    firehose_stream        = null
+    buffer_size_mb          = var.dns_query_logs_buffer_size
+    retention_days          = var.dns_query_logs_retention_days
+    } : {
+    enabled                 = false
+    s3_bucket               = null
+    firehose_stream         = null
     buffer_interval_seconds = null
-    buffer_size_mb         = null
-    retention_days         = null
+    buffer_size_mb          = null
+    retention_days          = null
   }
 }
 
