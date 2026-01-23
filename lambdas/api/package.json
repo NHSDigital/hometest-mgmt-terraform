@@ -1,0 +1,16 @@
+{
+  "name": "hometest-api",
+  "version": "1.0.0",
+  "description": "HomeTest API Lambda function",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest"
+  },
+  "keywords": ["hometest", "api", "lambda"],
+  "author": "NHS Digital Platform Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
