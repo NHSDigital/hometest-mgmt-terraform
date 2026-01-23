@@ -76,12 +76,7 @@ resource "aws_lambda_function" "main" {
 
   # Code signing configuration (optional)
   # checkov:skip=CKV_AWS_272: Code signing requires AWS Signer profile - configurable via code_signing_config_arn variable
-  dynamic "code_signing_config" {
-    for_each = var.code_signing_config_arn != "" ? [1] : []
-    content {
-      config_arn = var.code_signing_config_arn
-    }
-  }
+  code_signing_config_arn = var.code_signing_config_arn != "" ? var.code_signing_config_arn : null
 
   tags = merge(local.common_tags, {
     Name = local.lambda_name
