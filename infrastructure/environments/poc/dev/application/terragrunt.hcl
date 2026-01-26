@@ -19,8 +19,8 @@ dependency "network" {
     private_subnet_ids       = ["subnet-mock-1", "subnet-mock-2", "subnet-mock-3"]
     lambda_security_group_id = "sg-mock"
   }
-  mock_outputs_merge_strategy_with_state  = "shallow"
-  mock_outputs_allowed_terraform_commands = ["validate", "plan", "apply", "destroy"]
+  mock_outputs_merge_strategy_with_state = "shallow"
+  # mock_outputs_allowed_terraform_commands = ["validate", "plan", "apply", "destroy"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

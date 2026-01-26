@@ -24,6 +24,9 @@ AWS_PROFILE ?= Admin-PoC
 
 .PHONY: tf-init tf-plan tf-apply tf-destroy tf-output
 
+# Export AWS_PROFILE for Terraform/Terragrunt
+export AWS_PROFILE
+
 tf-init: ## Initialize Terragrunt for all modules in an environment @Infrastructure
 	@echo "🔧 Initializing Terragrunt for $(ENV) environment..."
 	cd $(INFRA_DIR)/$(ENV) && terragrunt run --all init --no-color
@@ -196,7 +199,7 @@ publish: upload-lambda ## Publish the project artefact @Pipeline
 
 deploy: tf-apply ## Deploy the project artefact to the target environment @Pipeline
 
-clean:: ## Clean-up project resources (main) @Operations
+tf-clean: ## Clean-up Terraform/Terragrunt caches @Operations
 	@echo "🧹 Cleaning up..."
 	rm -rf $(ARTIFACTS_DIR)/*.zip
 	find $(INFRA_DIR) -name ".terragrunt-cache" -type d -exec rm -rf {} + 2>/dev/null || true

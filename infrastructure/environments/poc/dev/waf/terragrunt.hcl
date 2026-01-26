@@ -18,8 +18,8 @@ dependency "api_gateway" {
   mock_outputs = {
     stage_arn = "arn:aws:apigateway:eu-west-2::/restapis/mock-api-id/stages/v1"
   }
-  mock_outputs_merge_strategy_with_state  = "shallow"
-  mock_outputs_allowed_terraform_commands = ["validate", "plan", "apply", "destroy"]
+  mock_outputs_merge_strategy_with_state = "shallow"
+  # mock_outputs_allowed_terraform_commands = ["validate", "plan", "apply", "destroy"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
