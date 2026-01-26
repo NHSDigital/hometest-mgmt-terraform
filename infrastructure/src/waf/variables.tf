@@ -89,7 +89,7 @@ variable "enable_ip_allowlist" {
 }
 
 variable "allowed_ip_addresses" {
-  description = "List of allowed IP addresses in CIDR notation (e.g., 1.2.3.4/32)"
+  description = "List of allowed IP addresses in CIDR notation (e.g., 203.0.113.0/32)"
   type        = list(string)
   default     = []
 }
@@ -101,7 +101,7 @@ variable "enable_ip_blocklist" {
 }
 
 variable "blocked_ip_addresses" {
-  description = "List of blocked IP addresses in CIDR notation (e.g., 1.2.3.4/32)"
+  description = "List of blocked IP addresses in CIDR notation (e.g., 203.0.113.0/32)"
   type        = list(string)
   default     = []
 }

@@ -190,7 +190,7 @@ inputs = {
   # IP filtering (optional)
   enable_ip_allowlist  = false
   enable_ip_blocklist  = true
-  blocked_ip_addresses = ["1.2.3.4/32"]
+  blocked_ip_addresses = ["203.0.113.5/32"]
 
   # Geo restriction (optional)
   enable_geo_restriction = true

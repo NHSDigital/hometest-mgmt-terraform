@@ -37,12 +37,12 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_allowed_countries"></a> [allowed\_countries](#input\_allowed\_countries) | List of country codes to allow (ISO 3166-1 alpha-2, e.g., GB, US) | `list(string)` | <pre>[<br/>  "GB"<br/>]</pre> | no |
-| <a name="input_allowed_ip_addresses"></a> [allowed\_ip\_addresses](#input\_allowed\_ip\_addresses) | List of allowed IP addresses in CIDR notation (e.g., 1.2.3.4/32) | `list(string)` | `[]` | no |
+| <a name="input_allowed_ip_addresses"></a> [allowed\_ip\_addresses](#input\_allowed\_ip\_addresses) | List of allowed IP addresses in CIDR notation (e.g., 203.0.113.0/32) | `list(string)` | `[]` | no |
 | <a name="input_api_gateway_stage_arn"></a> [api\_gateway\_stage\_arn](#input\_api\_gateway\_stage\_arn) | ARN of the API Gateway stage to associate with WAF | `string` | `""` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account ID for resources | `string` | n/a | yes |
 | <a name="input_aws_account_shortname"></a> [aws\_account\_shortname](#input\_aws\_account\_shortname) | AWS account short name/alias for resource naming | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region for resources | `string` | n/a | yes |
-| <a name="input_blocked_ip_addresses"></a> [blocked\_ip\_addresses](#input\_blocked\_ip\_addresses) | List of blocked IP addresses in CIDR notation (e.g., 1.2.3.4/32) | `list(string)` | `[]` | no |
+| <a name="input_blocked_ip_addresses"></a> [blocked\_ip\_addresses](#input\_blocked\_ip\_addresses) | List of blocked IP addresses in CIDR notation (e.g., 203.0.113.0/32) | `list(string)` | `[]` | no |
 | <a name="input_common_rules_excluded"></a> [common\_rules\_excluded](#input\_common\_rules\_excluded) | List of rules from AWSManagedRulesCommonRuleSet to exclude (set to count mode) | `list(string)` | `[]` | no |
 | <a name="input_enable_geo_restriction"></a> [enable\_geo\_restriction](#input\_enable\_geo\_restriction) | Enable geographic restriction (block all countries except allowed) | `bool` | `false` | no |
 | <a name="input_enable_ip_allowlist"></a> [enable\_ip\_allowlist](#input\_enable\_ip\_allowlist) | Enable IP allowlist rule | `bool` | `false` | no |
