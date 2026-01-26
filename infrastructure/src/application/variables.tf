@@ -291,6 +291,16 @@ variable "kms_key_deletion_window_days" {
 }
 
 #------------------------------------------------------------------------------
+# CloudWatch Configuration
+#------------------------------------------------------------------------------
+
+variable "cloudwatch_log_retention_days" {
+  description = "Number of days to retain CloudWatch logs for Lambda function"
+  type        = number
+  default     = 30
+}
+
+#------------------------------------------------------------------------------
 # Tags
 #------------------------------------------------------------------------------
 

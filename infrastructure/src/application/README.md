@@ -54,6 +54,7 @@ No modules.
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account ID for resources | `string` | n/a | yes |
 | <a name="input_aws_account_shortname"></a> [aws\_account\_shortname](#input\_aws\_account\_shortname) | AWS account short name/alias for resource naming | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region for resources | `string` | n/a | yes |
+| <a name="input_cloudwatch_log_retention_days"></a> [cloudwatch\_log\_retention\_days](#input\_cloudwatch\_log\_retention\_days) | Number of days to retain CloudWatch logs for Lambda function | `number` | `30` | no |
 | <a name="input_code_signing_config_arn"></a> [code\_signing\_config\_arn](#input\_code\_signing\_config\_arn) | ARN of the code signing configuration for Lambda (optional - for compliance) | `string` | `""` | no |
 | <a name="input_create_alarms"></a> [create\_alarms](#input\_create\_alarms) | Create CloudWatch alarms for the Lambda function | `bool` | `true` | no |
 | <a name="input_create_alias"></a> [create\_alias](#input\_create\_alias) | Create a Lambda alias for stable endpoint | `bool` | `false` | no |

@@ -188,7 +188,7 @@ resource "aws_iam_role_policy" "lambda_kms" {
 
 resource "aws_cloudwatch_log_group" "lambda" {
   name              = "/aws/lambda/${local.lambda_name}"
-  retention_in_days = 365
+  retention_in_days = var.cloudwatch_log_retention_days
   kms_key_id        = aws_kms_key.lambda.arn
 
   tags = merge(local.common_tags, {
