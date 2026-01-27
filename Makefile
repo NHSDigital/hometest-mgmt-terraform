@@ -200,11 +200,11 @@ publish: upload-lambda ## Publish the project artefact @Pipeline
 deploy: tf-apply ## Deploy the project artefact to the target environment @Pipeline
 
 tf-clean: ## Clean-up Terraform/Terragrunt caches @Operations
-	@echo "🧹 Cleaning up..."
-# 	rm -rf $(ARTIFACTS_DIR)/*.zip
-	find $(INFRA_DIR) -name ".terragrunt-cache" -type d -exec rm -rf {} + 2>/dev/null || true
-	find $(INFRA_DIR) -name ".trivy-cache" -type d -exec rm -rf {} + 2>/dev/null || true
-	find $(INFRA_DIR) -name ".terraform" -type d -exec rm -rf {} + 2>/dev/null || true
+	@echo "🧹 Cleaning up caches in infrastructure/..."
+	@find infrastructure -name ".terragrunt-cache" -type d -print -exec rm -rf {} + 2>/dev/null || true
+	@find infrastructure -name ".trivy-cache" -type d -print -exec rm -rf {} + 2>/dev/null || true
+	@find infrastructure -name ".terraform" -type d -print -exec rm -rf {} + 2>/dev/null || true
+	@echo "✅ Clean-up complete!"
 
 config:: ## Configure development environment (main) @Configuration
 	@echo "⚙️  Configuring development environment..."

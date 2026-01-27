@@ -368,10 +368,16 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_method.proxy.id,
       aws_api_gateway_method.proxy.authorization,
       aws_api_gateway_integration.proxy.id,
+      aws_api_gateway_integration.proxy.uri,
       aws_api_gateway_method.root.id,
       aws_api_gateway_method.root.authorization,
       aws_api_gateway_integration.root.id,
+      aws_api_gateway_integration.root.uri,
     ]))
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 
   depends_on = [
@@ -391,8 +397,8 @@ resource "aws_api_gateway_stage" "main" {
 
   xray_tracing_enabled = var.enable_xray_tracing
 
-  cache_cluster_enabled = true
-  cache_cluster_size    = "0.5"
+  cache_cluster_enabled = var.cache_cluster_enabled
+  cache_cluster_size    = var.cache_cluster_enabled ? var.cache_cluster_size : null
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gateway_access.arn
@@ -429,7 +435,7 @@ resource "aws_api_gateway_stage" "main" {
 
 resource "aws_cloudwatch_log_group" "api_gateway_access" {
   name              = "/aws/api-gateway/${local.api_name}/access-logs"
-  retention_in_days = 365
+  retention_in_days = var.log_retention_days
   kms_key_id        = aws_kms_key.api_gateway.arn
 
   tags = merge(local.common_tags, {
@@ -452,8 +458,8 @@ resource "aws_api_gateway_method_settings" "all" {
     data_trace_enabled     = var.data_trace_enabled
     throttling_burst_limit = var.throttling_burst_limit
     throttling_rate_limit  = var.throttling_rate_limit
-    caching_enabled        = true
-    cache_ttl_in_seconds   = 300
+    caching_enabled        = var.caching_enabled
+    cache_ttl_in_seconds   = var.cache_ttl_seconds
     cache_data_encrypted   = true
   }
 }

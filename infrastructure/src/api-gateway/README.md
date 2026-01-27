@@ -57,6 +57,10 @@ No modules.
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account ID for resources | `string` | n/a | yes |
 | <a name="input_aws_account_shortname"></a> [aws\_account\_shortname](#input\_aws\_account\_shortname) | AWS account short name/alias for resource naming | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region for resources | `string` | n/a | yes |
+| <a name="input_cache_cluster_enabled"></a> [cache\_cluster\_enabled](#input\_cache\_cluster\_enabled) | Enable API Gateway cache cluster for the stage | `bool` | `false` | no |
+| <a name="input_cache_cluster_size"></a> [cache\_cluster\_size](#input\_cache\_cluster\_size) | Size of the API Gateway cache cluster (0.5, 1.6, 6.1, 13.5, 28.4, 58.2, 118, 237 GB) | `string` | `"0.5"` | no |
+| <a name="input_cache_ttl_seconds"></a> [cache\_ttl\_seconds](#input\_cache\_ttl\_seconds) | TTL in seconds for cached responses (0-3600) | `number` | `300` | no |
+| <a name="input_caching_enabled"></a> [caching\_enabled](#input\_caching\_enabled) | Enable caching for API Gateway methods | `bool` | `false` | no |
 | <a name="input_certificate_arn"></a> [certificate\_arn](#input\_certificate\_arn) | ARN of the ACM certificate for the custom domain | `string` | `""` | no |
 | <a name="input_create_custom_domain"></a> [create\_custom\_domain](#input\_create\_custom\_domain) | Create a custom domain for the API Gateway | `bool` | `true` | no |
 | <a name="input_create_dns_record"></a> [create\_dns\_record](#input\_create\_dns\_record) | Create Route53 A record alias for the custom domain | `bool` | `true` | no |
@@ -69,6 +73,7 @@ No modules.
 | <a name="input_kms_key_deletion_window_days"></a> [kms\_key\_deletion\_window\_days](#input\_kms\_key\_deletion\_window\_days) | Number of days before KMS key is deleted | `number` | `30` | no |
 | <a name="input_lambda_function_name"></a> [lambda\_function\_name](#input\_lambda\_function\_name) | Name of the Lambda function to integrate with | `string` | n/a | yes |
 | <a name="input_lambda_invoke_arn"></a> [lambda\_invoke\_arn](#input\_lambda\_invoke\_arn) | Invoke ARN of the Lambda function | `string` | n/a | yes |
+| <a name="input_log_retention_days"></a> [log\_retention\_days](#input\_log\_retention\_days) | Number of days to retain API Gateway access logs in CloudWatch | `number` | `30` | no |
 | <a name="input_logging_level"></a> [logging\_level](#input\_logging\_level) | Logging level for API Gateway (OFF, ERROR, INFO) | `string` | `"INFO"` | no |
 | <a name="input_minimum_compression_size"></a> [minimum\_compression\_size](#input\_minimum\_compression\_size) | Minimum response size to compress (in bytes) | `number` | `1024` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Project name used for resource naming | `string` | n/a | yes |

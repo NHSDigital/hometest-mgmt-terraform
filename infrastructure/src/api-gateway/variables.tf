@@ -143,6 +143,17 @@ variable "data_trace_enabled" {
   default     = false
 }
 
+variable "log_retention_days" {
+  description = "Number of days to retain API Gateway access logs in CloudWatch"
+  type        = number
+  default     = 30
+
+  validation {
+    condition     = contains([0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653], var.log_retention_days)
+    error_message = "Log retention days must be a valid CloudWatch Logs retention value."
+  }
+}
+
 #------------------------------------------------------------------------------
 # Throttling Configuration
 #------------------------------------------------------------------------------
@@ -167,6 +178,40 @@ variable "enable_xray_tracing" {
   description = "Enable AWS X-Ray tracing for API Gateway"
   type        = bool
   default     = true
+}
+
+variable "cache_cluster_enabled" {
+  description = "Enable API Gateway cache cluster for the stage"
+  type        = bool
+  default     = false
+}
+
+variable "cache_cluster_size" {
+  description = "Size of the API Gateway cache cluster (0.5, 1.6, 6.1, 13.5, 28.4, 58.2, 118, 237 GB)"
+  type        = string
+  default     = "0.5"
+
+  validation {
+    condition     = contains(["0.5", "1.6", "6.1", "13.5", "28.4", "58.2", "118", "237"], var.cache_cluster_size)
+    error_message = "Cache cluster size must be one of: 0.5, 1.6, 6.1, 13.5, 28.4, 58.2, 118, 237."
+  }
+}
+
+variable "caching_enabled" {
+  description = "Enable caching for API Gateway methods"
+  type        = bool
+  default     = false
+}
+
+variable "cache_ttl_seconds" {
+  description = "TTL in seconds for cached responses (0-3600)"
+  type        = number
+  default     = 300
+
+  validation {
+    condition     = var.cache_ttl_seconds >= 0 && var.cache_ttl_seconds <= 3600
+    error_message = "Cache TTL must be between 0 and 3600 seconds."
+  }
 }
 
 variable "enable_compression" {
