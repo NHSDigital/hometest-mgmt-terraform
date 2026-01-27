@@ -17,22 +17,20 @@ dependency "application" {
 
   mock_outputs = {
     lambda_function_name = "nhs-hometest-poc-dev-api"
-    lambda_invoke_arn    = "arn:aws:apigateway:eu-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-2:781863586270:function:nhs-hometest-poc-dev-api/invocations"
+    lambda_invoke_arn    = "arn:aws:apigateway:eu-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-2:000000000000:function:nhs-hometest-poc-dev-api/invocations"
   }
   mock_outputs_merge_strategy_with_state = "shallow"
-  # mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
 dependency "dns_certificate" {
   config_path = "../dns-certificate"
 
   mock_outputs = {
-    certificate_arn  = "arn:aws:acm:eu-west-2:781863586270:certificate/mock-cert-id"
+    certificate_arn  = "arn:aws:acm:eu-west-2:000000000000:certificate/00000000-0000-0000-0000-000000000000"
     environment_fqdn = "dev.hometest.service.nhs.uk"
-    zone_id          = "Z065277424BZQXJTSWKE4"
+    zone_id          = "Z00000000000000000000"
   }
   mock_outputs_merge_strategy_with_state = "shallow"
-  # mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

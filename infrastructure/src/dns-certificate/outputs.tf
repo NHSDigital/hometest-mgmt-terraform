@@ -7,8 +7,8 @@
 #------------------------------------------------------------------------------
 
 output "certificate_arn" {
-  description = "The ARN of the ACM certificate"
-  value       = aws_acm_certificate.main.arn
+  description = "The ARN of the validated ACM certificate (waits for ISSUED state)"
+  value       = aws_acm_certificate_validation.main.certificate_arn
 }
 
 output "certificate_domain_name" {

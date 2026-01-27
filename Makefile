@@ -201,8 +201,9 @@ deploy: tf-apply ## Deploy the project artefact to the target environment @Pipel
 
 tf-clean: ## Clean-up Terraform/Terragrunt caches @Operations
 	@echo "🧹 Cleaning up..."
-	rm -rf $(ARTIFACTS_DIR)/*.zip
+# 	rm -rf $(ARTIFACTS_DIR)/*.zip
 	find $(INFRA_DIR) -name ".terragrunt-cache" -type d -exec rm -rf {} + 2>/dev/null || true
+	find $(INFRA_DIR) -name ".trivy-cache" -type d -exec rm -rf {} + 2>/dev/null || true
 	find $(INFRA_DIR) -name ".terraform" -type d -exec rm -rf {} + 2>/dev/null || true
 
 config:: ## Configure development environment (main) @Configuration

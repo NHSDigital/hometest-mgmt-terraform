@@ -240,18 +240,6 @@ resource "aws_kms_alias" "api_gateway" {
 }
 
 ################################################################################
-# Wait for ACM Certificate to be ISSUED
-################################################################################
-
-data "aws_acm_certificate" "validated" {
-  count    = var.create_custom_domain ? 1 : 0
-  domain   = var.domain_name
-  statuses = ["ISSUED"]
-
-  depends_on = [var.certificate_arn]
-}
-
-################################################################################
 # Custom Domain Name with mTLS
 ################################################################################
 
@@ -259,7 +247,7 @@ resource "aws_api_gateway_domain_name" "main" {
   count = var.create_custom_domain ? 1 : 0
 
   domain_name              = var.domain_name
-  regional_certificate_arn = data.aws_acm_certificate.validated[0].arn
+  regional_certificate_arn = var.certificate_arn
 
   dynamic "mutual_tls_authentication" {
     for_each = var.enable_mtls ? [1] : []

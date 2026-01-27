@@ -57,7 +57,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_api_endpoint_url"></a> [api\_endpoint\_url](#output\_api\_endpoint\_url) | The URL of the API endpoint |
-| <a name="output_certificate_arn"></a> [certificate\_arn](#output\_certificate\_arn) | The ARN of the ACM certificate |
+| <a name="output_certificate_arn"></a> [certificate\_arn](#output\_certificate\_arn) | The ARN of the validated ACM certificate (waits for ISSUED state) |
 | <a name="output_certificate_domain_name"></a> [certificate\_domain\_name](#output\_certificate\_domain\_name) | The domain name of the certificate |
 | <a name="output_certificate_status"></a> [certificate\_status](#output\_certificate\_status) | The status of the certificate |
 | <a name="output_certificate_validated"></a> [certificate\_validated](#output\_certificate\_validated) | Whether the certificate has been validated |
