@@ -5,9 +5,31 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "This is the tag that is going to be deployed"
+        description: "Git tag or artifact version to deploy"
         required: true
         default: "latest"
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+        default: "dev"
+      account:
+        description: "AWS Account"
+        required: true
+        type: choice
+        options:
+          - poc
+          - prod
+        default: "poc"
+
+env:
+  AWS_REGION: eu-west-2
+  TERRAFORM_VERSION: "1.14.0"
+  TERRAGRUNT_VERSION: "0.97.0"
 
 jobs:
   metadata:
@@ -23,9 +45,12 @@ jobs:
       terraform_version: ${{ steps.variables.outputs.terraform_version }}
       version: ${{ steps.variables.outputs.version }}
       tag: ${{ steps.variables.outputs.tag }}
+      environment: ${{ steps.variables.outputs.environment }}
+      account: ${{ steps.variables.outputs.account }}
+      s3_bucket: ${{ steps.variables.outputs.s3_bucket }}
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
       - name: "Set CI/CD variables"
         id: variables
         run: |
@@ -36,9 +61,11 @@ jobs:
           echo "nodejs_version=$(grep "^nodejs\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
           echo "python_version=$(grep "^python\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
           echo "terraform_version=$(grep "^terraform\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
-          # TODO: Get the version, but it may not be the .version file as this should come from the CI/CD Pull Request Workflow
-          echo "version=$(head -n 1 .version 2> /dev/null || echo unknown)" >> $GITHUB_OUTPUT
+          echo "version=$(head -n 1 VERSION 2> /dev/null || echo unknown)" >> $GITHUB_OUTPUT
           echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          echo "account=${{ github.event.inputs.account }}" >> $GITHUB_OUTPUT
+          echo "s3_bucket=nhs-hometest-${{ github.event.inputs.account }}-${{ github.event.inputs.environment }}-lambda-artifacts" >> $GITHUB_OUTPUT
       - name: "List variables"
         run: |
           export BUILD_DATETIME="${{ steps.variables.outputs.build_datetime }}"
@@ -50,56 +77,120 @@ jobs:
           export VERSION="${{ steps.variables.outputs.version }}"
           export TAG="${{ steps.variables.outputs.tag }}"
           make list-variables
-  deploy-bootstrap:
-    name: "Deploy TF Core/Bootstrap"
+
+  deploy:
+    name: "Deploy to ${{ github.event.inputs.environment }}"
     runs-on: ubuntu-latest
     needs: [metadata]
-    timeout-minutes: 10
-    permissions:
-      id-token: write    # REQUIRED for OIDC token
-      contents: read     # For checkout
+    timeout-minutes: 20
+    environment: ${{ needs.metadata.outputs.environment }}
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
-      - name: Deploy TF Core/Bootstrap
-        uses: ./.github/actions/deploy-terragrunt
+      - name: "Setup Terraform"
+        uses: hashicorp/setup-terraform@v3
         with:
-          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: infrastructure/environments/poc/core/bootstrap/
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
 
-  deploy-network:
-    name: "Deploy TF Core/Network"
+      - name: "Setup Terragrunt"
+        run: |
+          curl -sL https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.TERRAGRUNT_VERSION }}/terragrunt_linux_amd64 -o terragrunt
+          chmod +x terragrunt
+          sudo mv terragrunt /usr/local/bin/
+
+      - name: "Configure AWS credentials"
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: "Resolve artifact"
+        id: artifact
+        run: |
+          BUCKET="${{ needs.metadata.outputs.s3_bucket }}"
+          TAG="${{ needs.metadata.outputs.tag }}"
+
+          if [ "$TAG" = "latest" ]; then
+            # Find the latest artifact in S3
+            S3_KEY=$(aws s3 ls "s3://$BUCKET/lambda-api-" --recursive | sort | tail -n1 | awk '{print $4}')
+            if [ -z "$S3_KEY" ]; then
+              echo "❌ No artifacts found in s3://$BUCKET/"
+              exit 1
+            fi
+          else
+            S3_KEY="lambda-api-${TAG}.zip"
+          fi
+
+          # Download artifact to calculate hash
+          aws s3 cp "s3://$BUCKET/$S3_KEY" /tmp/artifact.zip
+          HASH=$(openssl dgst -sha256 -binary /tmp/artifact.zip | openssl enc -base64)
+
+          echo "s3_key=$S3_KEY" >> $GITHUB_OUTPUT
+          echo "source_code_hash=$HASH" >> $GITHUB_OUTPUT
+
+          echo "📦 Deploying artifact: $S3_KEY"
+          echo "   Hash: $HASH"
+
+      - name: "Terraform Init"
+        working-directory: infrastructure/environments/${{ needs.metadata.outputs.account }}/${{ needs.metadata.outputs.environment }}/application
+        run: |
+          echo "🔧 Initializing Terraform..."
+          terragrunt init
+
+      - name: "Terraform Plan"
+        working-directory: infrastructure/environments/${{ needs.metadata.outputs.account }}/${{ needs.metadata.outputs.environment }}/application
+        run: |
+          echo "📋 Planning Terraform changes..."
+          terragrunt plan \
+            -var="lambda_s3_key=${{ steps.artifact.outputs.s3_key }}" \
+            -var="lambda_source_code_hash=${{ steps.artifact.outputs.source_code_hash }}" \
+            -out=tfplan
+
+      - name: "Terraform Apply"
+        working-directory: infrastructure/environments/${{ needs.metadata.outputs.account }}/${{ needs.metadata.outputs.environment }}/application
+        run: |
+          echo "🚀 Applying Terraform changes..."
+          terragrunt apply tfplan
+
+      - name: "Verify deployment"
+        run: |
+          echo "✅ Verifying Lambda deployment..."
+
+          FUNCTION_NAME="nhs-hometest-${{ needs.metadata.outputs.account }}-${{ needs.metadata.outputs.environment }}-api"
+
+          aws lambda get-function-configuration \
+            --function-name "$FUNCTION_NAME" \
+            --query '{FunctionName: FunctionName, Runtime: Runtime, CodeSize: CodeSize, LastModified: LastModified}'
+
+          echo ""
+          echo "✅ Lambda deployment complete!"
+
+  notify:
+    name: "Success notification"
     runs-on: ubuntu-latest
-    needs: [deploy-bootstrap]
-    timeout-minutes: 10
-    permissions:
-      id-token: write    # REQUIRED for OIDC token
-      contents: read     # For checkout
+    needs: [metadata, deploy]
+    if: always()
     steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v6
+      - name: "Check prerequisites for notification"
+        id: check
+        run: echo "secret_exist=${{ secrets.TEAMS_NOTIFICATION_WEBHOOK_URL != '' }}" >> $GITHUB_OUTPUT
 
-      - name: Deploy TF Core/Network
-        uses: ./.github/actions/deploy-terragrunt
-        with:
-          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: infrastructure/environments/poc/core/network/
-  # TODO: More jobs or/and steps here
-  # success:
-  #   name: "Success notification"
-  #   runs-on: ubuntu-latest
-  #   needs: [deploy]
-  #   steps:
-  #     - name: "Check prerequisites for notification"
-  #       id: check
-  #       run: echo "secret_exist=${{ secrets.TEAMS_NOTIFICATION_WEBHOOK_URL != '' }}" >> $GITHUB_OUTPUT
-  #     - name: "Notify on deployment to an environment"
-  #       if: steps.check.outputs.secret_exist == 'true'
-  #       uses: nhs-england-tools/notify-msteams-action@v0.0.4
-  #       with:
-  #         github-token: ${{ secrets.GITHUB_TOKEN }}
-  #         teams-webhook-url: ${{ secrets.TEAMS_NOTIFICATION_WEBHOOK_URL }}
-  #         message-title: "Notification title"
-  #         message-text: "This is a notification body"
-  #         link: ${{ github.event.pull_request.html_url }}
+      - name: "Send notification"
+        run: |
+          if [ "${{ needs.deploy.result }}" = "success" ]; then
+            echo "✅ Deployment to ${{ needs.metadata.outputs.environment }} successful!"
+          else
+            echo "❌ Deployment to ${{ needs.metadata.outputs.environment }} failed!"
+          fi
+
+      # - name: "Notify on deployment to an environment"
+      #   if: steps.check.outputs.secret_exist == 'true'
+      #   uses: nhs-england-tools/notify-msteams-action@v0.0.4
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     teams-webhook-url: ${{ secrets.TEAMS_NOTIFICATION_WEBHOOK_URL }}
+      #     message-title: "Deployment to ${{ needs.metadata.outputs.environment }}"
+      #     message-text: "Lambda deployed successfully"
+      #     link: ${{ github.event.pull_request.html_url }}

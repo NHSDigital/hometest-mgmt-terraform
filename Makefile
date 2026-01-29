@@ -125,6 +125,96 @@ upload-lambda: package-lambda ## Upload Lambda artifacts to S3 @Build
 	done
 
 # ==============================================================================
+# External Service Repository Build (hometest-service)
+# ==============================================================================
+
+SERVICE_REPO_URL := git@github.com:NHSDigital/hometest-service.git
+SERVICE_REPO_DIR := .hometest-service
+SERVICE_REF ?= main
+
+.PHONY: clone-service build-service package-service deploy-service
+
+clone-service: ## Clone/update hometest-service repository @Service
+	@echo "📥 Cloning hometest-service repository..."
+	@if [ -d "$(SERVICE_REPO_DIR)" ]; then \
+		echo "  Updating existing clone..."; \
+		cd $(SERVICE_REPO_DIR) && git fetch origin && git checkout $(SERVICE_REF) && git pull origin $(SERVICE_REF) 2>/dev/null || git checkout $(SERVICE_REF); \
+	else \
+		echo "  Cloning fresh copy (using SSH)..."; \
+		git clone --branch $(SERVICE_REF) $(SERVICE_REPO_URL) $(SERVICE_REPO_DIR) 2>/dev/null || \
+		git clone $(SERVICE_REPO_URL) $(SERVICE_REPO_DIR) && cd $(SERVICE_REPO_DIR) && git checkout $(SERVICE_REF); \
+	fi
+	@echo "✅ Repository ready at $(SERVICE_REPO_DIR)"
+
+build-service: clone-service ## Build Lambda from hometest-service @Service
+	@echo "🔨 Building hometest-service Lambda..."
+	@cd $(SERVICE_REPO_DIR)/lambdas && \
+		echo "  Installing dependencies..." && \
+		npm ci && \
+		echo "  Compiling TypeScript..." && \
+		npm run build
+	@echo "✅ Build complete!"
+
+package-service: build-service ## Package hometest-service Lambda as zip @Service
+	@echo "📦 Packaging hometest-service Lambda..."
+	@mkdir -p $(ARTIFACTS_DIR)
+	@VERSION=$$(cat VERSION 2>/dev/null || echo "0.0.1"); \
+	TIMESTAMP=$$(date +%Y%m%d%H%M%S); \
+	ARTIFACT_NAME="lambda-api-$${VERSION}-$${TIMESTAMP}"; \
+	cd $(SERVICE_REPO_DIR)/lambdas && \
+		npm ci --omit=dev && \
+		zip -r ../../$(ARTIFACTS_DIR)/$${ARTIFACT_NAME}.zip \
+			. \
+			-x "*.ts" \
+			-x "*.test.js" \
+			-x "*.spec.js" \
+			-x "tsconfig.json" \
+			-x "jest.config.*" \
+			-x ".gitignore" \
+			-x "**/__tests__/**" && \
+		echo "✅ Created: $(ARTIFACTS_DIR)/$${ARTIFACT_NAME}.zip" && \
+		echo "   Size: $$(du -h ../../$(ARTIFACTS_DIR)/$${ARTIFACT_NAME}.zip | cut -f1)"
+
+upload-service: package-service ## Upload hometest-service Lambda to S3 @Service
+	@echo "⬆️  Uploading hometest-service Lambda to S3..."
+	@BUCKET="nhs-hometest-$(ACCOUNT)-$(ENV)-lambda-artifacts"; \
+	LATEST=$$(ls -t $(ARTIFACTS_DIR)/lambda-api-*.zip 2>/dev/null | head -1); \
+	if [ -n "$$LATEST" ]; then \
+		filename=$$(basename $$LATEST); \
+		echo "  Uploading $$filename to s3://$$BUCKET/"; \
+		aws s3 cp $$LATEST s3://$$BUCKET/$$filename --profile $(AWS_PROFILE); \
+		echo "  Creating 'latest' symlink..."; \
+		aws s3 cp $$LATEST s3://$$BUCKET/lambda-api-latest.zip --profile $(AWS_PROFILE); \
+		echo "✅ Upload complete!"; \
+		echo "   S3 Key: $$filename"; \
+	else \
+		echo "❌ No artifact found. Run 'make package-service' first."; \
+		exit 1; \
+	fi
+
+deploy-service: upload-service ## Build, upload, and deploy hometest-service Lambda @Service
+	@echo "🚀 Deploying hometest-service Lambda to $(ENV)..."
+	@LATEST=$$(ls -t $(ARTIFACTS_DIR)/lambda-api-*.zip 2>/dev/null | head -1); \
+	S3_KEY=$$(basename $$LATEST); \
+	S3_BUCKET="nhs-hometest-$(ACCOUNT)-$(ENV)-lambda-artifacts"; \
+	HASH=$$(openssl dgst -sha256 -binary $$LATEST | openssl enc -base64); \
+	echo "  S3 Bucket: $$S3_BUCKET"; \
+	echo "  S3 Key: $$S3_KEY"; \
+	echo "  Hash: $$HASH"; \
+	cd $(INFRA_DIR)/$(ENV)/application && \
+		terragrunt apply -auto-approve \
+			-var="lambda_filename=" \
+			-var="lambda_s3_bucket=$$S3_BUCKET" \
+			-var="lambda_s3_key=$$S3_KEY" \
+			-var="lambda_source_code_hash=$$HASH"
+	@echo "✅ Deployment complete!"
+
+clean-service: ## Remove cloned hometest-service repository @Service
+	@echo "🧹 Cleaning hometest-service clone..."
+	@rm -rf $(SERVICE_REPO_DIR)
+	@echo "✅ Clean complete!"
+
+# ==============================================================================
 # Environment Management
 # ==============================================================================
 

@@ -40,12 +40,12 @@ inputs = {
   # Build with: make package-lambda
   lambda_filename = "${get_repo_root()}/artifacts/api.zip"
 
-  # Option 2: Deploy from S3 (for CI/CD - uncomment and comment out lambda_filename)
-  # Upload with: make upload-lambda
+  # Option 2: Deploy from S3 (for CI/CD)
+  # Upload with: make upload-service
   # lambda_s3_bucket = "nhs-hometest-poc-dev-lambda-artifacts"
-  # lambda_s3_key    = "api.zip"
+  # lambda_s3_key    = "lambda-api-latest.zip"
 
-  lambda_source_code_hash = null # Set to filebase64sha256 for change detection
+  lambda_source_code_hash = filebase64sha256("${get_repo_root()}/artifacts/api.zip")
 
   # VPC Configuration - deploy Lambda in VPC for RDS access
   enable_vpc             = true

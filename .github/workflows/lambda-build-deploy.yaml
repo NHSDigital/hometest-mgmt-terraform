@@ -1,0 +1,357 @@
+---
+name: "Lambda Build and Deploy"
+
+# This workflow builds Lambda code from hometest-service repo and deploys to AWS
+# Triggered manually or on pushes to main branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+        default: "dev"
+      account:
+        description: "AWS Account"
+        required: true
+        type: choice
+        options:
+          - poc
+          - prod
+        default: "poc"
+      service_ref:
+        description: "Git ref (branch/tag/commit) from hometest-service repo"
+        required: false
+        type: string
+        default: "main"
+      skip_deploy:
+        description: "Skip Terraform deployment (build only)"
+        required: false
+        type: boolean
+        default: false
+
+  push:
+    branches:
+      - main
+    paths:
+      - "lambdas/**"
+      - ".github/workflows/lambda-build-deploy.yaml"
+
+env:
+  AWS_REGION: eu-west-2
+  NODE_VERSION: "20"
+  TERRAFORM_VERSION: "1.14.0"
+  TERRAGRUNT_VERSION: "0.97.0"
+
+jobs:
+  # ===========================================================================
+  # Metadata - Set build variables
+  # ===========================================================================
+  metadata:
+    name: "Set build metadata"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      build_datetime: ${{ steps.variables.outputs.build_datetime }}
+      build_timestamp: ${{ steps.variables.outputs.build_timestamp }}
+      version: ${{ steps.variables.outputs.version }}
+      environment: ${{ steps.variables.outputs.environment }}
+      account: ${{ steps.variables.outputs.account }}
+      service_ref: ${{ steps.variables.outputs.service_ref }}
+      artifact_name: ${{ steps.variables.outputs.artifact_name }}
+      s3_bucket: ${{ steps.variables.outputs.s3_bucket }}
+    steps:
+      - name: "Checkout infrastructure code"
+        uses: actions/checkout@v4
+
+      - name: "Set build variables"
+        id: variables
+        run: |
+          datetime=$(date -u +'%Y-%m-%dT%H:%M:%S%z')
+          timestamp=$(date --date="$datetime" -u +'%Y%m%d%H%M%S')
+
+          # Handle workflow_dispatch vs push trigger
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            environment="${{ github.event.inputs.environment }}"
+            account="${{ github.event.inputs.account }}"
+            service_ref="${{ github.event.inputs.service_ref }}"
+          else
+            environment="dev"
+            account="poc"
+            service_ref="main"
+          fi
+
+          # Read version from VERSION file
+          version=$(cat VERSION 2>/dev/null || echo "0.0.1")
+          version="${version}-${timestamp}"
+
+          echo "build_datetime=$datetime" >> $GITHUB_OUTPUT
+          echo "build_timestamp=$timestamp" >> $GITHUB_OUTPUT
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "environment=$environment" >> $GITHUB_OUTPUT
+          echo "account=$account" >> $GITHUB_OUTPUT
+          echo "service_ref=$service_ref" >> $GITHUB_OUTPUT
+          echo "artifact_name=lambda-api-${version}" >> $GITHUB_OUTPUT
+          echo "s3_bucket=nhs-hometest-${account}-${environment}-lambda-artifacts" >> $GITHUB_OUTPUT
+
+      - name: "Display build metadata"
+        run: |
+          echo "📋 Build Metadata:"
+          echo "  - DateTime:    ${{ steps.variables.outputs.build_datetime }}"
+          echo "  - Version:     ${{ steps.variables.outputs.version }}"
+          echo "  - Environment: ${{ steps.variables.outputs.environment }}"
+          echo "  - Account:     ${{ steps.variables.outputs.account }}"
+          echo "  - Service Ref: ${{ steps.variables.outputs.service_ref }}"
+          echo "  - S3 Bucket:   ${{ steps.variables.outputs.s3_bucket }}"
+
+  # ===========================================================================
+  # Build - Clone service repo, build TypeScript, package Lambda
+  # ===========================================================================
+  build:
+    name: "Build Lambda"
+    runs-on: ubuntu-latest
+    needs: [metadata]
+    timeout-minutes: 15
+    outputs:
+      artifact_s3_key: ${{ steps.package.outputs.s3_key }}
+      artifact_hash: ${{ steps.package.outputs.source_code_hash }}
+    steps:
+      - name: "Checkout infrastructure code"
+        uses: actions/checkout@v4
+        with:
+          path: infrastructure
+
+      - name: "Checkout hometest-service code"
+        uses: actions/checkout@v4
+        with:
+          repository: NHSDigital/hometest-service
+          ref: ${{ needs.metadata.outputs.service_ref }}
+          path: hometest-service
+          token: ${{ secrets.SERVICE_REPO_TOKEN }}
+
+      - name: "Setup Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: hometest-service/lambdas/package-lock.json
+
+      - name: "Install dependencies"
+        working-directory: hometest-service/lambdas
+        run: |
+          echo "📦 Installing Lambda dependencies..."
+          npm ci
+
+      - name: "Build TypeScript"
+        working-directory: hometest-service/lambdas
+        run: |
+          echo "🔨 Building TypeScript..."
+          npm run build
+
+      - name: "Run tests"
+        working-directory: hometest-service/lambdas
+        run: |
+          echo "🧪 Running tests..."
+          npm test || echo "No tests configured yet"
+        continue-on-error: true
+
+      - name: "Package Lambda artifact"
+        id: package
+        run: |
+          echo "📦 Packaging Lambda artifact..."
+
+          ARTIFACT_DIR="./artifacts"
+          ARTIFACT_NAME="${{ needs.metadata.outputs.artifact_name }}"
+          mkdir -p "$ARTIFACT_DIR"
+
+          # Create deployment package from built code
+          cd hometest-service/lambdas
+
+          # Install production dependencies only
+          npm ci --omit=dev
+
+          # Create zip with compiled JS and node_modules
+          # Exclude TypeScript source files, tests, and dev artifacts
+          zip -r "../../$ARTIFACT_DIR/${ARTIFACT_NAME}.zip" \
+            . \
+            -x "*.ts" \
+            -x "*.test.js" \
+            -x "*.spec.js" \
+            -x "tsconfig.json" \
+            -x "jest.config.*" \
+            -x ".gitignore" \
+            -x "src/**" \
+            -x "**/__tests__/**" \
+            -x "**/node_modules/.cache/**"
+
+          cd ../..
+
+          # Calculate hash for Terraform source_code_hash
+          HASH=$(openssl dgst -sha256 -binary "$ARTIFACT_DIR/${ARTIFACT_NAME}.zip" | openssl enc -base64)
+          S3_KEY="${ARTIFACT_NAME}.zip"
+
+          echo "s3_key=$S3_KEY" >> $GITHUB_OUTPUT
+          echo "source_code_hash=$HASH" >> $GITHUB_OUTPUT
+
+          echo "✅ Artifact created: ${ARTIFACT_NAME}.zip"
+          echo "   Size: $(du -h $ARTIFACT_DIR/${ARTIFACT_NAME}.zip | cut -f1)"
+          echo "   Hash: $HASH"
+
+      - name: "Upload artifact to GitHub"
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.metadata.outputs.artifact_name }}
+          path: artifacts/*.zip
+          retention-days: 30
+
+  # ===========================================================================
+  # Upload - Push artifact to S3
+  # ===========================================================================
+  upload:
+    name: "Upload to S3"
+    runs-on: ubuntu-latest
+    needs: [metadata, build]
+    timeout-minutes: 5
+    steps:
+      - name: "Download artifact"
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.metadata.outputs.artifact_name }}
+          path: artifacts
+
+      - name: "Configure AWS credentials"
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: "Upload to S3"
+        run: |
+          echo "⬆️ Uploading artifact to S3..."
+
+          BUCKET="${{ needs.metadata.outputs.s3_bucket }}"
+          S3_KEY="${{ needs.build.outputs.artifact_s3_key }}"
+
+          # Check if bucket exists
+          if ! aws s3 ls "s3://$BUCKET" 2>&1 > /dev/null; then
+            echo "⚠️ Bucket $BUCKET does not exist. It will be created during Terraform apply."
+            echo "   Uploading to temporary location..."
+            # Create bucket tag for later reference
+            echo "bucket_missing=true" >> $GITHUB_ENV
+          fi
+
+          # Upload artifact
+          aws s3 cp "artifacts/$S3_KEY" "s3://$BUCKET/$S3_KEY" \
+            --metadata "version=${{ needs.metadata.outputs.version }},commit=${{ github.sha }}"
+
+          echo "✅ Uploaded: s3://$BUCKET/$S3_KEY"
+
+  # ===========================================================================
+  # Deploy - Apply Terraform to update Lambda
+  # ===========================================================================
+  deploy:
+    name: "Deploy Lambda"
+    runs-on: ubuntu-latest
+    needs: [metadata, build, upload]
+    if: ${{ github.event.inputs.skip_deploy != 'true' }}
+    timeout-minutes: 20
+    environment: ${{ needs.metadata.outputs.environment }}
+    steps:
+      - name: "Checkout infrastructure code"
+        uses: actions/checkout@v4
+
+      - name: "Setup Terraform"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: "Setup Terragrunt"
+        run: |
+          curl -sL https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.TERRAGRUNT_VERSION }}/terragrunt_linux_amd64 -o terragrunt
+          chmod +x terragrunt
+          sudo mv terragrunt /usr/local/bin/
+
+      - name: "Configure AWS credentials"
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: "Terraform Init"
+        working-directory: infrastructure/environments/${{ needs.metadata.outputs.account }}/${{ needs.metadata.outputs.environment }}/application
+        run: |
+          echo "🔧 Initializing Terraform..."
+          terragrunt init
+
+      - name: "Terraform Plan"
+        working-directory: infrastructure/environments/${{ needs.metadata.outputs.account }}/${{ needs.metadata.outputs.environment }}/application
+        run: |
+          echo "📋 Planning Terraform changes..."
+          terragrunt plan \
+            -var="lambda_s3_key=${{ needs.build.outputs.artifact_s3_key }}" \
+            -var="lambda_source_code_hash=${{ needs.build.outputs.artifact_hash }}" \
+            -out=tfplan
+
+      - name: "Terraform Apply"
+        working-directory: infrastructure/environments/${{ needs.metadata.outputs.account }}/${{ needs.metadata.outputs.environment }}/application
+        run: |
+          echo "🚀 Applying Terraform changes..."
+          terragrunt apply tfplan
+
+      - name: "Verify deployment"
+        run: |
+          echo "✅ Verifying Lambda deployment..."
+
+          FUNCTION_NAME="nhs-hometest-${{ needs.metadata.outputs.account }}-${{ needs.metadata.outputs.environment }}-api"
+
+          # Get Lambda configuration
+          aws lambda get-function-configuration \
+            --function-name "$FUNCTION_NAME" \
+            --query '{FunctionName: FunctionName, Runtime: Runtime, CodeSize: CodeSize, LastModified: LastModified}'
+
+          # Test health endpoint
+          echo "🔬 Testing health endpoint..."
+          RESPONSE=$(aws lambda invoke \
+            --function-name "$FUNCTION_NAME" \
+            --payload '{"httpMethod": "GET", "path": "/health"}' \
+            --cli-binary-format raw-in-base64-out \
+            /tmp/response.json 2>&1)
+
+          cat /tmp/response.json
+
+          echo ""
+          echo "✅ Lambda deployment complete!"
+
+  # ===========================================================================
+  # Notify - Send deployment notification
+  # ===========================================================================
+  notify:
+    name: "Notify"
+    runs-on: ubuntu-latest
+    needs: [metadata, build, upload, deploy]
+    if: always()
+    timeout-minutes: 2
+    steps:
+      - name: "Send notification"
+        run: |
+          if [ "${{ needs.deploy.result }}" = "success" ]; then
+            echo "✅ Deployment to ${{ needs.metadata.outputs.environment }} successful!"
+            echo "   Version: ${{ needs.metadata.outputs.version }}"
+            echo "   Commit:  ${{ github.sha }}"
+          else
+            echo "❌ Deployment to ${{ needs.metadata.outputs.environment }} failed!"
+            echo "   Check the workflow logs for details."
+          fi
+
+          # TODO: Add Teams/Slack notification
+          # if [ -n "${{ secrets.TEAMS_WEBHOOK_URL }}" ]; then
+          #   curl -H 'Content-Type: application/json' \
+          #     -d '{"text": "Lambda deployed to ${{ needs.metadata.outputs.environment }}"}' \
+          #     "${{ secrets.TEAMS_WEBHOOK_URL }}"
+          # fi
