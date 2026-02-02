@@ -151,29 +151,30 @@ build-service: clone-service ## Build Lambda from hometest-service @Service
 	@cd $(SERVICE_REPO_DIR)/lambdas && \
 		echo "  Installing dependencies..." && \
 		npm ci && \
-		echo "  Compiling TypeScript..." && \
-		npm run build
+		echo "  Building with esbuild..." && \
+		npm run build && \
+		echo "  Packaging Lambda zips..." && \
+		npm run package
 	@echo "✅ Build complete!"
 
 package-service: build-service ## Package hometest-service Lambda as zip @Service
-	@echo "📦 Packaging hometest-service Lambda..."
+	@echo "📦 Copying Lambda artifacts..."
 	@mkdir -p $(ARTIFACTS_DIR)
 	@VERSION=$$(cat VERSION 2>/dev/null || echo "0.0.1"); \
 	TIMESTAMP=$$(date +%Y%m%d%H%M%S); \
+	LAMBDA_NAME="eligibility-test-info-lambda"; \
 	ARTIFACT_NAME="lambda-api-$${VERSION}-$${TIMESTAMP}"; \
-	cd $(SERVICE_REPO_DIR)/lambdas && \
-		npm ci --omit=dev && \
-		zip -r ../../$(ARTIFACTS_DIR)/$${ARTIFACT_NAME}.zip \
-			. \
-			-x "*.ts" \
-			-x "*.test.js" \
-			-x "*.spec.js" \
-			-x "tsconfig.json" \
-			-x "jest.config.*" \
-			-x ".gitignore" \
-			-x "**/__tests__/**" && \
-		echo "✅ Created: $(ARTIFACTS_DIR)/$${ARTIFACT_NAME}.zip" && \
-		echo "   Size: $$(du -h ../../$(ARTIFACTS_DIR)/$${ARTIFACT_NAME}.zip | cut -f1)"
+	SOURCE_ZIP="$(SERVICE_REPO_DIR)/lambdas/dist/$${LAMBDA_NAME}.zip"; \
+	if [ -f "$${SOURCE_ZIP}" ]; then \
+		cp "$${SOURCE_ZIP}" "$(ARTIFACTS_DIR)/$${ARTIFACT_NAME}.zip"; \
+		echo "✅ Created: $(ARTIFACTS_DIR)/$${ARTIFACT_NAME}.zip"; \
+		echo "   Size: $$(du -h $(ARTIFACTS_DIR)/$${ARTIFACT_NAME}.zip | cut -f1)"; \
+	else \
+		echo "❌ Error: Lambda zip not found at $${SOURCE_ZIP}"; \
+		echo "   Available zips:"; \
+		ls -lh $(SERVICE_REPO_DIR)/lambdas/dist/*.zip 2>/dev/null || echo "   None found"; \
+		exit 1; \
+	fi
 
 upload-service: package-service ## Upload hometest-service Lambda to S3 @Service
 	@echo "⬆️  Uploading hometest-service Lambda to S3..."
