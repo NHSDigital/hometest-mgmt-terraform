@@ -38,4 +38,7 @@ locals {
   #   "arn:aws:iam::aws:policy/AmazonS3FullAccess"
   # ]
 
+  enable_cognito = true
+  cognito_callback_urls = ["https://dev.hometest.service.nhs.uk/callback"]
+  cognito_logout_urls   = ["https://dev.hometest.service.nhs.uk/logout"]
 }

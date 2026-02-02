@@ -353,3 +353,413 @@ variable "dns_query_logs_buffer_interval" {
     error_message = "Buffer interval must be between 60 and 900 seconds."
   }
 }
+
+#------------------------------------------------------------------------------
+# Cognito User Pool Configuration
+#------------------------------------------------------------------------------
+
+variable "enable_cognito" {
+  description = "Enable AWS Cognito User Pool for authentication"
+  type        = bool
+  default     = false
+}
+
+variable "cognito_allow_admin_create_user_only" {
+  description = "Only allow administrators to create users (disable self-registration)"
+  type        = bool
+  default     = false
+}
+
+variable "cognito_invite_email_subject" {
+  description = "Email subject for user invitation emails"
+  type        = string
+  default     = "Your temporary password"
+}
+
+variable "cognito_invite_email_message" {
+  description = "Email message for user invitation emails. Must contain {username} and {####} placeholders."
+  type        = string
+  default     = "Your username is {username} and temporary password is {####}."
+}
+
+variable "cognito_invite_sms_message" {
+  description = "SMS message for user invitation. Must contain {username} and {####} placeholders."
+  type        = string
+  default     = "Your username is {username} and temporary password is {####}."
+}
+
+variable "cognito_auto_verified_attributes" {
+  description = "Attributes to be auto-verified (email, phone_number, or both)"
+  type        = list(string)
+  default     = ["email"]
+
+  validation {
+    condition     = alltrue([for attr in var.cognito_auto_verified_attributes : contains(["email", "phone_number"], attr)])
+    error_message = "Auto-verified attributes must be 'email', 'phone_number', or both."
+  }
+}
+
+variable "cognito_deletion_protection" {
+  description = "Enable deletion protection for the user pool"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_device_challenge_required" {
+  description = "Require device challenge on new devices"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_device_remember_on_prompt" {
+  description = "Only remember devices when user opts in"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_email_sending_account" {
+  description = "Email sending account type (COGNITO_DEFAULT or DEVELOPER)"
+  type        = string
+  default     = "COGNITO_DEFAULT"
+
+  validation {
+    condition     = contains(["COGNITO_DEFAULT", "DEVELOPER"], var.cognito_email_sending_account)
+    error_message = "Email sending account must be COGNITO_DEFAULT or DEVELOPER."
+  }
+}
+
+variable "cognito_ses_email_identity_arn" {
+  description = "ARN of SES verified email identity (required if email_sending_account is DEVELOPER)"
+  type        = string
+  default     = null
+}
+
+variable "cognito_from_email_address" {
+  description = "From email address for Cognito emails (requires DEVELOPER email sending account)"
+  type        = string
+  default     = null
+}
+
+variable "cognito_mfa_configuration" {
+  description = "MFA configuration (OFF, ON, OPTIONAL)"
+  type        = string
+  default     = "OPTIONAL"
+
+  validation {
+    condition     = contains(["OFF", "ON", "OPTIONAL"], var.cognito_mfa_configuration)
+    error_message = "MFA configuration must be OFF, ON, or OPTIONAL."
+  }
+}
+
+variable "cognito_password_minimum_length" {
+  description = "Minimum password length"
+  type        = number
+  default     = 12
+
+  validation {
+    condition     = var.cognito_password_minimum_length >= 8 && var.cognito_password_minimum_length <= 256
+    error_message = "Password minimum length must be between 8 and 256."
+  }
+}
+
+variable "cognito_password_require_lowercase" {
+  description = "Require lowercase letters in password"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_password_require_numbers" {
+  description = "Require numbers in password"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_password_require_symbols" {
+  description = "Require symbols in password"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_password_require_uppercase" {
+  description = "Require uppercase letters in password"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_temporary_password_validity_days" {
+  description = "Number of days temporary passwords are valid"
+  type        = number
+  default     = 7
+}
+
+variable "cognito_custom_attributes" {
+  description = "List of custom user attributes"
+  type = list(object({
+    name                     = string
+    attribute_data_type      = string # String, Number, DateTime, Boolean
+    developer_only_attribute = optional(bool, false)
+    mutable                  = optional(bool, true)
+    required                 = optional(bool, false)
+    min_length               = optional(number, 0)
+    max_length               = optional(number, 2048)
+    min_value                = optional(number)
+    max_value                = optional(number)
+  }))
+  default = []
+}
+
+variable "cognito_username_case_sensitive" {
+  description = "Whether usernames are case sensitive"
+  type        = bool
+  default     = false
+}
+
+variable "cognito_attributes_require_verification" {
+  description = "Attributes that require verification before update"
+  type        = list(string)
+  default     = ["email"]
+}
+
+variable "cognito_verification_email_option" {
+  description = "Verification email option (CONFIRM_WITH_LINK or CONFIRM_WITH_CODE)"
+  type        = string
+  default     = "CONFIRM_WITH_CODE"
+
+  validation {
+    condition     = contains(["CONFIRM_WITH_LINK", "CONFIRM_WITH_CODE"], var.cognito_verification_email_option)
+    error_message = "Verification email option must be CONFIRM_WITH_LINK or CONFIRM_WITH_CODE."
+  }
+}
+
+variable "cognito_verification_email_subject" {
+  description = "Email subject for verification emails"
+  type        = string
+  default     = "Your verification code"
+}
+
+variable "cognito_verification_email_message" {
+  description = "Email message for verification emails. Must contain {####} placeholder."
+  type        = string
+  default     = "Your verification code is {####}."
+}
+
+variable "cognito_verification_email_subject_by_link" {
+  description = "Email subject for verification link emails"
+  type        = string
+  default     = "Verify your email"
+}
+
+variable "cognito_verification_email_message_by_link" {
+  description = "Email message for verification link emails. Must contain {##Verify Email##} placeholder."
+  type        = string
+  default     = "Please click the link below to verify your email address. {##Verify Email##}"
+}
+
+#------------------------------------------------------------------------------
+# Cognito User Pool Domain Configuration
+#------------------------------------------------------------------------------
+
+variable "cognito_custom_domain" {
+  description = "Custom domain for Cognito hosted UI (leave empty for default AWS domain)"
+  type        = string
+  default     = ""
+}
+
+variable "cognito_domain_certificate_arn" {
+  description = "ACM certificate ARN for custom domain (required if using custom domain)"
+  type        = string
+  default     = null
+}
+
+#------------------------------------------------------------------------------
+# Cognito User Pool Client Configuration
+#------------------------------------------------------------------------------
+
+variable "cognito_access_token_validity" {
+  description = "Access token validity in time units"
+  type        = number
+  default     = 60
+}
+
+variable "cognito_id_token_validity" {
+  description = "ID token validity in time units"
+  type        = number
+  default     = 60
+}
+
+variable "cognito_refresh_token_validity" {
+  description = "Refresh token validity in time units"
+  type        = number
+  default     = 30
+}
+
+variable "cognito_access_token_validity_units" {
+  description = "Time unit for access token validity (seconds, minutes, hours, days)"
+  type        = string
+  default     = "minutes"
+
+  validation {
+    condition     = contains(["seconds", "minutes", "hours", "days"], var.cognito_access_token_validity_units)
+    error_message = "Token validity unit must be seconds, minutes, hours, or days."
+  }
+}
+
+variable "cognito_id_token_validity_units" {
+  description = "Time unit for ID token validity (seconds, minutes, hours, days)"
+  type        = string
+  default     = "minutes"
+
+  validation {
+    condition     = contains(["seconds", "minutes", "hours", "days"], var.cognito_id_token_validity_units)
+    error_message = "Token validity unit must be seconds, minutes, hours, or days."
+  }
+}
+
+variable "cognito_refresh_token_validity_units" {
+  description = "Time unit for refresh token validity (seconds, minutes, hours, days)"
+  type        = string
+  default     = "days"
+
+  validation {
+    condition     = contains(["seconds", "minutes", "hours", "days"], var.cognito_refresh_token_validity_units)
+    error_message = "Token validity unit must be seconds, minutes, hours, or days."
+  }
+}
+
+variable "cognito_allowed_oauth_flows" {
+  description = "Allowed OAuth flows (code, implicit, client_credentials)"
+  type        = list(string)
+  default     = ["code"]
+
+  validation {
+    condition     = alltrue([for flow in var.cognito_allowed_oauth_flows : contains(["code", "implicit", "client_credentials"], flow)])
+    error_message = "OAuth flows must be code, implicit, or client_credentials."
+  }
+}
+
+variable "cognito_allowed_oauth_flows_user_pool_client" {
+  description = "Whether OAuth flows are allowed for the user pool client"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_allowed_oauth_scopes" {
+  description = "Allowed OAuth scopes"
+  type        = list(string)
+  default     = ["email", "openid", "profile"]
+}
+
+variable "cognito_callback_urls" {
+  description = "List of allowed callback URLs for OAuth"
+  type        = list(string)
+  default     = []
+}
+
+variable "cognito_logout_urls" {
+  description = "List of allowed logout URLs"
+  type        = list(string)
+  default     = []
+}
+
+variable "cognito_supported_identity_providers" {
+  description = "Supported identity providers (COGNITO, Facebook, Google, etc.)"
+  type        = list(string)
+  default     = ["COGNITO"]
+}
+
+variable "cognito_generate_client_secret" {
+  description = "Generate a client secret for the app client"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_prevent_user_existence_errors" {
+  description = "How to handle user existence errors (LEGACY or ENABLED)"
+  type        = string
+  default     = "ENABLED"
+
+  validation {
+    condition     = contains(["LEGACY", "ENABLED"], var.cognito_prevent_user_existence_errors)
+    error_message = "Prevent user existence errors must be LEGACY or ENABLED."
+  }
+}
+
+variable "cognito_enable_token_revocation" {
+  description = "Enable token revocation"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_enable_propagate_user_context" {
+  description = "Enable propagation of additional user context data"
+  type        = bool
+  default     = false
+}
+
+variable "cognito_explicit_auth_flows" {
+  description = "Explicit authentication flows enabled"
+  type        = list(string)
+  default = [
+    "ALLOW_REFRESH_TOKEN_AUTH",
+    "ALLOW_USER_SRP_AUTH"
+  ]
+}
+
+variable "cognito_read_attributes" {
+  description = "List of user pool attributes the app client can read"
+  type        = list(string)
+  default     = ["email", "email_verified", "name"]
+}
+
+variable "cognito_write_attributes" {
+  description = "List of user pool attributes the app client can write"
+  type        = list(string)
+  default     = ["email", "name"]
+}
+
+#------------------------------------------------------------------------------
+# Cognito Resource Server Configuration
+#------------------------------------------------------------------------------
+
+variable "cognito_resource_server_identifier" {
+  description = "Identifier for the resource server (defaults to route53_zone_name)"
+  type        = string
+  default     = ""
+}
+
+variable "cognito_resource_server_scopes" {
+  description = "List of scopes for the resource server"
+  type = list(object({
+    name        = string
+    description = string
+  }))
+  default = []
+}
+
+#------------------------------------------------------------------------------
+# Cognito Identity Pool Configuration
+#------------------------------------------------------------------------------
+
+variable "enable_cognito_identity_pool" {
+  description = "Enable Cognito Identity Pool for federated identities"
+  type        = bool
+  default     = false
+}
+
+variable "cognito_allow_unauthenticated_identities" {
+  description = "Allow unauthenticated identities in the identity pool"
+  type        = bool
+  default     = false
+}
+
+variable "cognito_allow_classic_flow" {
+  description = "Allow classic (basic) authentication flow"
+  type        = bool
+  default     = false
+}
+
+variable "cognito_server_side_token_check" {
+  description = "Enable server-side token validation"
+  type        = bool
+  default     = true
+}
