@@ -1,3 +1,7 @@
+# Dynamically select the newest lambda-api-0.1.0-*.zip from S3
+locals {
+  lambda_s3_key = run_cmd("bash", "-c", "aws s3 ls s3://nhs-hometest-poc-dev-lambda-artifacts/ | grep lambda-api-0.1.0 | sort | tail -1 | awk '{print $4}'")
+}
 # ---------------------------------------------------------------------------------------------------------------------
 # TERRAGRUNT CONFIGURATION - Application (Lambda) for DEV Environment
 # This deploys the Lambda function for the dev environment
@@ -30,7 +34,7 @@ inputs = {
   # Lambda Configuration
   lambda_name        = "api"
   lambda_description = "HomeTest API Lambda for dev environment"
-  lambda_handler     = "index.handler"
+  lambda_handler     = "src/consumer-order-stack/eligibility-test-info-lambda/index.handler"
   lambda_runtime     = "nodejs20.x"
   lambda_timeout     = 30
   lambda_memory_size = 256
@@ -38,14 +42,14 @@ inputs = {
   # Lambda artifact configuration
   # Option 1: Deploy from local zip (for initial deployment)
   # Build with: make package-lambda
-  lambda_filename = "${get_repo_root()}/artifacts/api.zip"
+  # lambda_filename = "${get_repo_root()}/artifacts/api.zip"
 
   # Option 2: Deploy from S3 (for CI/CD)
   # Upload with: make upload-service
-  # lambda_s3_bucket = "nhs-hometest-poc-dev-lambda-artifacts"
-  # lambda_s3_key    = "lambda-api-latest.zip"
+  lambda_s3_bucket = "nhs-hometest-poc-dev-lambda-artifacts"
+  lambda_s3_key    = local.lambda_s3_key
 
-  lambda_source_code_hash = filebase64sha256("${get_repo_root()}/artifacts/api.zip")
+  # lambda_source_code_hash = filebase64sha256("${get_repo_root()}/artifacts/api.zip")
 
   # VPC Configuration - deploy Lambda in VPC for RDS access
   enable_vpc             = true
