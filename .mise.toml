@@ -45,11 +45,6 @@ vale = "latest"
 # https://github.com/igorshubovych/markdownlint-cli/releases
 # markdownlint-cli = "latest"
 
-## Application dependencies
-
-# https://nodejs.org/en/download/releases
-node = "24"
-
 [tasks.pre-commit]
 description = "Run pre-commit checks on all files"
 run = "pre-commit run --all-files --show-diff-on-failure --color=always"
