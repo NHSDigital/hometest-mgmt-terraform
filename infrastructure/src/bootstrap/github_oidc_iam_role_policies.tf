@@ -58,7 +58,8 @@ data "aws_iam_policy_document" "tfstate_policy" {
       "kms:GenerateDataKey*",
       "kms:DescribeKey",
       "kms:GetKeyPolicy",
-      "kms:GetKeyRotationStatus"
+      "kms:GetKeyRotationStatus",
+      "kms:ListResourceTags"
     ]
     resources = [aws_kms_key.tfstate.arn]
   }
@@ -118,6 +119,7 @@ data "aws_iam_policy_document" "infrastructure_policy" {
       "s3:GetBucketPublicAccessBlock",
       "s3:GetBucketWebsite",
       "s3:GetAccelerateConfiguration",
+      "s3:GetBucketRequestPayment",
       "s3:ListBucket",
       "s3:ListAllMyBuckets",
 
