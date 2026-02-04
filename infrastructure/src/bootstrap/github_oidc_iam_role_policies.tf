@@ -57,7 +57,8 @@ data "aws_iam_policy_document" "tfstate_policy" {
       "kms:ReEncrypt*",
       "kms:GenerateDataKey*",
       "kms:DescribeKey",
-      "kms:GetKeyPolicy"
+      "kms:GetKeyPolicy",
+      "kms:GetKeyRotationStatus"
     ]
     resources = [aws_kms_key.tfstate.arn]
   }
@@ -116,6 +117,7 @@ data "aws_iam_policy_document" "infrastructure_policy" {
       "s3:GetLifecycleConfiguration",
       "s3:GetBucketPublicAccessBlock",
       "s3:GetBucketWebsite",
+      "s3:GetAccelerateConfiguration",
       "s3:ListBucket",
       "s3:ListAllMyBuckets",
 
@@ -174,6 +176,7 @@ data "aws_iam_policy_document" "infrastructure_policy" {
 
       # Resource Groups
       "resource-groups:GetGroup",
+      "resource-groups:GetGroupConfiguration",
       "resource-groups:GetGroupQuery",
       "resource-groups:ListGroupResources",
       "resource-groups:GetTags"
