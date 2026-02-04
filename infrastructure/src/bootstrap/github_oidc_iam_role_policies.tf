@@ -97,7 +97,18 @@ data "aws_iam_policy_document" "infrastructure_policy" {
       "resource-groups:*",
       "tag:*",
 
-      # Identity (read + limited write)
+      # Identity
+      "cognito-idp:*",
+      "cognito-identity:*",
+
+      # Data Streaming
+      "firehose:*",
+      "kinesis:*",
+
+      # Database
+      "rds:*",
+
+      # STS
       "sts:GetCallerIdentity",
       "sts:AssumeRole"
     ]
