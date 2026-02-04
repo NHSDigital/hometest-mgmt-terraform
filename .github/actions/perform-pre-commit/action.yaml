@@ -4,28 +4,9 @@ description: "Perform pre-commit checks"
 runs:
   using: "composite"
   steps:
-    - name: Install pre-commit dependencies
-      working-directory: /tmp
+    - name: Install pre-commit hooks
       shell: bash
       run: |
-        echo "::group::Install mise"
-        sudo curl -fsSL https://mise.jdx.dev/gpg-key.pub | sudo gpg --dearmor -o /etc/apt/keyrings/mise-archive-keyring.gpg
-        sudo echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg arch=amd64] https://mise.jdx.dev/deb stable main" | sudo tee /etc/apt/sources.list.d/mise.list
-        sudo apt-get update
-        sudo apt-get install -y mise
-        echo "::endgroup::"
-
-    - name: Install pre-commit
-      shell: bash
-      run: |
-        echo "::group::Configure git"
-        git config --global --add safe.directory '*'
-        echo "::endgroup::"
-
-        echo "::group::Install mise tools"
-        mise install
-        echo "::endgroup::"
-
         echo "::group::Install pre-commit hooks"
         mise exec -- pre-commit install --install-hooks
         echo "::endgroup::"

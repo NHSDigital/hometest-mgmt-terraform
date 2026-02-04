@@ -61,21 +61,15 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: "eu-west-2"
 
-      - name: Mise init
-        run: |
-          echo "::group::Install mise tools"
-          mise install
-          echo "::endgroup::"
-
-          echo "::group::Install pre-commit hooks"
-          mise exec -- pre-commit install --install-hooks
-          echo "::endgroup::"
+      - name: Run mise
+        uses: ./.github/actions/install-mise
 
       - name: Terragrunt Bootstrap Init
         working-directory: infrastructure/environments/poc/core/bootstrap/
