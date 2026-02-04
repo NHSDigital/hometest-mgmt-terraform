@@ -317,34 +317,316 @@ data "aws_iam_policy_document" "infrastructure_policy" {
     ]
   }
 
-  # Write access - CUSTOMIZE BASED ON YOUR NEEDS
-  # Start with read-only and add write permissions as needed
-  # Example: Uncomment and modify for your use case
+  #-----------------------------------------------------------------------------
+  # VPC and Networking Permissions
+  # Required for network infrastructure deployment
+  #-----------------------------------------------------------------------------
 
-  # statement {
-  #   sid    = "EC2WriteAccess"
-  #   effect = "Allow"
-  #   actions = [
-  #     "ec2:CreateVpc",
-  #     "ec2:DeleteVpc",
-  #     "ec2:CreateSubnet",
-  #     "ec2:DeleteSubnet",
-  #     "ec2:CreateSecurityGroup",
-  #     "ec2:DeleteSecurityGroup",
-  #     "ec2:AuthorizeSecurityGroupIngress",
-  #     "ec2:RevokeSecurityGroupIngress",
-  #     "ec2:AuthorizeSecurityGroupEgress",
-  #     "ec2:RevokeSecurityGroupEgress",
-  #     "ec2:CreateTags",
-  #     "ec2:DeleteTags"
-  #   ]
-  #   resources = ["*"]
-  #   condition {
-  #     test     = "StringEquals"
-  #     variable = "aws:RequestedRegion"
-  #     values   = [var.aws_region]
-  #   }
-  # }
+  statement {
+    sid    = "VPCNetworkingAccess"
+    effect = "Allow"
+    actions = [
+      # VPC
+      "ec2:CreateVpc",
+      "ec2:DeleteVpc",
+      "ec2:ModifyVpcAttribute",
+      "ec2:AssociateVpcCidrBlock",
+      "ec2:DisassociateVpcCidrBlock",
+
+      # Subnets
+      "ec2:CreateSubnet",
+      "ec2:DeleteSubnet",
+      "ec2:ModifySubnetAttribute",
+
+      # Internet Gateway
+      "ec2:CreateInternetGateway",
+      "ec2:DeleteInternetGateway",
+      "ec2:AttachInternetGateway",
+      "ec2:DetachInternetGateway",
+
+      # NAT Gateway
+      "ec2:CreateNatGateway",
+      "ec2:DeleteNatGateway",
+      "ec2:AllocateAddress",
+      "ec2:ReleaseAddress",
+      "ec2:AssociateAddress",
+      "ec2:DisassociateAddress",
+
+      # Route Tables
+      "ec2:CreateRouteTable",
+      "ec2:DeleteRouteTable",
+      "ec2:CreateRoute",
+      "ec2:DeleteRoute",
+      "ec2:ReplaceRoute",
+      "ec2:AssociateRouteTable",
+      "ec2:DisassociateRouteTable",
+      "ec2:ReplaceRouteTableAssociation",
+
+      # Security Groups
+      "ec2:CreateSecurityGroup",
+      "ec2:DeleteSecurityGroup",
+      "ec2:AuthorizeSecurityGroupIngress",
+      "ec2:RevokeSecurityGroupIngress",
+      "ec2:AuthorizeSecurityGroupEgress",
+      "ec2:RevokeSecurityGroupEgress",
+      "ec2:ModifySecurityGroupRules",
+      "ec2:UpdateSecurityGroupRuleDescriptionsIngress",
+      "ec2:UpdateSecurityGroupRuleDescriptionsEgress",
+
+      # Network ACLs
+      "ec2:CreateNetworkAcl",
+      "ec2:DeleteNetworkAcl",
+      "ec2:CreateNetworkAclEntry",
+      "ec2:DeleteNetworkAclEntry",
+      "ec2:ReplaceNetworkAclEntry",
+      "ec2:ReplaceNetworkAclAssociation",
+
+      # VPC Endpoints
+      "ec2:CreateVpcEndpoint",
+      "ec2:DeleteVpcEndpoints",
+      "ec2:ModifyVpcEndpoint",
+
+      # VPC Flow Logs
+      "ec2:CreateFlowLogs",
+      "ec2:DeleteFlowLogs",
+
+      # Tags
+      "ec2:CreateTags",
+      "ec2:DeleteTags"
+    ]
+    resources = ["*"]
+  }
+
+  #-----------------------------------------------------------------------------
+  # AWS Network Firewall Permissions
+  # Required for egress filtering deployment
+  #-----------------------------------------------------------------------------
+
+  statement {
+    sid    = "NetworkFirewallAccess"
+    effect = "Allow"
+    actions = [
+      "network-firewall:CreateFirewall",
+      "network-firewall:DeleteFirewall",
+      "network-firewall:UpdateFirewallDescription",
+      "network-firewall:UpdateFirewallDeleteProtection",
+      "network-firewall:UpdateFirewallPolicy",
+      "network-firewall:UpdateFirewallPolicyChangeProtection",
+      "network-firewall:UpdateSubnetChangeProtection",
+      "network-firewall:AssociateFirewallPolicy",
+      "network-firewall:DisassociateSubnets",
+      "network-firewall:AssociateSubnets",
+      "network-firewall:DescribeFirewall",
+      "network-firewall:DescribeFirewallPolicy",
+      "network-firewall:DescribeRuleGroup",
+      "network-firewall:DescribeLoggingConfiguration",
+      "network-firewall:ListFirewalls",
+      "network-firewall:ListFirewallPolicies",
+      "network-firewall:ListRuleGroups",
+      "network-firewall:CreateFirewallPolicy",
+      "network-firewall:DeleteFirewallPolicy",
+      "network-firewall:UpdateFirewallPolicy",
+      "network-firewall:CreateRuleGroup",
+      "network-firewall:DeleteRuleGroup",
+      "network-firewall:UpdateRuleGroup",
+      "network-firewall:UpdateLoggingConfiguration",
+      "network-firewall:TagResource",
+      "network-firewall:UntagResource",
+      "network-firewall:ListTagsForResource"
+    ]
+    resources = ["*"]
+  }
+
+  #-----------------------------------------------------------------------------
+  # Route53 Write Permissions
+  # Required for DNS management
+  #-----------------------------------------------------------------------------
+
+  statement {
+    sid    = "Route53WriteAccess"
+    effect = "Allow"
+    actions = [
+      "route53:CreateHostedZone",
+      "route53:DeleteHostedZone",
+      "route53:UpdateHostedZoneComment",
+      "route53:ChangeResourceRecordSets",
+      "route53:CreateHealthCheck",
+      "route53:DeleteHealthCheck",
+      "route53:UpdateHealthCheck",
+      "route53:GetHealthCheck",
+      "route53:GetHostedZone",
+      "route53:ListHostedZones",
+      "route53:ListResourceRecordSets",
+      "route53:GetChange",
+      "route53:ChangeTagsForResource",
+      "route53:ListTagsForResource",
+      "route53:AssociateVPCWithHostedZone",
+      "route53:DisassociateVPCFromHostedZone",
+      "route53:CreateQueryLoggingConfig",
+      "route53:DeleteQueryLoggingConfig",
+      "route53:GetQueryLoggingConfig",
+      "route53:ListQueryLoggingConfigs"
+    ]
+    resources = ["*"]
+  }
+
+  #-----------------------------------------------------------------------------
+  # KMS Key Management Permissions
+  # Required for encryption key management (VPC Flow Logs, etc.)
+  #-----------------------------------------------------------------------------
+
+  statement {
+    sid    = "KMSKeyManagement"
+    effect = "Allow"
+    actions = [
+      "kms:CreateKey",
+      "kms:CreateAlias",
+      "kms:DeleteAlias",
+      "kms:UpdateAlias",
+      "kms:ScheduleKeyDeletion",
+      "kms:CancelKeyDeletion",
+      "kms:EnableKeyRotation",
+      "kms:DisableKeyRotation",
+      "kms:PutKeyPolicy",
+      "kms:TagResource",
+      "kms:UntagResource",
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey",
+      "kms:GetKeyPolicy",
+      "kms:GetKeyRotationStatus",
+      "kms:ListResourceTags",
+      "kms:ListAliases",
+      "kms:ListKeys"
+    ]
+    resources = ["*"]
+  }
+
+  #-----------------------------------------------------------------------------
+  # S3 Bucket Management Permissions
+  # Required for S3 bucket deployment and management
+  #-----------------------------------------------------------------------------
+
+  statement {
+    sid    = "S3BucketManagement"
+    effect = "Allow"
+    actions = [
+      "s3:CreateBucket",
+      "s3:DeleteBucket",
+      "s3:PutBucketPolicy",
+      "s3:DeleteBucketPolicy",
+      "s3:PutBucketAcl",
+      "s3:PutBucketCORS",
+      "s3:PutBucketVersioning",
+      "s3:PutEncryptionConfiguration",
+      "s3:PutBucketTagging",
+      "s3:PutBucketLogging",
+      "s3:PutLifecycleConfiguration",
+      "s3:PutBucketPublicAccessBlock",
+      "s3:PutBucketWebsite",
+      "s3:DeleteBucketWebsite",
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:DeleteObject",
+      "s3:GetBucketPolicy",
+      "s3:GetBucketAcl",
+      "s3:GetBucketCORS",
+      "s3:GetBucketVersioning",
+      "s3:GetBucketLocation",
+      "s3:GetEncryptionConfiguration",
+      "s3:GetBucketTagging",
+      "s3:GetBucketLogging",
+      "s3:GetLifecycleConfiguration",
+      "s3:GetBucketPublicAccessBlock",
+      "s3:GetBucketWebsite",
+      "s3:GetAccelerateConfiguration",
+      "s3:GetBucketRequestPayment",
+      "s3:ListBucket",
+      "s3:ListAllMyBuckets",
+      "s3:GetBucketNotification",
+      "s3:PutBucketNotification",
+      "s3:GetReplicationConfiguration",
+      "s3:PutReplicationConfiguration",
+      "s3:GetBucketOwnershipControls",
+      "s3:PutBucketOwnershipControls",
+      "s3:GetObjectTagging",
+      "s3:PutObjectTagging"
+    ]
+    resources = ["*"]
+  }
+
+  #-----------------------------------------------------------------------------
+  # DynamoDB Permissions
+  # Required for state locking and application tables
+  #-----------------------------------------------------------------------------
+
+  statement {
+    sid    = "DynamoDBManagement"
+    effect = "Allow"
+    actions = [
+      "dynamodb:CreateTable",
+      "dynamodb:DeleteTable",
+      "dynamodb:UpdateTable",
+      "dynamodb:DescribeTable",
+      "dynamodb:DescribeContinuousBackups",
+      "dynamodb:UpdateContinuousBackups",
+      "dynamodb:DescribeTimeToLive",
+      "dynamodb:UpdateTimeToLive",
+      "dynamodb:ListTagsOfResource",
+      "dynamodb:TagResource",
+      "dynamodb:UntagResource",
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:DeleteItem"
+    ]
+    resources = ["*"]
+  }
+
+  #-----------------------------------------------------------------------------
+  # Resource Groups Permissions
+  # Required for resource group management
+  #-----------------------------------------------------------------------------
+
+  statement {
+    sid    = "ResourceGroupsManagement"
+    effect = "Allow"
+    actions = [
+      "resource-groups:CreateGroup",
+      "resource-groups:DeleteGroup",
+      "resource-groups:UpdateGroup",
+      "resource-groups:UpdateGroupQuery",
+      "resource-groups:GetGroup",
+      "resource-groups:GetGroupConfiguration",
+      "resource-groups:GetGroupQuery",
+      "resource-groups:ListGroupResources",
+      "resource-groups:GetTags",
+      "resource-groups:Tag",
+      "resource-groups:Untag",
+      "resource-groups:PutGroupConfiguration"
+    ]
+    resources = ["*"]
+  }
+
+  #-----------------------------------------------------------------------------
+  # IAM Service-Linked Roles
+  # Required for Network Firewall and VPC Flow Logs
+  #-----------------------------------------------------------------------------
+
+  statement {
+    sid    = "IAMServiceLinkedRoles"
+    effect = "Allow"
+    actions = [
+      "iam:CreateServiceLinkedRole",
+      "iam:DeleteServiceLinkedRole",
+      "iam:GetServiceLinkedRoleDeletionStatus"
+    ]
+    resources = [
+      "arn:aws:iam::*:role/aws-service-role/network-firewall.amazonaws.com/*",
+      "arn:aws:iam::*:role/aws-service-role/logs.amazonaws.com/*"
+    ]
+  }
 }
 
 ################################################################################
