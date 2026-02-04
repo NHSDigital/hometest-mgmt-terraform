@@ -51,7 +51,7 @@ jobs:
           export TAG="${{ steps.variables.outputs.tag }}"
           make list-variables
   deploy-bootstrap:
-    name: "Deploy TF core/bootstrap"
+    name: "Deploy TF Core/Bootstrap"
     runs-on: ubuntu-latest
     needs: [metadata]
     timeout-minutes: 10
@@ -62,28 +62,14 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@v6
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Deploy TF Core/Bootstrap
+        uses: ./.github/actions/deploy-terragrunt
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: "eu-west-2"
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          working_directory: infrastructure/environments/poc/core/bootstrap/
 
-      - name: Run mise
-        uses: ./.github/actions/install-mise
-
-      - name: Terragrunt Bootstrap Init
-        working-directory: infrastructure/environments/poc/core/bootstrap/
-        run: mise exec -- terragrunt init
-
-      - name: Terragrunt Bootstrap Plan
-        working-directory: infrastructure/environments/poc/core/bootstrap/
-        run: mise exec -- terragrunt plan -out=tfplan
-
-      - name: Terragrunt Bootstrap Apply
-        working-directory: infrastructure/environments/poc/core/bootstrap/
-        run: mise exec -- terragrunt apply -auto-approve tfplan
   deploy-network:
-    name: "Deploy TF core/network"
+    name: "Deploy TF Core/Network"
     runs-on: ubuntu-latest
     needs: [deploy-bootstrap]
     timeout-minutes: 10
@@ -94,26 +80,11 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@v6
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Deploy TF Core/Network
+        uses: ./.github/actions/deploy-terragrunt
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: "eu-west-2"
-
-      - name: Run mise
-        uses: ./.github/actions/install-mise
-
-      - name: Terragrunt Network Init
-        working-directory: infrastructure/environments/poc/core/network/
-        run: mise exec -- terragrunt init
-
-      - name: Terragrunt Network Plan
-        working-directory: infrastructure/environments/poc/core/network/
-        run: mise exec -- terragrunt plan -out=tfplan
-
-      - name: Terragrunt Network Apply
-        working-directory: infrastructure/environments/poc/core/network/
-        run: mise exec -- terragrunt apply -auto-approve tfplan
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          working_directory: infrastructure/environments/poc/core/network/
   # TODO: More jobs or/and steps here
   # success:
   #   name: "Success notification"

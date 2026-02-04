@@ -59,7 +59,7 @@ jobs:
       working_dir_base: ${{ steps.set-modules.outputs.working_dir_base }}
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: "Set modules to deploy"
         id: set-modules
@@ -113,40 +113,13 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@v4
 
-      - name: "Configure AWS credentials"
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: "Deploy ${{ matrix.module }}"
+        uses: ./.github/actions/deploy-terragrunt
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: "Install mise tools"
-        uses: ./.github/actions/install-mise
-
-      - name: "Set working directory"
-        id: workdir
-        run: |
-          WORKDIR="${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.module }}"
-          echo "path=${WORKDIR}" >> $GITHUB_OUTPUT
-          echo "Working directory: ${WORKDIR}"
-
-      - name: "Terragrunt Init"
-        working-directory: ${{ steps.workdir.outputs.path }}
-        run: mise exec -- terragrunt init
-
-      - name: "Terragrunt Plan"
-        if: inputs.action == 'plan' || inputs.action == 'apply'
-        working-directory: ${{ steps.workdir.outputs.path }}
-        run: mise exec -- terragrunt plan -out=tfplan
-
-      - name: "Terragrunt Destroy Plan"
-        if: inputs.action == 'destroy-plan' || inputs.action == 'destroy'
-        working-directory: ${{ steps.workdir.outputs.path }}
-        run: mise exec -- terragrunt plan -destroy -out=tfplan
-
-      - name: "Terragrunt Apply"
-        if: inputs.action == 'apply' || inputs.action == 'destroy'
-        working-directory: ${{ steps.workdir.outputs.path }}
-        run: mise exec -- terragrunt apply -auto-approve tfplan
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          aws_region: ${{ env.AWS_REGION }}
+          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.module }}
+          action: ${{ inputs.action }}
 
       - name: "Post deployment summary"
         if: always()
@@ -154,7 +127,7 @@ jobs:
           echo "## Module: ${{ matrix.module }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Action**: ${{ inputs.action }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Path**: ${{ steps.workdir.outputs.path }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Path**: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.module }}" >> $GITHUB_STEP_SUMMARY
 
   summary:
     name: "Deployment Summary"

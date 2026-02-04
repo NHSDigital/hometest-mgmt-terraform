@@ -13,17 +13,6 @@ output "state_bucket_arn" {
   value       = aws_s3_bucket.tfstate.arn
 }
 
-# DynamoDB Lock Table Outputs
-output "dynamodb_table_name" {
-  description = "Name of the DynamoDB table for state locking"
-  value       = aws_dynamodb_table.tfstate_lock.name
-}
-
-output "dynamodb_table_arn" {
-  description = "ARN of the DynamoDB table for state locking"
-  value       = aws_dynamodb_table.tfstate_lock.arn
-}
-
 # KMS Key Outputs
 output "kms_key_arn" {
   description = "ARN of the KMS key for state encryption"
@@ -64,7 +53,7 @@ output "backend_config_hcl" {
   value       = <<-EOT
     bucket         = "${aws_s3_bucket.tfstate.id}"
     region         = "${var.aws_region}"
-    dynamodb_table = "${aws_dynamodb_table.tfstate_lock.name}"
+    use_lockfile   = true
     encrypt        = true
     kms_key_id     = "${aws_kms_key.tfstate.arn}"
   EOT

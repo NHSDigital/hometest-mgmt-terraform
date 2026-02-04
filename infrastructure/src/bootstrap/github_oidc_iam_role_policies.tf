@@ -22,16 +22,6 @@ data "aws_iam_policy_document" "tfstate_policy" {
     ]
   }
 
-  # DynamoDB Lock Table
-  statement {
-    sid    = "DynamoDBLockTable"
-    effect = "Allow"
-    actions = [
-      "dynamodb:*"
-    ]
-    resources = [aws_dynamodb_table.tfstate_lock.arn]
-  }
-
   # KMS Key for State Encryption
   statement {
     sid    = "KMSStateEncryption"
