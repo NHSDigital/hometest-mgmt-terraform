@@ -1,83 +1,21 @@
 ---
 name: "Perform pre-commit checks"
 description: "Perform pre-commit checks"
-inputs:
-
-  # https://github.com/terraform-docs/terraform-docs/releases
-  terraform_docs_version:
-    description: "Version of terraform-docs to install"
-    required: true
-    default: "0.21.0"
-  # https://github.com/terraform-linters/tflint/releases
-  tflint_version:
-    description: "Version of tflint to install"
-    required: true
-    default: "0.60.0"
-  # https://github.com/aquasecurity/trivy/releases
-  trivy_version:
-    description: "Version of trivy to install"
-    required: true
-    default: "0.68.2"
 runs:
   using: "composite"
   steps:
-    - name: Install tfswitch
-      run: |
-        curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | bash -s -- -b ~/.local/bin latest
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
-        tfswitch
-      working-directory: infrastructure/src/bootstrap/
-      shell: bash
-
-    - name: Install tgswitch
-      run: |
-        curl -L https://raw.githubusercontent.com/warrensbox/tgswitch/release/install.sh | bash -s -- -b ~/.local/bin latest
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
-        tgswitch 0.97.2
-      working-directory: infrastructure/environments/poc/core/bootstrap/
-      shell: bash
-
-    - name: Install pre-commit dependencies
-      working-directory: /tmp
+    - name: Install pre-commit hooks
       shell: bash
       run: |
-        echo "Install tflint ${{ inputs.tflint_version }}"
-        curl -sL https://github.com/terraform-linters/tflint/releases/download/v${{ inputs.tflint_version }}/tflint_linux_amd64.zip -O
-        unzip tflint_linux_amd64.zip -d /tmp
-        sudo mv /tmp/tflint /usr/bin/
-        rm tflint_linux_amd64.zip
-        tflint --version
-
-        echo "Install trivy ${{ inputs.trivy_version }}"
-        curl -sL https://github.com/aquasecurity/trivy/releases/download/v${{ inputs.trivy_version }}/trivy_${{ inputs.trivy_version }}_Linux-64bit.tar.gz -O
-        tar -xf trivy_${{ inputs.trivy_version }}_Linux-64bit.tar.gz -C /tmp
-        sudo mv /tmp/trivy /usr/bin/
-        rm -rf trivy_${{ inputs.trivy_version }}_Linux-64bit.tar.gz
-        trivy --version
-
-        echo "Install terraform_docs ${{ inputs.terraform_docs_version }}"
-        curl -sL https://github.com/terraform-docs/terraform-docs/releases/download/v${{ inputs.terraform_docs_version }}/terraform-docs-v${{ inputs.terraform_docs_version }}-linux-amd64.tar.gz -O
-        tar -xf terraform-docs-v${{ inputs.terraform_docs_version }}-linux-amd64.tar.gz -C /tmp
-        sudo mv /tmp/terraform-docs /usr/bin/
-        rm -rf terraform-docs-v${{ inputs.terraform_docs_version }}-linux-amd64.tar.gz
-        terraform-docs --version
-
-        echo "Install pipx checkov"
-        sudo pipx install --global checkov
-        checkov --version
-
-    - name: Install pre-commit
-      shell: bash
-      run: |
-        # whereis pre-commit
-        # pre-commit
-        sudo pipx install --global pre-commit
-        git config --global --add safe.directory '*'
-        pre-commit install --install-hooks
+        echo "::group::Install pre-commit hooks"
+        mise exec -- pre-commit install --install-hooks
+        echo "::endgroup::"
 
     - name: Run pre-commit
       shell: bash
       run: |
-        pre-commit run --all-files --show-diff-on-failure --color=always
+        echo "::group::Run pre-commit checks"
+        mise exec -- pre-commit run --all-files --show-diff-on-failure --color=always
+        echo "::endgroup::"
       env:
         PRE_COMMIT_COLOR: always
