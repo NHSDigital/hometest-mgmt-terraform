@@ -28,12 +28,12 @@ locals {
 remote_state {
   backend = "s3"
   config = {
-    bucket         = "nhs-hometest-poc-core-s3-tfstate"
-    dynamodb_table = "nhs-hometest-poc-core-dynamodb-tfstate-lock"
-    key            = "${local.account_name}-${local.environment}-${basename(path_relative_to_include())}.tfstate"
-    encrypt        = true
-    kms_key_id     = "arn:aws:kms:eu-west-2:781863586270:key/3e87d63f-febc-4dd4-a771-92c3c07a51f5"
-    region         = local.region
+    bucket       = "nhs-hometest-poc-core-s3-tfstate"
+    use_lockfile = true
+    key          = "${local.account_name}-${local.environment}-${basename(path_relative_to_include())}.tfstate"
+    encrypt      = true
+    kms_key_id   = "arn:aws:kms:eu-west-2:781863586270:key/3e87d63f-febc-4dd4-a771-92c3c07a51f5"
+    region       = local.region
   }
   generate = {
     path      = "backend.tf"

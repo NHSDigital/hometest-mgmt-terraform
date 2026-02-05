@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "This is the tag that is oging to be deployed"
+        description: "This is the tag that is going to be deployed"
         required: true
         default: "latest"
 
@@ -50,14 +50,41 @@ jobs:
           export VERSION="${{ steps.variables.outputs.version }}"
           export TAG="${{ steps.variables.outputs.tag }}"
           make list-variables
-  deploy:
-    name: "Deploy to an environment"
+  deploy-bootstrap:
+    name: "Deploy TF Core/Bootstrap"
     runs-on: ubuntu-latest
     needs: [metadata]
     timeout-minutes: 10
+    permissions:
+      id-token: write    # REQUIRED for OIDC token
+      contents: read     # For checkout
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
+
+      - name: Deploy TF Core/Bootstrap
+        uses: ./.github/actions/deploy-terragrunt
+        with:
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          working_directory: infrastructure/environments/poc/core/bootstrap/
+
+  deploy-network:
+    name: "Deploy TF Core/Network"
+    runs-on: ubuntu-latest
+    needs: [deploy-bootstrap]
+    timeout-minutes: 10
+    permissions:
+      id-token: write    # REQUIRED for OIDC token
+      contents: read     # For checkout
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v6
+
+      - name: Deploy TF Core/Network
+        uses: ./.github/actions/deploy-terragrunt
+        with:
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          working_directory: infrastructure/environments/poc/core/network/
   # TODO: More jobs or/and steps here
   # success:
   #   name: "Success notification"
