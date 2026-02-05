@@ -1,6 +1,6 @@
 ---
 name: "Deploy Terraform Module"
-run-name: "Deploy env: ${{ inputs.environment }}, module: ${{ inputs.module }}, tf: ${{ inputs.action }} by @${{ github.actor }}"
+run-name: "Deploy env: ${{ inputs.environment }}, module: ${{ inputs.module }}, tf: ${{ inputs.action }}"
 
 # ${{ inputs.tag }} - the tag being deployed
 # ${{ inputs.environment }} - target environment
