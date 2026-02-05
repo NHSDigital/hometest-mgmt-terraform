@@ -1,13 +1,19 @@
 ---
 name: "CI/CD deploy"
+run-name: "Deploy ${{ inputs.tag }} to ${{ inputs.environment }} from ${{ github.ref_name }} by @${{ github.actor }}"
 
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: "This is the tag that is going to be deployed"
+      environment:
+        description: "Target environment"
         required: true
-        default: "latest"
+        type: choice
+        options:
+          - poc
+          - dev
+          - staging
+          - prod
 
 jobs:
   metadata:
