@@ -1,5 +1,12 @@
 ---
 name: "Deploy Terraform Module"
+run-name: "Deploy env: ${{ inputs.environment }}, module: ${{ inputs.module }}, tf: ${{ inputs.action }} by @${{ github.actor }}"
+
+# ${{ inputs.tag }} - the tag being deployed
+# ${{ inputs.environment }} - target environment
+# ${{ github.ref_name }} - branch name
+# ${{ github.actor }} - who triggered the workflow
+# If you'd prefer to show the commit message instead of/in addition to branch name, you can use ${{ github.event.head_commit.message }}
 
 on:
   workflow_dispatch:
@@ -39,10 +46,6 @@ on:
           - destroy-plan
           - destroy
         default: plan
-      tag:
-        description: "Tag/version to deploy (for reference)"
-        required: false
-        default: "latest"
 
 env:
   AWS_REGION: "eu-west-2"
