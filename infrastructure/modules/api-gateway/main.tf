@@ -4,7 +4,7 @@
 ################################################################################
 
 locals {
-  api_name = "${var.project_name}-${var.environment}-api"
+  api_name = var.api_name_suffix != null ? "${var.project_name}-${var.environment}-${var.api_name_suffix}" : "${var.project_name}-${var.environment}-api"
 
   common_tags = merge(
     var.tags,
@@ -114,7 +114,7 @@ resource "aws_api_gateway_method_settings" "this" {
     throttling_rate_limit  = var.throttling_rate_limit
 
     # Caching
-    caching_enabled = var.caching_enabled
+    caching_enabled      = var.caching_enabled
     cache_ttl_in_seconds = var.cache_ttl_seconds
   }
 }

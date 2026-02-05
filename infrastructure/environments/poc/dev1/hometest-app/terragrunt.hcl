@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# TERRAGRUNT CONFIGURATION FOR dev ENVIRONMENT
-# Deployment with: cd dev/hometest-app && terragrunt apply
+# TERRAGRUNT CONFIGURATION FOR dev1 ENVIRONMENT
+# Deployment with: cd dev1/hometest-app && terragrunt apply
 # Dependencies: network (VPC/Route53), shared_services (WAF/ACM/KMS)
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -19,6 +19,7 @@ terraform {
 dependency "network" {
   config_path = "../../core/network"
 
+  # Mock outputs for plan when network hasn't been deployed yet
   mock_outputs = {
     route53_zone_id           = "Z0123456789ABCDEFGHIJ"
     vpc_id                    = "vpc-mock12345"
@@ -31,6 +32,7 @@ dependency "network" {
 dependency "shared_services" {
   config_path = "../../core/shared_services"
 
+  # Mock outputs for plan when shared_services hasn't been deployed yet
   mock_outputs = {
     kms_key_arn                    = "arn:aws:kms:eu-west-2:123456789012:key/mock-key-id"
     waf_regional_arn               = "arn:aws:wafv2:eu-west-2:123456789012:regional/webacl/mock/mock-id"
@@ -48,14 +50,14 @@ dependency "shared_services" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  account_vars     = read_terragrunt_config(find_in_parent_folders("account.hcl"))
-  environment_vars = read_terragrunt_config(find_in_parent_folders("env.hcl"))
-  global_vars      = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
+  account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
+  global_vars  = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
 
   project_name = local.global_vars.locals.project_name
-  environment  = local.environment_vars.locals.environment
   account_id   = local.account_vars.locals.aws_account_id
+  environment  = "dev1"
 
+  # Domain configuration
   base_domain = "hometest.service.nhs.uk"
   env_domain  = "${local.environment}.${local.base_domain}"
 }
@@ -88,13 +90,13 @@ inputs = {
   lambda_runtime     = "nodejs20.x"
   lambda_timeout     = 30
   lambda_memory_size = 256
-  log_retention_days = 30
+  log_retention_days = 14
 
   # API Gateway Configuration
   api_stage_name             = "v1"
   api_endpoint_type          = "REGIONAL"
-  api_throttling_burst_limit = 5000
-  api_throttling_rate_limit  = 10000
+  api_throttling_burst_limit = 1000
+  api_throttling_rate_limit  = 2000
 
   # Custom Domains
   api1_custom_domain_name = "api1.${local.env_domain}"

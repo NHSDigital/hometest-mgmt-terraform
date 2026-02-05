@@ -57,6 +57,7 @@ module "developer_iam" {
 ## Permissions Denied
 
 The following actions are explicitly denied:
+
 - IAM modifications
 - Organization changes
 - S3 bucket deletion

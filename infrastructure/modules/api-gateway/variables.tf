@@ -13,6 +13,12 @@ variable "environment" {
   type        = string
 }
 
+variable "api_name_suffix" {
+  description = "Suffix for API name (e.g., api1, api2). If null, uses 'api'"
+  type        = string
+  default     = null
+}
+
 # API Configuration
 variable "description" {
   description = "Description of the API"

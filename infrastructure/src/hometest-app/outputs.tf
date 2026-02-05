@@ -2,55 +2,87 @@
 # HomeTest Service Application Outputs
 ################################################################################
 
-# Deployment Artifacts
-output "artifacts_bucket_id" {
-  description = "S3 bucket ID for deployment artifacts"
-  value       = module.deployment_artifacts.bucket_id
-}
-
-output "artifacts_bucket_arn" {
-  description = "S3 bucket ARN for deployment artifacts"
-  value       = module.deployment_artifacts.bucket_arn
-}
-
+#------------------------------------------------------------------------------
 # Lambda Functions
+#------------------------------------------------------------------------------
+
 output "lambda_execution_role_arn" {
   description = "ARN of the Lambda execution role"
   value       = module.lambda_iam.role_arn
 }
 
-output "eligibility_test_info_lambda_arn" {
-  description = "ARN of the eligibility-test-info Lambda"
-  value       = module.eligibility_test_info_lambda.function_arn
+output "api1_lambda_arn" {
+  description = "ARN of the API 1 Lambda"
+  value       = module.api1_lambda.function_arn
 }
 
-output "order_router_lambda_arn" {
-  description = "ARN of the order-router Lambda"
-  value       = module.order_router_lambda.function_arn
+output "api1_lambda_name" {
+  description = "Name of the API 1 Lambda"
+  value       = module.api1_lambda.function_name
 }
 
-output "hello_world_lambda_arn" {
-  description = "ARN of the hello-world Lambda"
-  value       = module.hello_world_lambda.function_arn
+output "api2_lambda_arn" {
+  description = "ARN of the API 2 Lambda"
+  value       = module.api2_lambda.function_arn
 }
 
-# API Gateway
-output "api_gateway_id" {
-  description = "ID of the REST API"
-  value       = module.api_gateway.rest_api_id
+output "api2_lambda_name" {
+  description = "Name of the API 2 Lambda"
+  value       = module.api2_lambda.function_name
 }
 
-output "api_gateway_invoke_url" {
-  description = "URL to invoke the API"
-  value       = module.api_gateway.invoke_url
+#------------------------------------------------------------------------------
+# API Gateway 1
+#------------------------------------------------------------------------------
+
+output "api1_gateway_id" {
+  description = "ID of API Gateway 1"
+  value       = module.api_gateway_1.rest_api_id
 }
 
-output "api_gateway_stage_name" {
-  description = "API Gateway stage name"
-  value       = module.api_gateway.stage_name
+output "api1_invoke_url" {
+  description = "Invoke URL for API Gateway 1"
+  value       = module.api_gateway_1.invoke_url
 }
 
+output "api1_custom_domain" {
+  description = "Custom domain for API 1"
+  value       = var.api1_custom_domain_name
+}
+
+output "api1_url" {
+  description = "Full URL for API 1"
+  value       = var.api1_custom_domain_name != null ? "https://${var.api1_custom_domain_name}" : module.api_gateway_1.invoke_url
+}
+
+#------------------------------------------------------------------------------
+# API Gateway 2
+#------------------------------------------------------------------------------
+
+output "api2_gateway_id" {
+  description = "ID of API Gateway 2"
+  value       = module.api_gateway_2.rest_api_id
+}
+
+output "api2_invoke_url" {
+  description = "Invoke URL for API Gateway 2"
+  value       = module.api_gateway_2.invoke_url
+}
+
+output "api2_custom_domain" {
+  description = "Custom domain for API 2"
+  value       = var.api2_custom_domain_name
+}
+
+output "api2_url" {
+  description = "Full URL for API 2"
+  value       = var.api2_custom_domain_name != null ? "https://${var.api2_custom_domain_name}" : module.api_gateway_2.invoke_url
+}
+
+#------------------------------------------------------------------------------
 # CloudFront SPA
+#------------------------------------------------------------------------------
+
 output "spa_bucket_id" {
   description = "S3 bucket ID for SPA static assets"
   value       = module.cloudfront_spa.s3_bucket_id
@@ -76,51 +108,41 @@ output "cloudfront_domain_name" {
   value       = module.cloudfront_spa.distribution_domain_name
 }
 
-output "cloudfront_url" {
-  description = "CloudFront distribution URL"
-  value       = module.cloudfront_spa.distribution_url
+output "spa_url" {
+  description = "Full URL for SPA"
+  value       = length(var.spa_custom_domain_names) > 0 ? "https://${var.spa_custom_domain_names[0]}" : module.cloudfront_spa.distribution_url
 }
 
-# Developer Deployment
-output "developer_role_arn" {
-  description = "ARN of the developer deployment role"
-  value       = module.developer_iam.role_arn
+#------------------------------------------------------------------------------
+# Environment URLs Summary
+#------------------------------------------------------------------------------
+
+output "environment_urls" {
+  description = "All environment URLs"
+  value = {
+    ui   = length(var.spa_custom_domain_names) > 0 ? "https://${var.spa_custom_domain_names[0]}" : module.cloudfront_spa.distribution_url
+    api1 = var.api1_custom_domain_name != null ? "https://${var.api1_custom_domain_name}" : module.api_gateway_1.invoke_url
+    api2 = var.api2_custom_domain_name != null ? "https://${var.api2_custom_domain_name}" : module.api_gateway_2.invoke_url
+  }
 }
 
-output "developer_role_assume_command" {
-  description = "AWS CLI command to assume the developer role"
-  value       = module.developer_iam.assume_role_command
-}
-
-output "developer_role_profile_config" {
-  description = "AWS CLI profile configuration for developer role"
-  value       = module.developer_iam.assume_role_profile_config
-}
-
+#------------------------------------------------------------------------------
 # Deployment Commands
-output "deploy_lambda_command" {
-  description = "Command to deploy a Lambda function"
-  value       = <<-EOT
-# Upload Lambda zip to S3:
-aws s3 cp lambda.zip s3://${module.deployment_artifacts.bucket_id}/lambdas/<function-name>.zip
+#------------------------------------------------------------------------------
 
-# Update Lambda function code:
-aws lambda update-function-code \
-  --function-name ${var.project_name}-${var.environment}-<function-name> \
-  --s3-bucket ${module.deployment_artifacts.bucket_id} \
-  --s3-key lambdas/<function-name>.zip
-EOT
-}
-
-output "deploy_spa_command" {
-  description = "Commands to deploy SPA to CloudFront"
+output "deploy_commands" {
+  description = "Commands to deploy application code"
   value       = <<-EOT
-# Sync SPA build to S3:
+# Deploy API 1 Lambda:
+aws s3 cp api1-handler.zip s3://${var.deployment_bucket_id}/lambdas/${var.environment}/
+aws lambda update-function-code --function-name ${module.api1_lambda.function_name} --s3-bucket ${var.deployment_bucket_id} --s3-key lambdas/${var.environment}/api1-handler.zip
+
+# Deploy API 2 Lambda:
+aws s3 cp api2-handler.zip s3://${var.deployment_bucket_id}/lambdas/${var.environment}/
+aws lambda update-function-code --function-name ${module.api2_lambda.function_name} --s3-bucket ${var.deployment_bucket_id} --s3-key lambdas/${var.environment}/api2-handler.zip
+
+# Deploy SPA:
 aws s3 sync ./dist s3://${module.cloudfront_spa.s3_bucket_id} --delete
-
-# Invalidate CloudFront cache:
-aws cloudfront create-invalidation \
-  --distribution-id ${module.cloudfront_spa.distribution_id} \
-  --paths "/*"
+aws cloudfront create-invalidation --distribution-id ${module.cloudfront_spa.distribution_id} --paths "/*"
 EOT
 }

@@ -1,66 +1,4 @@
 ################################################################################
-# HomeTest Service Application Infrastructure
-# Deploys environment-specific resources:
-# - 2 API Lambdas with API Gateway
-# - CloudFront SPA
-# - Route53 DNS records
-#
-# Dependencies (from Terragrunt):
-# - network: VPC, subnets, security groups, Route53 zone
-# - shared_services: KMS, WAF, ACM certificates, deployment bucket
-################################################################################
-
-terraform {
-  required_version = ">= 1.5.0"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
-################################################################################
-# Data Sources
-################################################################################
-
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-
-locals {
-  account_id      = data.aws_caller_identity.current.account_id
-  region          = data.aws_region.current.name
-  resource_prefix = "${var.project_name}-${var.environment}"
-}
-
-################################################################################
-# Lambda Execution IAM Role
-################################################################################
-
-module "lambda_iam" {
-  source = "../../modules/lambda-iam"
-
-  project_name   = var.project_name
-  environment    = var.environment
-  aws_account_id = local.account_id
-  aws_region     = local.region
-
-  enable_xray       = true
-  enable_vpc_access = var.enable_vpc_access
-  vpc_id            = var.vpc_id
-
-  secrets_arns        = var.lambda_secrets_arns
-  ssm_parameter_arns  = var.lambda_ssm_parameter_arns
-  kms_key_arns        = var.kms_key_arn != null ? [var.kms_key_arn] : []
-  s3_bucket_arns      = concat([var.deployment_bucket_arn], var.lambda_s3_bucket_arns)
-  dynamodb_table_arns = var.lambda_dynamodb_table_arns
-  sqs_queue_arns      = var.lambda_sqs_queue_arns
-
-  tags = var.tags
-}
-
-################################################################################
 # API Gateway 1 - First API
 ################################################################################
 
@@ -117,92 +55,6 @@ module "api_gateway_2" {
 }
 
 ################################################################################
-# Lambda Function - API 1 Handler
-################################################################################
-
-module "api1_lambda" {
-  source = "../../modules/lambda"
-
-  project_name    = var.project_name
-  function_name   = "api1-handler"
-  environment     = var.environment
-  lambda_role_arn = module.lambda_iam.role_arn
-
-  s3_bucket        = var.deployment_bucket_id
-  s3_key           = "lambdas/${var.environment}/api1-handler.zip"
-  source_code_hash = var.api1_lambda_hash
-
-  description = "API 1 Handler Lambda"
-  handler     = "index.handler"
-  runtime     = var.lambda_runtime
-  timeout     = var.lambda_timeout
-  memory_size = var.lambda_memory_size
-
-  tracing_mode       = "Active"
-  log_retention_days = var.log_retention_days
-
-  vpc_subnet_ids         = var.lambda_subnet_ids
-  vpc_security_group_ids = var.lambda_security_group_ids
-
-  lambda_kms_key_arn     = var.kms_key_arn
-  cloudwatch_kms_key_arn = var.kms_key_arn
-
-  environment_variables = merge(
-    {
-      NODE_OPTIONS = "--enable-source-maps"
-      ENVIRONMENT  = var.environment
-      API_NAME     = "api1"
-    },
-    var.api1_env_vars
-  )
-
-  tags = var.tags
-}
-
-################################################################################
-# Lambda Function - API 2 Handler
-################################################################################
-
-module "api2_lambda" {
-  source = "../../modules/lambda"
-
-  project_name    = var.project_name
-  function_name   = "api2-handler"
-  environment     = var.environment
-  lambda_role_arn = module.lambda_iam.role_arn
-
-  s3_bucket        = var.deployment_bucket_id
-  s3_key           = "lambdas/${var.environment}/api2-handler.zip"
-  source_code_hash = var.api2_lambda_hash
-
-  description = "API 2 Handler Lambda"
-  handler     = "index.handler"
-  runtime     = var.lambda_runtime
-  timeout     = var.lambda_timeout
-  memory_size = var.lambda_memory_size
-
-  tracing_mode       = "Active"
-  log_retention_days = var.log_retention_days
-
-  vpc_subnet_ids         = var.lambda_subnet_ids
-  vpc_security_group_ids = var.lambda_security_group_ids
-
-  lambda_kms_key_arn     = var.kms_key_arn
-  cloudwatch_kms_key_arn = var.kms_key_arn
-
-  environment_variables = merge(
-    {
-      NODE_OPTIONS = "--enable-source-maps"
-      ENVIRONMENT  = var.environment
-      API_NAME     = "api2"
-    },
-    var.api2_env_vars
-  )
-
-  tags = var.tags
-}
-
-################################################################################
 # API Gateway 1 - Lambda Integration
 ################################################################################
 
@@ -242,14 +94,6 @@ resource "aws_api_gateway_integration" "api1_root" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = module.api1_lambda.function_invoke_arn
-}
-
-resource "aws_lambda_permission" "api1" {
-  statement_id  = "AllowAPIGateway1Invoke"
-  action        = "lambda:InvokeFunction"
-  function_name = module.api1_lambda.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${module.api_gateway_1.rest_api_execution_arn}/*/*"
 }
 
 # CORS OPTIONS for API 1
@@ -337,14 +181,6 @@ resource "aws_api_gateway_integration" "api2_root" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = module.api2_lambda.function_invoke_arn
-}
-
-resource "aws_lambda_permission" "api2" {
-  statement_id  = "AllowAPIGateway2Invoke"
-  action        = "lambda:InvokeFunction"
-  function_name = module.api2_lambda.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${module.api_gateway_2.rest_api_execution_arn}/*/*"
 }
 
 # CORS OPTIONS for API 2
@@ -442,77 +278,4 @@ resource "aws_api_gateway_deployment" "api2" {
     aws_api_gateway_integration.api2_root,
     aws_api_gateway_integration.api2_options,
   ]
-}
-
-################################################################################
-# Route53 Records for API Custom Domains
-################################################################################
-
-resource "aws_route53_record" "api1" {
-  count = var.api1_custom_domain_name != null && var.route53_zone_id != null ? 1 : 0
-
-  zone_id = var.route53_zone_id
-  name    = var.api1_custom_domain_name
-  type    = "A"
-
-  alias {
-    name                   = module.api_gateway_1.custom_domain_regional_domain_name
-    zone_id                = module.api_gateway_1.custom_domain_regional_zone_id
-    evaluate_target_health = false
-  }
-}
-
-resource "aws_route53_record" "api2" {
-  count = var.api2_custom_domain_name != null && var.route53_zone_id != null ? 1 : 0
-
-  zone_id = var.route53_zone_id
-  name    = var.api2_custom_domain_name
-  type    = "A"
-
-  alias {
-    name                   = module.api_gateway_2.custom_domain_regional_domain_name
-    zone_id                = module.api_gateway_2.custom_domain_regional_zone_id
-    evaluate_target_health = false
-  }
-}
-
-################################################################################
-# CloudFront SPA Distribution
-################################################################################
-
-module "cloudfront_spa" {
-  source = "../../modules/cloudfront-spa"
-
-  project_name   = var.project_name
-  environment    = var.environment
-  aws_account_id = local.account_id
-
-  enable_spa_routing = true
-  price_class        = var.cloudfront_price_class
-
-  s3_kms_key_arn                        = var.kms_key_arn
-  s3_noncurrent_version_expiration_days = 30
-
-  # No API integration - APIs have separate domains
-  api_gateway_domain_name = null
-
-  # Custom domain
-  custom_domain_names = var.spa_custom_domain_names
-  acm_certificate_arn = var.spa_acm_certificate_arn
-  route53_zone_id     = var.route53_zone_id
-
-  # Security
-  waf_web_acl_arn         = var.waf_cloudfront_arn
-  content_security_policy = var.content_security_policy
-  permissions_policy      = var.permissions_policy
-
-  # Geo restriction
-  geo_restriction_type      = var.geo_restriction_type
-  geo_restriction_locations = var.geo_restriction_locations
-
-  # Logging
-  enable_access_logging      = var.enable_cloudfront_logging
-  logging_bucket_domain_name = var.cloudfront_logging_bucket_domain_name
-
-  tags = var.tags
 }

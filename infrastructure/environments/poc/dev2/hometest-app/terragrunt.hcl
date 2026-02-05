@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# TERRAGRUNT CONFIGURATION FOR dev ENVIRONMENT
-# Deployment with: cd dev/hometest-app && terragrunt apply
+# TERRAGRUNT CONFIGURATION FOR dev2 ENVIRONMENT
+# Deployment with: cd dev2/hometest-app && terragrunt apply
 # Dependencies: network (VPC/Route53), shared_services (WAF/ACM/KMS)
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -48,13 +48,12 @@ dependency "shared_services" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 locals {
-  account_vars     = read_terragrunt_config(find_in_parent_folders("account.hcl"))
-  environment_vars = read_terragrunt_config(find_in_parent_folders("env.hcl"))
-  global_vars      = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
+  account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
+  global_vars  = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
 
   project_name = local.global_vars.locals.project_name
-  environment  = local.environment_vars.locals.environment
   account_id   = local.account_vars.locals.aws_account_id
+  environment  = "dev2"
 
   base_domain = "hometest.service.nhs.uk"
   env_domain  = "${local.environment}.${local.base_domain}"
@@ -88,13 +87,13 @@ inputs = {
   lambda_runtime     = "nodejs20.x"
   lambda_timeout     = 30
   lambda_memory_size = 256
-  log_retention_days = 30
+  log_retention_days = 14
 
   # API Gateway Configuration
   api_stage_name             = "v1"
   api_endpoint_type          = "REGIONAL"
-  api_throttling_burst_limit = 5000
-  api_throttling_rate_limit  = 10000
+  api_throttling_burst_limit = 1000
+  api_throttling_rate_limit  = 2000
 
   # Custom Domains
   api1_custom_domain_name = "api1.${local.env_domain}"

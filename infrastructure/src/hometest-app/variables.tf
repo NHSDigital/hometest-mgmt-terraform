@@ -2,25 +2,106 @@
 # HomeTest Service Application Variables
 ################################################################################
 
+#------------------------------------------------------------------------------
 # Project Configuration
+#------------------------------------------------------------------------------
+
 variable "project_name" {
   description = "Name of the project"
   type        = string
 }
 
 variable "environment" {
-  description = "Environment name (dev, staging, prod)"
+  description = "Environment name (dev, dev1, dev2, staging, prod)"
   type        = string
 }
 
-# Encryption
+variable "tags" {
+  description = "Tags to apply to all resources"
+  type        = map(string)
+  default     = {}
+}
+
+#------------------------------------------------------------------------------
+# Dependencies from shared_services
+#------------------------------------------------------------------------------
+
 variable "kms_key_arn" {
-  description = "ARN of KMS key for encryption"
+  description = "ARN of shared KMS key (from shared_services)"
+  type        = string
+}
+
+variable "waf_regional_arn" {
+  description = "ARN of regional WAF Web ACL for API Gateway (from shared_services)"
   type        = string
   default     = null
 }
 
+variable "waf_cloudfront_arn" {
+  description = "ARN of CloudFront WAF Web ACL (from shared_services)"
+  type        = string
+  default     = null
+}
+
+variable "deployment_bucket_id" {
+  description = "ID of shared deployment artifacts bucket (from shared_services)"
+  type        = string
+}
+
+variable "deployment_bucket_arn" {
+  description = "ARN of shared deployment artifacts bucket (from shared_services)"
+  type        = string
+}
+
+variable "api_acm_certificate_arn" {
+  description = "ACM certificate ARN for API custom domains (from shared_services)"
+  type        = string
+  default     = null
+}
+
+variable "spa_acm_certificate_arn" {
+  description = "ACM certificate ARN for CloudFront (us-east-1, from shared_services)"
+  type        = string
+  default     = null
+}
+
+#------------------------------------------------------------------------------
+# Dependencies from network
+#------------------------------------------------------------------------------
+
+variable "vpc_id" {
+  description = "VPC ID (from network)"
+  type        = string
+  default     = null
+}
+
+variable "lambda_subnet_ids" {
+  description = "Private subnet IDs for Lambda VPC configuration (from network)"
+  type        = list(string)
+  default     = []
+}
+
+variable "lambda_security_group_ids" {
+  description = "Security group IDs for Lambda (from network)"
+  type        = list(string)
+  default     = []
+}
+
+variable "route53_zone_id" {
+  description = "Route53 hosted zone ID (from network)"
+  type        = string
+}
+
+#------------------------------------------------------------------------------
 # Lambda Configuration
+#------------------------------------------------------------------------------
+
+variable "enable_vpc_access" {
+  description = "Enable VPC access for Lambda functions"
+  type        = bool
+  default     = false
+}
+
 variable "lambda_runtime" {
   description = "Lambda runtime"
   type        = string
@@ -42,38 +123,7 @@ variable "lambda_memory_size" {
 variable "log_retention_days" {
   description = "CloudWatch log retention in days"
   type        = number
-  default     = 30
-}
-
-variable "artifact_retention_days" {
-  description = "Days to retain old deployment artifacts"
-  type        = number
-  default     = 30
-}
-
-# Lambda VPC Configuration
-variable "enable_vpc_access" {
-  description = "Enable VPC access for Lambda functions"
-  type        = bool
-  default     = false
-}
-
-variable "vpc_id" {
-  description = "VPC ID for Lambda functions"
-  type        = string
-  default     = null
-}
-
-variable "lambda_vpc_subnet_ids" {
-  description = "Subnet IDs for Lambda VPC configuration"
-  type        = list(string)
-  default     = null
-}
-
-variable "lambda_security_group_ids" {
-  description = "Security group IDs for Lambda VPC configuration"
-  type        = list(string)
-  default     = null
+  default     = 14
 }
 
 # Lambda Resource Access
@@ -90,7 +140,7 @@ variable "lambda_ssm_parameter_arns" {
 }
 
 variable "lambda_s3_bucket_arns" {
-  description = "S3 bucket ARNs for Lambda access"
+  description = "Additional S3 bucket ARNs for Lambda access"
   type        = list(string)
   default     = []
 }
@@ -107,39 +157,36 @@ variable "lambda_sqs_queue_arns" {
   default     = []
 }
 
-# Lambda Code Hashes (for updates)
-variable "eligibility_test_info_hash" {
-  description = "Source code hash for eligibility-test-info Lambda"
+# Lambda Code Hashes
+variable "api1_lambda_hash" {
+  description = "Source code hash for API 1 Lambda"
   type        = string
   default     = null
 }
 
-variable "order_router_hash" {
-  description = "Source code hash for order-router Lambda"
-  type        = string
-  default     = null
-}
-
-variable "hello_world_hash" {
-  description = "Source code hash for hello-world Lambda"
+variable "api2_lambda_hash" {
+  description = "Source code hash for API 2 Lambda"
   type        = string
   default     = null
 }
 
 # Lambda Environment Variables
-variable "eligibility_test_info_env_vars" {
-  description = "Additional environment variables for eligibility-test-info Lambda"
+variable "api1_env_vars" {
+  description = "Additional environment variables for API 1 Lambda"
   type        = map(string)
   default     = {}
 }
 
-variable "order_router_env_vars" {
-  description = "Additional environment variables for order-router Lambda"
+variable "api2_env_vars" {
+  description = "Additional environment variables for API 2 Lambda"
   type        = map(string)
   default     = {}
 }
 
+#------------------------------------------------------------------------------
 # API Gateway Configuration
+#------------------------------------------------------------------------------
+
 variable "api_stage_name" {
   description = "API Gateway stage name"
   type        = string
@@ -155,28 +202,32 @@ variable "api_endpoint_type" {
 variable "api_throttling_burst_limit" {
   description = "API Gateway throttling burst limit"
   type        = number
-  default     = 5000
+  default     = 1000
 }
 
 variable "api_throttling_rate_limit" {
   description = "API Gateway throttling rate limit"
   type        = number
-  default     = 10000
+  default     = 2000
 }
 
-variable "api_custom_domain_name" {
-  description = "Custom domain name for API Gateway"
+# API Gateway Custom Domains
+variable "api1_custom_domain_name" {
+  description = "Custom domain name for API 1 (e.g., api1.dev1.hometest.service.nhs.uk)"
   type        = string
   default     = null
 }
 
-variable "api_acm_certificate_arn" {
-  description = "ACM certificate ARN for API custom domain"
+variable "api2_custom_domain_name" {
+  description = "Custom domain name for API 2 (e.g., api2.dev1.hometest.service.nhs.uk)"
   type        = string
   default     = null
 }
 
+#------------------------------------------------------------------------------
 # CloudFront Configuration
+#------------------------------------------------------------------------------
+
 variable "cloudfront_price_class" {
   description = "CloudFront price class"
   type        = string
@@ -187,18 +238,6 @@ variable "spa_custom_domain_names" {
   description = "Custom domain names for CloudFront SPA"
   type        = list(string)
   default     = []
-}
-
-variable "spa_acm_certificate_arn" {
-  description = "ACM certificate ARN for CloudFront custom domains (must be in us-east-1)"
-  type        = string
-  default     = null
-}
-
-variable "route53_zone_id" {
-  description = "Route53 hosted zone ID"
-  type        = string
-  default     = null
 }
 
 variable "enable_cloudfront_logging" {
@@ -213,12 +252,9 @@ variable "cloudfront_logging_bucket_domain_name" {
   default     = null
 }
 
+#------------------------------------------------------------------------------
 # Security Configuration
-variable "waf_web_acl_arn" {
-  description = "WAF Web ACL ARN"
-  type        = string
-  default     = null
-}
+#------------------------------------------------------------------------------
 
 variable "content_security_policy" {
   description = "Content Security Policy header"
@@ -242,42 +278,4 @@ variable "geo_restriction_locations" {
   description = "List of country codes for geo restriction"
   type        = list(string)
   default     = []
-}
-
-# Developer IAM Configuration
-variable "developer_account_arns" {
-  description = "IAM ARNs of developers who can assume the deployment role"
-  type        = list(string)
-  default     = []
-}
-
-variable "developer_require_mfa" {
-  description = "Require MFA for developer role assumption"
-  type        = bool
-  default     = true
-}
-
-variable "developer_require_external_id" {
-  description = "Require external ID for developer role assumption"
-  type        = bool
-  default     = false
-}
-
-variable "developer_external_id" {
-  description = "External ID for developer role assumption"
-  type        = string
-  default     = null
-}
-
-variable "developer_allowed_ip_ranges" {
-  description = "IP ranges allowed for developer role assumption"
-  type        = list(string)
-  default     = []
-}
-
-# Tags
-variable "tags" {
-  description = "Tags to apply to all resources"
-  type        = map(string)
-  default     = {}
 }

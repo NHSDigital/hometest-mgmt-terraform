@@ -109,10 +109,10 @@ resource "aws_s3_bucket_policy" "artifacts" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "EnforceHTTPS"
-        Effect = "Deny"
+        Sid       = "EnforceHTTPS"
+        Effect    = "Deny"
         Principal = "*"
-        Action = "s3:*"
+        Action    = "s3:*"
         Resource = [
           aws_s3_bucket.artifacts.arn,
           "${aws_s3_bucket.artifacts.arn}/*"
@@ -129,7 +129,7 @@ resource "aws_s3_bucket_policy" "artifacts" {
         Principal = {
           Service = "lambda.amazonaws.com"
         }
-        Action = "s3:GetObject"
+        Action   = "s3:GetObject"
         Resource = "${aws_s3_bucket.artifacts.arn}/*"
         Condition = {
           StringEquals = {
