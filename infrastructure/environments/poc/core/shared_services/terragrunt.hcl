@@ -9,7 +9,7 @@ include "root" {
 }
 
 terraform {
-  source = "${get_repo_root()}/infrastructure/src/shared_services"
+  source = "${get_repo_root()}/infrastructure//src/shared_services"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -33,23 +33,11 @@ locals {
   account_id   = local.account_vars.locals.aws_account_id
 }
 
-# Generate provider configuration for us-east-1 (required for CloudFront WAF and ACM)
-generate "provider_us_east_1" {
-  path      = "provider_us_east_1.tf"
-  if_exists = "overwrite_terragrunt"
-  contents  = <<EOF
-provider "aws" {
-  alias  = "us_east_1"
-  region = "us-east-1"
-}
-EOF
-}
-
 inputs = {
   project_name = local.project_name
   environment  = "core"
 
-  # Domain for wildcard certificates
+  # Domain for wildcard certificates (*.hometest.service.nhs.uk)
   domain_name     = "hometest.service.nhs.uk"
   route53_zone_id = dependency.network.outputs.route53_zone_id
 
@@ -70,5 +58,5 @@ inputs = {
   developer_account_arns = [
     "arn:aws:iam::${local.account_id}:root"
   ]
-  require_mfa = false  # Set to true for production
+  require_mfa = false # Set to true for production
 }

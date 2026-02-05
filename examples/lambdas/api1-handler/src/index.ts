@@ -1,6 +1,6 @@
 /**
  * API 1 Handler - Example User Service
- * 
+ *
  * This Lambda provides user-related endpoints:
  * - GET /users - List all users
  * - GET /users/{id} - Get user by ID
@@ -80,7 +80,7 @@ export async function handler(
             return response(404, { error: 'User not found', id: userId });
           }
           // List all users
-          return response(200, { 
+          return response(200, {
             data: users,
             count: users.length,
             _links: {
@@ -99,7 +99,7 @@ export async function handler(
             role: body.role || 'patient',
           };
           users.push(newUser);
-          return response(201, { 
+          return response(201, {
             data: newUser,
             message: 'User created successfully'
           });

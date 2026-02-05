@@ -1,5 +1,9 @@
 ################################################################################
 # CloudFront SPA Distribution
+# Single domain with path-based routing:
+# - / -> SPA (S3)
+# - /api1/* -> API Gateway 1
+# - /api2/* -> API Gateway 2
 ################################################################################
 
 module "cloudfront_spa" {
@@ -15,12 +19,21 @@ module "cloudfront_spa" {
   s3_kms_key_arn                        = var.kms_key_arn
   s3_noncurrent_version_expiration_days = 30
 
-  # No API integration - APIs have separate domains
-  api_gateway_domain_name = null
+  # API Gateway origins for path-based routing
+  api_origins = {
+    api1 = {
+      domain_name = "${module.api_gateway_1.rest_api_id}.execute-api.${local.region}.amazonaws.com"
+      origin_path = "/${var.api_stage_name}"
+    }
+    api2 = {
+      domain_name = "${module.api_gateway_2.rest_api_id}.execute-api.${local.region}.amazonaws.com"
+      origin_path = "/${var.api_stage_name}"
+    }
+  }
 
-  # Custom domain
-  custom_domain_names = var.spa_custom_domain_names
-  acm_certificate_arn = var.spa_acm_certificate_arn
+  # Custom domain - single domain for everything
+  custom_domain_names = var.custom_domain_name != null ? [var.custom_domain_name] : []
+  acm_certificate_arn = var.acm_certificate_arn
   route53_zone_id     = var.route53_zone_id
 
   # Security
@@ -37,4 +50,9 @@ module "cloudfront_spa" {
   logging_bucket_domain_name = var.cloudfront_logging_bucket_domain_name
 
   tags = var.tags
+
+  depends_on = [
+    aws_api_gateway_deployment.api1,
+    aws_api_gateway_deployment.api2
+  ]
 }

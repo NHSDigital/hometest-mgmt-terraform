@@ -68,15 +68,25 @@ variable "route53_zone_id" {
   default     = null
 }
 
-# API Gateway Integration
+# API Gateway Integration (supports multiple APIs with path-based routing)
+variable "api_origins" {
+  description = "Map of API origins for path-based routing. Key is the path prefix (e.g., 'api1'), value contains domain_name and optional origin_path"
+  type = map(object({
+    domain_name = string
+    origin_path = optional(string, "")
+  }))
+  default = {}
+}
+
+# Legacy single API Gateway Integration (deprecated, use api_origins instead)
 variable "api_gateway_domain_name" {
-  description = "Domain name of the API Gateway (e.g., xyz.execute-api.region.amazonaws.com)"
+  description = "DEPRECATED: Use api_origins instead. Domain name of the API Gateway"
   type        = string
   default     = null
 }
 
 variable "api_gateway_origin_path" {
-  description = "Origin path for API Gateway (e.g., /prod)"
+  description = "DEPRECATED: Use api_origins instead. Origin path for API Gateway"
   type        = string
   default     = ""
 }

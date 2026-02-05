@@ -10,9 +10,11 @@ module "api1_lambda" {
   environment     = var.environment
   lambda_role_arn = module.lambda_iam.role_arn
 
-  s3_bucket        = var.deployment_bucket_id
-  s3_key           = "lambdas/${var.environment}/api1-handler.zip"
-  source_code_hash = var.api1_lambda_hash
+  # Use placeholder or S3 deployment
+  use_placeholder  = var.use_placeholder_lambda
+  s3_bucket        = var.use_placeholder_lambda ? null : var.deployment_bucket_id
+  s3_key           = var.use_placeholder_lambda ? null : "lambdas/${var.environment}/api1-handler.zip"
+  source_code_hash = var.use_placeholder_lambda ? null : var.api1_lambda_hash
 
   description = "API 1 Handler Lambda"
   handler     = "index.handler"
@@ -53,9 +55,11 @@ module "api2_lambda" {
   environment     = var.environment
   lambda_role_arn = module.lambda_iam.role_arn
 
-  s3_bucket        = var.deployment_bucket_id
-  s3_key           = "lambdas/${var.environment}/api2-handler.zip"
-  source_code_hash = var.api2_lambda_hash
+  # Use placeholder or S3 deployment
+  use_placeholder  = var.use_placeholder_lambda
+  s3_bucket        = var.use_placeholder_lambda ? null : var.deployment_bucket_id
+  s3_key           = var.use_placeholder_lambda ? null : "lambdas/${var.environment}/api2-handler.zip"
+  source_code_hash = var.use_placeholder_lambda ? null : var.api2_lambda_hash
 
   description = "API 2 Handler Lambda"
   handler     = "index.handler"

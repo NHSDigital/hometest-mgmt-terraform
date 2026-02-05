@@ -32,7 +32,7 @@ output "api2_lambda_name" {
 }
 
 #------------------------------------------------------------------------------
-# API Gateway 1
+# API Gateway
 #------------------------------------------------------------------------------
 
 output "api1_gateway_id" {
@@ -40,43 +40,9 @@ output "api1_gateway_id" {
   value       = module.api_gateway_1.rest_api_id
 }
 
-output "api1_invoke_url" {
-  description = "Invoke URL for API Gateway 1"
-  value       = module.api_gateway_1.invoke_url
-}
-
-output "api1_custom_domain" {
-  description = "Custom domain for API 1"
-  value       = var.api1_custom_domain_name
-}
-
-output "api1_url" {
-  description = "Full URL for API 1"
-  value       = var.api1_custom_domain_name != null ? "https://${var.api1_custom_domain_name}" : module.api_gateway_1.invoke_url
-}
-
-#------------------------------------------------------------------------------
-# API Gateway 2
-#------------------------------------------------------------------------------
-
 output "api2_gateway_id" {
   description = "ID of API Gateway 2"
   value       = module.api_gateway_2.rest_api_id
-}
-
-output "api2_invoke_url" {
-  description = "Invoke URL for API Gateway 2"
-  value       = module.api_gateway_2.invoke_url
-}
-
-output "api2_custom_domain" {
-  description = "Custom domain for API 2"
-  value       = var.api2_custom_domain_name
-}
-
-output "api2_url" {
-  description = "Full URL for API 2"
-  value       = var.api2_custom_domain_name != null ? "https://${var.api2_custom_domain_name}" : module.api_gateway_2.invoke_url
 }
 
 #------------------------------------------------------------------------------
@@ -110,19 +76,21 @@ output "cloudfront_domain_name" {
 
 output "spa_url" {
   description = "Full URL for SPA"
-  value       = length(var.spa_custom_domain_names) > 0 ? "https://${var.spa_custom_domain_names[0]}" : module.cloudfront_spa.distribution_url
+  value       = var.custom_domain_name != null ? "https://${var.custom_domain_name}" : module.cloudfront_spa.distribution_url
 }
 
 #------------------------------------------------------------------------------
 # Environment URLs Summary
+# All services accessible via single domain with path-based routing
 #------------------------------------------------------------------------------
 
 output "environment_urls" {
   description = "All environment URLs"
   value = {
-    ui   = length(var.spa_custom_domain_names) > 0 ? "https://${var.spa_custom_domain_names[0]}" : module.cloudfront_spa.distribution_url
-    api1 = var.api1_custom_domain_name != null ? "https://${var.api1_custom_domain_name}" : module.api_gateway_1.invoke_url
-    api2 = var.api2_custom_domain_name != null ? "https://${var.api2_custom_domain_name}" : module.api_gateway_2.invoke_url
+    base_url = var.custom_domain_name != null ? "https://${var.custom_domain_name}" : module.cloudfront_spa.distribution_url
+    ui       = var.custom_domain_name != null ? "https://${var.custom_domain_name}" : module.cloudfront_spa.distribution_url
+    api1     = var.custom_domain_name != null ? "https://${var.custom_domain_name}/api1" : "${module.cloudfront_spa.distribution_url}/api1"
+    api2     = var.custom_domain_name != null ? "https://${var.custom_domain_name}/api2" : "${module.cloudfront_spa.distribution_url}/api2"
   }
 }
 

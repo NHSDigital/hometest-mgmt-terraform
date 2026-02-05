@@ -1,22 +1,33 @@
 ################################################################################
-# HomeTest Service Application Infrastructure
-# Deploys environment-specific resources:
-# - 2 API Lambdas with API Gateway
-# - CloudFront SPA
-# - Route53 DNS records
-#
-# Dependencies (from Terragrunt):
-# - network: VPC, subnets, security groups, Route53 zone
-# - shared_services: KMS, WAF, ACM certificates, deployment bucket
+# Shared Services Infrastructure
+# Contains resources shared across all environments:
+# - WAF Web ACL (shared across API Gateways and CloudFront)
+# - ACM Certificates (regional and global)
+# - KMS Keys for encryption
+# - Deployment Artifacts S3 Bucket
+# - Developer IAM Role
 ################################################################################
 
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.14.0"
 
   required_providers {
+
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.28.0"
     }
   }
+}
+
+provider "aws" {
+  region              = var.aws_region
+  allowed_account_ids = [var.aws_account_id]
+}
+
+# Provider for us-east-1 (required for Route 53 query logging CloudWatch logs)
+provider "aws" {
+  alias               = "us_east_1"
+  region              = "us-east-1"
+  allowed_account_ids = [var.aws_account_id]
 }

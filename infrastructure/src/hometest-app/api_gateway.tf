@@ -1,5 +1,6 @@
 ################################################################################
 # API Gateway 1 - First API
+# Accessed via CloudFront at /api1/*
 ################################################################################
 
 module "api_gateway_1" {
@@ -17,17 +18,21 @@ module "api_gateway_1" {
   throttling_burst_limit = var.api_throttling_burst_limit
   throttling_rate_limit  = var.api_throttling_rate_limit
 
-  waf_web_acl_arn        = var.waf_regional_arn
   cloudwatch_kms_key_arn = var.kms_key_arn
 
-  custom_domain_name  = var.api1_custom_domain_name
-  acm_certificate_arn = var.api_acm_certificate_arn
+  # No custom domain - accessed via CloudFront path-based routing
+  custom_domain_name  = null
+  acm_certificate_arn = null
+
+  # No WAF at API Gateway level - WAF is attached to CloudFront
+  waf_web_acl_arn = null
 
   tags = var.tags
 }
 
 ################################################################################
 # API Gateway 2 - Second API
+# Accessed via CloudFront at /api2/*
 ################################################################################
 
 module "api_gateway_2" {
@@ -45,11 +50,14 @@ module "api_gateway_2" {
   throttling_burst_limit = var.api_throttling_burst_limit
   throttling_rate_limit  = var.api_throttling_rate_limit
 
-  waf_web_acl_arn        = var.waf_regional_arn
   cloudwatch_kms_key_arn = var.kms_key_arn
 
-  custom_domain_name  = var.api2_custom_domain_name
-  acm_certificate_arn = var.api_acm_certificate_arn
+  # No custom domain - accessed via CloudFront path-based routing
+  custom_domain_name  = null
+  acm_certificate_arn = null
+
+  # No WAF at API Gateway level - WAF is attached to CloudFront
+  waf_web_acl_arn = null
 
   tags = var.tags
 }

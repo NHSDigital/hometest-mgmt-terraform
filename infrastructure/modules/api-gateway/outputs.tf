@@ -24,17 +24,17 @@ output "rest_api_execution_arn" {
 
 output "stage_name" {
   description = "Name of the deployment stage"
-  value       = aws_api_gateway_stage.this.stage_name
+  value       = try(aws_api_gateway_stage.this[0].stage_name, var.stage_name)
 }
 
 output "stage_arn" {
   description = "ARN of the deployment stage"
-  value       = aws_api_gateway_stage.this.arn
+  value       = try(aws_api_gateway_stage.this[0].arn, null)
 }
 
 output "invoke_url" {
   description = "URL to invoke the API"
-  value       = aws_api_gateway_stage.this.invoke_url
+  value       = try(aws_api_gateway_stage.this[0].invoke_url, null)
 }
 
 output "log_group_name" {

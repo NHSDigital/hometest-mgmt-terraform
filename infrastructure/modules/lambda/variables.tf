@@ -25,13 +25,15 @@ variable "lambda_role_arn" {
 
 # Deployment Package
 variable "s3_bucket" {
-  description = "S3 bucket containing the Lambda deployment package"
+  description = "S3 bucket containing the Lambda deployment package (not required if use_placeholder is true)"
   type        = string
+  default     = null
 }
 
 variable "s3_key" {
-  description = "S3 key for the Lambda deployment package"
+  description = "S3 key for the Lambda deployment package (not required if use_placeholder is true)"
   type        = string
+  default     = null
 }
 
 variable "s3_object_version" {
@@ -44,6 +46,18 @@ variable "source_code_hash" {
   description = "Base64-encoded SHA256 hash of the deployment package"
   type        = string
   default     = null
+}
+
+variable "use_placeholder" {
+  description = "Use placeholder code for initial deployment (useful when S3 code doesn't exist yet)"
+  type        = bool
+  default     = false
+}
+
+variable "placeholder_response" {
+  description = "JSON response for placeholder Lambda (when use_placeholder is true)"
+  type        = string
+  default     = "{\"statusCode\": 200, \"body\": \"Placeholder - deploy actual code\"}"
 }
 
 # Function Configuration

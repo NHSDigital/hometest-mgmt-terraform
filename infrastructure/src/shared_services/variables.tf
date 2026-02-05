@@ -2,6 +2,16 @@
 # Shared Services Variables
 ################################################################################
 
+variable "aws_region" {
+  description = "AWS region for resources"
+  type        = string
+}
+
+variable "aws_account_id" {
+  description = "AWS account ID for resources"
+  type        = string
+}
+
 variable "project_name" {
   description = "Name of the project"
   type        = string
@@ -56,7 +66,7 @@ variable "create_acm_certificates" {
 }
 
 variable "domain_name" {
-  description = "Base domain name for certificates (e.g., dev.hometest.service.nhs.uk)"
+  description = "Base domain name for certificates (e.g., hometest.service.nhs.uk)"
   type        = string
 }
 

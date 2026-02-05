@@ -6,6 +6,16 @@
 # Project Configuration
 #------------------------------------------------------------------------------
 
+variable "aws_region" {
+  description = "AWS region for resources"
+  type        = string
+}
+
+variable "aws_account_id" {
+  description = "AWS account ID for resources"
+  type        = string
+}
+
 variable "project_name" {
   description = "Name of the project"
   type        = string
@@ -51,18 +61,6 @@ variable "deployment_bucket_id" {
 variable "deployment_bucket_arn" {
   description = "ARN of shared deployment artifacts bucket (from shared_services)"
   type        = string
-}
-
-variable "api_acm_certificate_arn" {
-  description = "ACM certificate ARN for API custom domains (from shared_services)"
-  type        = string
-  default     = null
-}
-
-variable "spa_acm_certificate_arn" {
-  description = "ACM certificate ARN for CloudFront (us-east-1, from shared_services)"
-  type        = string
-  default     = null
 }
 
 #------------------------------------------------------------------------------
@@ -124,6 +122,12 @@ variable "log_retention_days" {
   description = "CloudWatch log retention in days"
   type        = number
   default     = 14
+}
+
+variable "use_placeholder_lambda" {
+  description = "Use placeholder Lambda code for initial deployment (when S3 code doesn't exist yet)"
+  type        = bool
+  default     = false
 }
 
 # Lambda Resource Access
@@ -211,15 +215,22 @@ variable "api_throttling_rate_limit" {
   default     = 2000
 }
 
-# API Gateway Custom Domains
-variable "api1_custom_domain_name" {
-  description = "Custom domain name for API 1 (e.g., api1.dev1.hometest.service.nhs.uk)"
+#------------------------------------------------------------------------------
+# Custom Domain Configuration
+# Single domain for everything: dev1.hometest.service.nhs.uk
+# - / -> SPA
+# - /api1/* -> API Gateway 1
+# - /api2/* -> API Gateway 2
+#------------------------------------------------------------------------------
+
+variable "custom_domain_name" {
+  description = "Custom domain name for the environment (e.g., dev1.hometest.service.nhs.uk)"
   type        = string
   default     = null
 }
 
-variable "api2_custom_domain_name" {
-  description = "Custom domain name for API 2 (e.g., api2.dev1.hometest.service.nhs.uk)"
+variable "acm_certificate_arn" {
+  description = "ACM certificate ARN for CloudFront (us-east-1, from shared_services)"
   type        = string
   default     = null
 }
@@ -232,12 +243,6 @@ variable "cloudfront_price_class" {
   description = "CloudFront price class"
   type        = string
   default     = "PriceClass_100"
-}
-
-variable "spa_custom_domain_names" {
-  description = "Custom domain names for CloudFront SPA"
-  type        = list(string)
-  default     = []
 }
 
 variable "enable_cloudfront_logging" {

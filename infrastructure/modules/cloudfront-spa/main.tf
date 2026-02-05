@@ -1,12 +1,22 @@
 ################################################################################
 # CloudFront SPA Module
 # CloudFront distribution for SPA with S3 origin and security best practices
+# Supports multiple API origins with path-based routing
 ################################################################################
 
 locals {
   distribution_name = "${var.project_name}-${var.environment}-spa"
   s3_origin_id      = "S3-${var.project_name}-${var.environment}-spa"
-  api_origin_id     = "API-${var.project_name}-${var.environment}"
+
+  # Build map of API origins (supports both new api_origins and legacy api_gateway_domain_name)
+  api_origins_map = length(var.api_origins) > 0 ? var.api_origins : (
+    var.api_gateway_domain_name != null ? {
+      "api" = {
+        domain_name = var.api_gateway_domain_name
+        origin_path = var.api_gateway_origin_path
+      }
+    } : {}
+  )
 
   common_tags = merge(
     var.tags,
@@ -215,13 +225,13 @@ resource "aws_cloudfront_distribution" "spa" {
     origin_access_control_id = aws_cloudfront_origin_access_control.spa.id
   }
 
-  # API Gateway Origin (optional)
+  # Dynamic API Gateway Origins (supports multiple APIs)
   dynamic "origin" {
-    for_each = var.api_gateway_domain_name != null ? [1] : []
+    for_each = local.api_origins_map
     content {
-      domain_name = var.api_gateway_domain_name
-      origin_id   = local.api_origin_id
-      origin_path = var.api_gateway_origin_path
+      domain_name = origin.value.domain_name
+      origin_id   = "API-${origin.key}"
+      origin_path = origin.value.origin_path
 
       custom_origin_config {
         http_port              = 80
@@ -254,14 +264,14 @@ resource "aws_cloudfront_distribution" "spa" {
     }
   }
 
-  # API path behavior (optional)
+  # Dynamic API path behaviors (supports multiple APIs with different paths)
   dynamic "ordered_cache_behavior" {
-    for_each = var.api_gateway_domain_name != null ? [1] : []
+    for_each = local.api_origins_map
     content {
-      path_pattern     = "/api/*"
+      path_pattern     = "/${ordered_cache_behavior.key}/*"
       allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
       cached_methods   = ["GET", "HEAD"]
-      target_origin_id = local.api_origin_id
+      target_origin_id = "API-${ordered_cache_behavior.key}"
 
       # No caching for API calls
       cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # CachingDisabled
@@ -331,26 +341,7 @@ resource "aws_cloudfront_function" "spa_routing" {
   comment = "SPA routing function for ${local.distribution_name}"
   publish = true
 
-  code = <<-EOF
-function handler(event) {
-    var request = event.request;
-    var uri = request.uri;
-
-    // Check if the request is for a file (has extension)
-    if (uri.includes('.')) {
-        return request;
-    }
-
-    // Check if path starts with /api/ - don't rewrite API calls
-    if (uri.startsWith('/api/')) {
-        return request;
-    }
-
-    // For all other requests, serve index.html
-    request.uri = '/index.html';
-    return request;
-}
-EOF
+  code = file("${path.module}/functions/spa_routing.js")
 }
 
 ################################################################################

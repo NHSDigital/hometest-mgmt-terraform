@@ -1,6 +1,6 @@
 /**
  * API 2 Handler - Example Test Orders Service
- * 
+ *
  * This Lambda provides test order-related endpoints:
  * - GET /orders - List all test orders
  * - GET /orders/{id} - Get order by ID
@@ -12,26 +12,26 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda
 
 // Example in-memory data store (replace with DynamoDB in production)
 const orders = [
-  { 
-    id: 'ORD-001', 
-    userId: '1', 
-    testType: 'COVID-19 PCR', 
+  {
+    id: 'ORD-001',
+    userId: '1',
+    testType: 'COVID-19 PCR',
     status: 'completed',
     createdAt: '2026-02-01T10:00:00Z',
     result: 'negative'
   },
-  { 
-    id: 'ORD-002', 
-    userId: '2', 
-    testType: 'Lateral Flow', 
+  {
+    id: 'ORD-002',
+    userId: '2',
+    testType: 'Lateral Flow',
     status: 'pending',
     createdAt: '2026-02-05T09:30:00Z',
     result: null
   },
-  { 
-    id: 'ORD-003', 
-    userId: '1', 
-    testType: 'Blood Test', 
+  {
+    id: 'ORD-003',
+    userId: '1',
+    testType: 'Blood Test',
     status: 'in_transit',
     createdAt: '2026-02-04T14:00:00Z',
     result: null
@@ -102,18 +102,18 @@ export async function handler(
             }
             return response(404, { error: 'Order not found', id: orderId });
           }
-          
+
           // List orders with optional filtering
           let filteredOrders = [...orders];
-          
+
           if (queryStringParameters?.userId) {
             filteredOrders = filteredOrders.filter(o => o.userId === queryStringParameters.userId);
           }
           if (queryStringParameters?.status) {
             filteredOrders = filteredOrders.filter(o => o.status === queryStringParameters.status);
           }
-          
-          return response(200, { 
+
+          return response(200, {
             data: filteredOrders,
             count: filteredOrders.length,
             filters: queryStringParameters || {},
@@ -135,7 +135,7 @@ export async function handler(
             result: null,
           };
           orders.push(newOrder);
-          return response(201, { 
+          return response(201, {
             data: newOrder,
             message: 'Order created successfully'
           });

@@ -38,7 +38,7 @@ function App() {
   // API 1 state (Users)
   const [api1Health, setApi1Health] = useState<ApiState<HealthStatus>>({ data: null, loading: true, error: null });
   const [users, setUsers] = useState<ApiState<User[]>>({ data: null, loading: false, error: null });
-  
+
   // API 2 state (Orders)
   const [api2Health, setApi2Health] = useState<ApiState<HealthStatus>>({ data: null, loading: true, error: null });
   const [orders, setOrders] = useState<ApiState<Order[]>>({ data: null, loading: false, error: null });
@@ -60,10 +60,10 @@ function App() {
         const health = await fetchApi<HealthStatus>(`${API1_URL}/health`);
         setApi1Health({ data: health, loading: false, error: null });
       } catch (err) {
-        setApi1Health({ 
-          data: null, 
-          loading: false, 
-          error: err instanceof Error ? err.message : 'Failed to connect' 
+        setApi1Health({
+          data: null,
+          loading: false,
+          error: err instanceof Error ? err.message : 'Failed to connect'
         });
       }
 
@@ -72,10 +72,10 @@ function App() {
         const health = await fetchApi<HealthStatus>(`${API2_URL}/health`);
         setApi2Health({ data: health, loading: false, error: null });
       } catch (err) {
-        setApi2Health({ 
-          data: null, 
-          loading: false, 
-          error: err instanceof Error ? err.message : 'Failed to connect' 
+        setApi2Health({
+          data: null,
+          loading: false,
+          error: err instanceof Error ? err.message : 'Failed to connect'
         });
       }
     };
@@ -92,10 +92,10 @@ function App() {
       const response = await fetchApi<{ data: User[] }>(`${API1_URL}/users`);
       setUsers({ data: response.data, loading: false, error: null });
     } catch (err) {
-      setUsers({ 
-        data: null, 
-        loading: false, 
-        error: err instanceof Error ? err.message : 'Failed to fetch users' 
+      setUsers({
+        data: null,
+        loading: false,
+        error: err instanceof Error ? err.message : 'Failed to fetch users'
       });
     }
   }, [fetchApi]);
@@ -107,10 +107,10 @@ function App() {
       const response = await fetchApi<{ data: Order[] }>(`${API2_URL}/orders`);
       setOrders({ data: response.data, loading: false, error: null });
     } catch (err) {
-      setOrders({ 
-        data: null, 
-        loading: false, 
-        error: err instanceof Error ? err.message : 'Failed to fetch orders' 
+      setOrders({
+        data: null,
+        loading: false,
+        error: err instanceof Error ? err.message : 'Failed to fetch orders'
       });
     }
   }, [fetchApi]);
@@ -157,8 +157,8 @@ function App() {
               <div className="health-indicator">
                 <span className={`health-dot ${api1Health.loading ? 'loading' : api1Health.data ? 'healthy' : 'unhealthy'}`}></span>
                 <span>
-                  {api1Health.loading ? 'Checking...' : 
-                   api1Health.data ? `Healthy (${api1Health.data.environment})` : 
+                  {api1Health.loading ? 'Checking...' :
+                   api1Health.data ? `Healthy (${api1Health.data.environment})` :
                    'Unhealthy'}
                 </span>
               </div>
@@ -183,8 +183,8 @@ function App() {
               <div className="health-indicator">
                 <span className={`health-dot ${api2Health.loading ? 'loading' : api2Health.data ? 'healthy' : 'unhealthy'}`}></span>
                 <span>
-                  {api2Health.loading ? 'Checking...' : 
-                   api2Health.data ? `Healthy (${api2Health.data.environment})` : 
+                  {api2Health.loading ? 'Checking...' :
+                   api2Health.data ? `Healthy (${api2Health.data.environment})` :
                    'Unhealthy'}
                 </span>
               </div>
@@ -209,8 +209,8 @@ function App() {
             👥 Users (from API 1)
           </div>
           <div className="card-body">
-            <button 
-              className="btn btn-primary" 
+            <button
+              className="btn btn-primary"
               onClick={fetchUsers}
               disabled={users.loading}
               style={{ marginBottom: '16px' }}
@@ -254,15 +254,15 @@ function App() {
           </div>
           <div className="card-body">
             <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-              <button 
-                className="btn btn-primary" 
+              <button
+                className="btn btn-primary"
                 onClick={fetchOrders}
                 disabled={orders.loading}
               >
                 {orders.loading ? <><span className="loading-spinner"></span> Loading...</> : 'Fetch Orders'}
               </button>
-              <button 
-                className="btn btn-secondary" 
+              <button
+                className="btn btn-secondary"
                 onClick={createOrder}
               >
                 + Create Test Order

@@ -149,6 +149,19 @@ variable "base_path_mapping" {
   default     = ""
 }
 
+# Deployment Configuration
+variable "create_deployment" {
+  description = "Whether to create the API Gateway deployment (set to false if managing deployment externally)"
+  type        = bool
+  default     = false
+}
+
+variable "deployment_triggers" {
+  description = "Map of triggers for redeployment (only used if create_deployment is true)"
+  type        = map(string)
+  default     = {}
+}
+
 # Tags
 variable "tags" {
   description = "Tags to apply to resources"

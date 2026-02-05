@@ -145,21 +145,25 @@ The hometest-app deployments depend on outputs from:
 ## Security Features
 
 ### Network Security
+
 - **VPC** with private subnets for Lambda
 - **Security Groups** with least-privilege rules
 - **NAT Gateway** for outbound internet access
 
 ### WAF Protection
+
 - AWS Managed Rules (CommonRuleSet, SQLi, KnownBadInputs)
 - Rate limiting (2000 requests/5 min per IP)
 - Separate WAFs for API Gateway and CloudFront
 
 ### Encryption
+
 - **KMS** encryption for Lambda env vars, S3, CloudWatch
 - **TLS 1.2+** for all endpoints
 - **HTTPS only** with HTTP redirect
 
 ### Access Control
+
 - **MFA required** for developer role (production)
 - **IP restrictions** available
 - **Explicit denies** for dangerous actions
@@ -179,18 +183,21 @@ After deploying hometest-app, you get:
 ## Troubleshooting
 
 ### Dependencies not resolved
+
 ```bash
 # Run with explicit dependency fetching
 terragrunt apply --terragrunt-fetch-dependency-output-from-state
 ```
 
 ### Certificate validation pending
+
 ```bash
 # Check certificate status
 aws acm describe-certificate --certificate-arn <ARN> --query 'Certificate.Status'
 ```
 
 ### WAF not attached
+
 ```bash
 # Verify WAF association
 aws wafv2 list-resources-for-web-acl --web-acl-arn <ARN> --resource-type API_GATEWAY

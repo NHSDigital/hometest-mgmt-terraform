@@ -6,6 +6,13 @@
 locals {
   function_name = "${var.project_name}-${var.environment}-${var.function_name}"
 
+  # Placeholder code for initial deployment
+  placeholder_code = <<EOF
+exports.handler = async (event) => {
+  return ${var.placeholder_response};
+};
+EOF
+
   common_tags = merge(
     var.tags,
     {
@@ -17,6 +24,22 @@ locals {
       ResourceType = "lambda-function"
     }
   )
+}
+
+################################################################################
+# Placeholder ZIP Archive (when use_placeholder is true)
+################################################################################
+
+data "archive_file" "placeholder" {
+  count = var.use_placeholder ? 1 : 0
+
+  type        = "zip"
+  output_path = "${path.module}/.placeholder/${local.function_name}.zip"
+
+  source {
+    content  = local.placeholder_code
+    filename = "index.js"
+  }
 }
 
 ################################################################################
@@ -47,11 +70,12 @@ resource "aws_lambda_function" "this" {
   timeout       = var.timeout
   memory_size   = var.memory_size
 
-  # Deployment package
-  s3_bucket         = var.s3_bucket
-  s3_key            = var.s3_key
-  s3_object_version = var.s3_object_version
-  source_code_hash  = var.source_code_hash
+  # Deployment package - either S3 or placeholder
+  s3_bucket         = var.use_placeholder ? null : var.s3_bucket
+  s3_key            = var.use_placeholder ? null : var.s3_key
+  s3_object_version = var.use_placeholder ? null : var.s3_object_version
+  filename          = var.use_placeholder ? data.archive_file.placeholder[0].output_path : null
+  source_code_hash  = var.use_placeholder ? data.archive_file.placeholder[0].output_base64sha256 : var.source_code_hash
 
   # VPC Configuration (optional)
   dynamic "vpc_config" {
@@ -92,6 +116,12 @@ resource "aws_lambda_function" "this" {
   depends_on = [aws_cloudwatch_log_group.lambda]
 
   tags = local.common_tags
+
+  timeouts {
+    create = "2m"  # Custom create timeout (e.g., 10 minutes)
+    update = "2m"   # Custom update timeout
+    delete = "2m"   # Custom delete timeout for durable executions
+  }
 }
 
 ################################################################################
@@ -136,3 +166,20 @@ resource "aws_lambda_alias" "this" {
     }
   }
 }
+
+# * Failed to execute "terraform apply -auto-approve" in ./.terragrunt-cache/Omq22eG3YTbbRpQQRiuSifYiqLI/R-jNQY0q8KEUNT6OtV-g2bdzJkU/src/hometest-app
+#   ╷
+#   │ Error: creating Lambda Function (nhs-hometest-dev1-api2-handler): operation error Lambda: CreateFunction, https response error StatusCode: 400, RequestID: 1d444545-512a-490c-b759-3af233f5e51f, InvalidParameterValueException: The provided execution role does not have permissions to call CreateNetworkInterface on EC2
+#   │
+#   │   with module.api2_lambda.aws_lambda_function.this,
+#   │   on ../../modules/lambda/main.tf line 64, in resource "aws_lambda_function" "this":
+#   │   64: resource "aws_lambda_function" "this" {
+#   │
+#   ╵
+#   ╷
+#   │ Error: creating Lambda Function (nhs-hometest-dev1-api1-handler): operation error Lambda: CreateFunction, https response error StatusCode: 400, RequestID: bd03209b-d3fa-4704-9b7a-cbd929bc9934, InvalidParameterValueException: The provided execution role does not have permissions to call CreateNetworkInterface on EC2
+#   │
+#   │   with module.api1_lambda.aws_lambda_function.this,
+#   │   on ../../modules/lambda/main.tf line 64, in resource "aws_lambda_function" "this":
+#   │   64: resource "aws_lambda_function" "this" {
+#   │

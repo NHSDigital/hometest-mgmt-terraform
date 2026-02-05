@@ -52,10 +52,14 @@ resource "aws_cloudwatch_log_group" "api_gateway" {
 
 ################################################################################
 # API Gateway Stage
+# NOTE: Stage is created only when create_deployment is true
+# When managing deployments externally, create stage in the calling module
 ################################################################################
 
 resource "aws_api_gateway_stage" "this" {
-  deployment_id = aws_api_gateway_deployment.this.id
+  count = var.create_deployment ? 1 : 0
+
+  deployment_id = aws_api_gateway_deployment.this[0].id
   rest_api_id   = aws_api_gateway_rest_api.this.id
   stage_name    = var.stage_name
 
@@ -96,11 +100,14 @@ resource "aws_api_gateway_stage" "this" {
 
 ################################################################################
 # API Gateway Method Settings (for throttling and logging)
+# Only created when create_deployment is true (stage exists)
 ################################################################################
 
 resource "aws_api_gateway_method_settings" "this" {
+  count = var.create_deployment ? 1 : 0
+
   rest_api_id = aws_api_gateway_rest_api.this.id
-  stage_name  = aws_api_gateway_stage.this.stage_name
+  stage_name  = aws_api_gateway_stage.this[0].stage_name
   method_path = "*/*"
 
   settings {
@@ -121,14 +128,16 @@ resource "aws_api_gateway_method_settings" "this" {
 
 ################################################################################
 # API Gateway Deployment
+# Only created when create_deployment is true
+# When false, deployment should be managed externally after adding integrations
 ################################################################################
 
 resource "aws_api_gateway_deployment" "this" {
+  count = var.create_deployment ? 1 : 0
+
   rest_api_id = aws_api_gateway_rest_api.this.id
 
-  triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.this.body))
-  }
+  triggers = var.deployment_triggers
 
   lifecycle {
     create_before_destroy = true
@@ -194,12 +203,13 @@ resource "aws_iam_role_policy" "api_gateway_cloudwatch" {
 
 ################################################################################
 # WAF Web ACL Association (optional)
+# Only created when both WAF ARN is provided AND stage exists
 ################################################################################
 
 resource "aws_wafv2_web_acl_association" "this" {
-  count = var.waf_web_acl_arn != null ? 1 : 0
+  count = var.waf_web_acl_arn != null && var.create_deployment ? 1 : 0
 
-  resource_arn = aws_api_gateway_stage.this.arn
+  resource_arn = aws_api_gateway_stage.this[0].arn
   web_acl_arn  = var.waf_web_acl_arn
 }
 
@@ -224,10 +234,10 @@ resource "aws_api_gateway_domain_name" "this" {
 }
 
 resource "aws_api_gateway_base_path_mapping" "this" {
-  count = var.custom_domain_name != null ? 1 : 0
+  count = var.custom_domain_name != null && var.create_deployment ? 1 : 0
 
   api_id      = aws_api_gateway_rest_api.this.id
-  stage_name  = aws_api_gateway_stage.this.stage_name
+  stage_name  = aws_api_gateway_stage.this[0].stage_name
   domain_name = aws_api_gateway_domain_name.this[0].domain_name
   base_path   = var.base_path_mapping
 }
