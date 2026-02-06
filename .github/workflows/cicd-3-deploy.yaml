@@ -1,13 +1,25 @@
 ---
 name: "CI/CD deploy"
+run-name: "Deploy ${{ inputs.tag }} to ${{ inputs.environment }} by @${{ github.actor }}"
+
+# ${{ inputs.tag }} - the tag being deployed
+# ${{ inputs.environment }} - target environment
+# ${{ github.ref_name }} - branch name
+# ${{ github.actor }} - who triggered the workflow
+# If you'd prefer to show the commit message instead of/in addition to branch name, you can use ${{ github.event.head_commit.message }}
 
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: "This is the tag that is going to be deployed"
+      environment:
+        description: "Target environment"
         required: true
-        default: "latest"
+        type: choice
+        options:
+          - poc
+          - dev
+          - staging
+          - prod
 
 jobs:
   metadata:
@@ -50,6 +62,7 @@ jobs:
           export VERSION="${{ steps.variables.outputs.version }}"
           export TAG="${{ steps.variables.outputs.tag }}"
           make list-variables
+
   deploy-bootstrap:
     name: "Deploy TF Core/Bootstrap"
     runs-on: ubuntu-latest
@@ -85,6 +98,8 @@ jobs:
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           working_directory: infrastructure/environments/poc/core/network/
+
+
   # TODO: More jobs or/and steps here
   # success:
   #   name: "Success notification"
