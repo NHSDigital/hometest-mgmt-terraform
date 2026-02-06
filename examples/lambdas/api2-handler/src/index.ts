@@ -5,10 +5,18 @@
  * - GET /orders - List all test orders
  * - GET /orders/{id} - Get order by ID
  * - POST /orders - Create a new test order
+ * - POST /queue - Send message to SQS queue
  * - GET /health - Health check
  */
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+
+// Initialize SQS client
+const sqsClient = new SQSClient({});
+
+// Get SQS queue URL from environment
+const SQS_QUEUE_URL = process.env.SQS_QUEUE_URL;
 
 // Example in-memory data store (replace with DynamoDB in production)
 const orders = [
@@ -67,18 +75,31 @@ export async function handler(
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> {
+  const { httpMethod, pathParameters, queryStringParameters } = event;
+
+  // Normalize path - CloudFront sends /api2/orders, we need /orders
+  // The proxy path contains the full path after stage (e.g., "api2/orders")
+  // We need to strip the API prefix (api1 or api2) to get the actual route
+  const proxyPath = pathParameters?.proxy || '';
+  const pathParts = proxyPath.split('/');
+  // Remove the api prefix (first segment) if it matches our api pattern
+  const routePath = pathParts.length > 1 && pathParts[0].startsWith('api')
+    ? '/' + pathParts.slice(1).join('/')
+    : proxyPath ? `/${proxyPath}` : event.path;
+  const path = routePath || '/';
+
   console.log('API2 Handler invoked', {
-    path: event.path,
+    eventPath: event.path,
+    proxyPath: proxyPath,
+    normalizedPath: path,
     method: event.httpMethod,
     requestId: context.awsRequestId,
     environment: process.env.ENVIRONMENT,
   });
 
-  const { httpMethod, path, pathParameters, queryStringParameters } = event;
-
   try {
     // Health check endpoint
-    if (path === '/health' || path === '/') {
+    if (path === '/health' || path === '/' || event.path === '/health' || event.path === '/') {
       return response(200, {
         status: 'healthy',
         service: 'api2-orders-service',
@@ -153,6 +174,68 @@ export async function handler(
           { id: 'lft', name: 'Lateral Flow', description: 'Rapid antigen test' },
           { id: 'blood', name: 'Blood Test', description: 'General blood panel' },
         ]
+      });
+    }
+
+    // SQS Queue endpoint - send messages to SQS for processing
+    if (path === '/queue' || path.startsWith('/queue')) {
+      if (httpMethod === 'POST') {
+        if (!SQS_QUEUE_URL) {
+          return response(400, {
+            error: 'SQS_QUEUE_URL environment variable not configured',
+          });
+        }
+
+        const body = event.body ? JSON.parse(event.body) : {};
+        const messageType = body.type || 'TEST_MESSAGE';
+        const payload = body.payload || {};
+
+        try {
+          const messageBody = JSON.stringify({
+            type: messageType,
+            payload: {
+              ...payload,
+              timestamp: new Date().toISOString(),
+              source: 'api2-handler',
+            },
+          });
+
+          const command = new SendMessageCommand({
+            QueueUrl: SQS_QUEUE_URL,
+            MessageBody: messageBody,
+            MessageAttributes: {
+              MessageType: {
+                DataType: 'String',
+                StringValue: messageType,
+              },
+            },
+          });
+
+          const result = await sqsClient.send(command);
+
+          return response(200, {
+            message: 'Message sent to queue successfully',
+            messageId: result.MessageId,
+            messageType,
+            timestamp: new Date().toISOString(),
+          });
+        } catch (error) {
+          console.error('Error sending SQS message:', error);
+          return response(500, {
+            error: 'Failed to send message to queue',
+            message: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      }
+
+      return response(200, {
+        message: 'SQS Queue endpoint',
+        methods: ['POST'],
+        description: 'Send messages to the event queue for processing',
+        example: {
+          type: 'ORDER_CREATED',
+          payload: { orderId: 'ORD-001' },
+        },
       });
     }
 

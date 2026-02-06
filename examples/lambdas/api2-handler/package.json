@@ -8,7 +8,9 @@
     "package": "cd dist && zip -r ../api2-handler.zip .",
     "clean": "rm -rf dist api2-handler.zip"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.400.0"
+  },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.131",
     "@types/node": "^20.10.0",

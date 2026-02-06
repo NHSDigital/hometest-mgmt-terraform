@@ -117,9 +117,9 @@ output "environment_urls" {
     },
     {
       for prefix in local.api_prefixes : prefix => (
-        var.custom_domain_name != null 
-          ? "https://${var.custom_domain_name}/${prefix}" 
-          : "${module.cloudfront_spa.distribution_url}/${prefix}"
+        var.custom_domain_name != null
+        ? "https://${var.custom_domain_name}/${prefix}"
+        : "${module.cloudfront_spa.distribution_url}/${prefix}"
       )
     }
   )
@@ -137,12 +137,12 @@ output "deployment_bucket" {
 output "deployment_info" {
   description = "Information for CI/CD deployments"
   value = {
-    environment    = var.environment
-    spa_bucket     = module.cloudfront_spa.s3_bucket_id
-    cloudfront_id  = module.cloudfront_spa.distribution_id
-    deploy_bucket  = var.deployment_bucket_id
-    lambda_prefix  = "lambdas/${var.environment}"
-    lambdas        = [for name, _ in local.all_lambdas : name]
-    api_prefixes   = [for prefix in local.api_prefixes : prefix]
+    environment   = var.environment
+    spa_bucket    = module.cloudfront_spa.s3_bucket_id
+    cloudfront_id = module.cloudfront_spa.distribution_id
+    deploy_bucket = var.deployment_bucket_id
+    lambda_prefix = "lambdas/${var.environment}"
+    lambdas       = [for name, _ in local.all_lambdas : name]
+    api_prefixes  = [for prefix in local.api_prefixes : prefix]
   }
 }

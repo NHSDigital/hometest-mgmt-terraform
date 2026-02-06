@@ -2,14 +2,19 @@
 # TERRAGRUNT CONFIGURATION FOR dev2 ENVIRONMENT
 # Deployment with: cd dev2/hometest-app && terragrunt apply
 # Dependencies: network (VPC/Route53), shared_services (WAF/ACM/KMS)
+#
+# This configuration inherits terraform source and hooks from _envcommon/hometest-app.hcl
+# Dependencies and inputs are defined here as they reference dependency outputs.
 # ---------------------------------------------------------------------------------------------------------------------
 
 include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
-terraform {
-  source = "${get_repo_root()}/infrastructure//src/hometest-app"
+include "envcommon" {
+  path           = "${dirname(find_in_parent_folders("root.hcl"))}/_envcommon/hometest-app.hcl"
+  expose         = true
+  merge_strategy = "deep"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -19,6 +24,7 @@ terraform {
 dependency "network" {
   config_path = "../../core/network"
 
+  # Mock outputs for plan when network hasn't been deployed yet
   mock_outputs = {
     route53_zone_id          = "Z0123456789ABCDEFGHIJ"
     vpc_id                   = "vpc-mock12345"
@@ -31,6 +37,7 @@ dependency "network" {
 dependency "shared_services" {
   config_path = "../../core/shared_services"
 
+  # Mock outputs for plan when shared_services hasn't been deployed yet
   mock_outputs = {
     kms_key_arn                     = "arn:aws:kms:eu-west-2:123456789012:key/mock-key-id"
     waf_regional_arn                = "arn:aws:wafv2:eu-west-2:123456789012:regional/webacl/mock/mock-id"
@@ -39,33 +46,19 @@ dependency "shared_services" {
     acm_cloudfront_certificate_arn  = "arn:aws:acm:us-east-1:123456789012:certificate/mock-cert"
     deployment_artifacts_bucket_id  = "mock-deployment-bucket"
     deployment_artifacts_bucket_arn = "arn:aws:s3:::mock-deployment-bucket"
+    api_config_secret_arn           = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:mock-secret"
+    api_config_secret_name          = "mock/secret/name"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# LOCALS
-# ---------------------------------------------------------------------------------------------------------------------
-
-locals {
-  account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
-  global_vars  = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
-
-  project_name = local.global_vars.locals.project_name
-  account_id   = local.account_vars.locals.aws_account_id
-  environment  = "dev2"
-
-  base_domain = "hometest.service.nhs.uk"
-  env_domain  = "${local.environment}.${local.base_domain}"
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# INPUTS
+# INPUTS - Uses locals from envcommon and dependencies defined above
 # ---------------------------------------------------------------------------------------------------------------------
 
 inputs = {
-  project_name = local.project_name
-  environment  = local.environment
+  project_name = include.envcommon.locals.project_name
+  environment  = include.envcommon.locals.environment
 
   # Dependencies from network
   vpc_id                    = dependency.network.outputs.vpc_id
@@ -79,37 +72,72 @@ inputs = {
   deployment_bucket_id  = dependency.shared_services.outputs.deployment_artifacts_bucket_id
   deployment_bucket_arn = dependency.shared_services.outputs.deployment_artifacts_bucket_arn
 
-  # Lambda Configuration
+  # Lambda Configuration - Use defaults from envcommon
   enable_vpc_access  = true
-  lambda_runtime     = "nodejs20.x"
-  lambda_timeout     = 30
-  lambda_memory_size = 256
-  log_retention_days = 14
+  lambda_runtime     = include.envcommon.locals.lambda_runtime
+  lambda_timeout     = include.envcommon.locals.lambda_timeout
+  lambda_memory_size = include.envcommon.locals.lambda_memory_size
+  log_retention_days = include.envcommon.locals.log_retention_days
 
-  # Use placeholder Lambda code for initial deployment
-  use_placeholder_lambda = true
+  # Lambda code deployment - hooks build and upload automatically
+  use_placeholder_lambda = false
+
+  # Base path where lambda zip files are located after build
+  lambdas_base_path = "${get_repo_root()}/examples/lambdas"
+
+  # =============================================================================
+  # LAMBDA DEFINITIONS MAP
+  # =============================================================================
+  lambdas = {
+    # User Service API - accessible at /api1/*
+    "api1-handler" = {
+      description     = "User Service API Handler with Secrets Manager"
+      api_path_prefix = "api1"
+      timeout         = 30
+      memory_size     = 256
+      secrets_arn     = dependency.shared_services.outputs.api_config_secret_arn
+      environment = {
+        API_NAME    = "users"
+        API_VERSION = "v1"
+        SECRET_NAME = dependency.shared_services.outputs.api_config_secret_name
+      }
+    }
+
+    # Order Service API - accessible at /api2/*
+    "api2-handler" = {
+      description     = "Order Service API Handler with SQS integration"
+      api_path_prefix = "api2"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        API_NAME      = "orders"
+        API_VERSION   = "v1"
+        SQS_QUEUE_URL = "https://sqs.eu-west-2.amazonaws.com/${include.envcommon.locals.account_id}/${include.envcommon.locals.project_name}-${include.envcommon.locals.environment}-events"
+      }
+    }
+
+    # SQS Message Processor - triggered by SQS events (no API Gateway)
+    "sqs-processor" = {
+      description = "SQS Event Processor - processes messages from queue"
+      sqs_trigger = true
+      timeout     = 60
+      memory_size = 256
+      environment = {
+        PROCESSOR_NAME = "event-processor"
+      }
+    }
+  }
 
   # API Gateway Configuration
-  api_stage_name             = "v1"
-  api_endpoint_type          = "REGIONAL"
-  api_throttling_burst_limit = 1000
-  api_throttling_rate_limit  = 2000
+  api_stage_name             = include.envcommon.locals.api_stage_name
+  api_endpoint_type          = include.envcommon.locals.api_endpoint_type
+  api_throttling_burst_limit = include.envcommon.locals.api_throttling_burst_limit
+  api_throttling_rate_limit  = include.envcommon.locals.api_throttling_rate_limit
 
-  # Single custom domain for everything
-  custom_domain_name  = local.env_domain
+  # Domain configuration
+  custom_domain_name  = include.envcommon.locals.env_domain
   acm_certificate_arn = dependency.shared_services.outputs.acm_cloudfront_certificate_arn
 
   # CloudFront Configuration
-  cloudfront_price_class = "PriceClass_100"
-
-  # Lambda environment variables
-  api1_env_vars = {
-    API_NAME    = "api1-users"
-    ENVIRONMENT = local.environment
-  }
-
-  api2_env_vars = {
-    API_NAME    = "api2-orders"
-    ENVIRONMENT = local.environment
-  }
+  cloudfront_price_class = include.envcommon.locals.cloudfront_price_class
 }

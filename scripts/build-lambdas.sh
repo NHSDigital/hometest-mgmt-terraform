@@ -109,7 +109,7 @@ parse_args() {
 # Validate requirements
 validate_requirements() {
     log_info "Validating requirements..."
-    
+
     if [[ -z "$ENVIRONMENT" ]]; then
         log_error "Environment is required. Use -e or --environment"
         exit 1
@@ -176,16 +176,16 @@ get_lambdas() {
 clean_lambda() {
     local lambda_name=$1
     local lambda_dir="${SOURCE_DIR}/${lambda_name}"
-    
+
     log_info "Cleaning ${lambda_name}..."
-    
+
     rm -rf "${lambda_dir}/dist" "${lambda_dir}/node_modules" "${lambda_dir}/*.zip" "${lambda_dir}/.source_hash" 2>/dev/null || true
 }
 
 # Calculate hash of source files (excluding build artifacts)
 calculate_source_hash() {
     local lambda_dir=$1
-    
+
     # Hash all source files: *.ts, *.js, package.json, tsconfig.json
     # Exclude node_modules, dist, zip files
     find "$lambda_dir" \
@@ -206,30 +206,30 @@ needs_rebuild() {
     local lambda_dir="${SOURCE_DIR}/${lambda_name}"
     local hash_file="${lambda_dir}/.source_hash"
     local zip_file="${lambda_dir}/${lambda_name}.zip"
-    
+
     # Force rebuild if requested
     if [[ "$FORCE_BUILD" == true ]]; then
         return 0  # needs rebuild
     fi
-    
+
     # Rebuild if zip doesn't exist
     if [[ ! -f "$zip_file" ]]; then
         return 0  # needs rebuild
     fi
-    
+
     # Rebuild if no previous hash
     if [[ ! -f "$hash_file" ]]; then
         return 0  # needs rebuild
     fi
-    
+
     # Compare current source hash with stored hash
     local current_hash=$(calculate_source_hash "$lambda_dir")
     local stored_hash=$(cat "$hash_file" 2>/dev/null)
-    
+
     if [[ "$current_hash" != "$stored_hash" ]]; then
         return 0  # needs rebuild
     fi
-    
+
     return 1  # no rebuild needed
 }
 
@@ -238,7 +238,7 @@ save_source_hash() {
     local lambda_name=$1
     local lambda_dir="${SOURCE_DIR}/${lambda_name}"
     local hash_file="${lambda_dir}/.source_hash"
-    
+
     calculate_source_hash "$lambda_dir" > "$hash_file"
 }
 
@@ -246,21 +246,21 @@ save_source_hash() {
 build_lambda() {
     local lambda_name=$1
     local lambda_dir="${SOURCE_DIR}/${lambda_name}"
-    
+
     log_info "Building ${lambda_name}..."
-    
+
     cd "$lambda_dir"
-    
+
     # Install dependencies
     log_info "  Installing dependencies..."
     npm ci --silent 2>/dev/null || npm install --silent
-    
+
     # Build (if build script exists)
     if grep -q '"build"' package.json; then
         log_info "  Compiling TypeScript..."
         npm run build --silent
     fi
-    
+
     cd - > /dev/null
     log_success "Built ${lambda_name}"
 }
@@ -270,26 +270,26 @@ package_lambda() {
     local lambda_name=$1
     local lambda_dir="${SOURCE_DIR}/${lambda_name}"
     local output_file="${lambda_dir}/${lambda_name}.zip"
-    
+
     log_info "Packaging ${lambda_name}..."
-    
+
     cd "$lambda_dir"
-    
+
     # Determine what to package
     local package_dir="dist"
     if [[ ! -d "dist" ]]; then
         package_dir="."
     fi
-    
+
     # Create zip file
     rm -f "${lambda_name}.zip"
-    
+
     if [[ "$package_dir" == "dist" ]]; then
         # For TypeScript projects, only include dist and production dependencies
         cd dist
         zip -rq "../${lambda_name}.zip" . -x "*.map"
         cd ..
-        
+
         # Add node_modules if there are runtime dependencies
         if [[ -d "node_modules" ]] && grep -q '"dependencies"' package.json; then
             # Install production dependencies only
@@ -303,9 +303,9 @@ package_lambda() {
             -x "node_modules/.bin/*" -x ".git/*" \
             -x "package-lock.json" -x ".npmrc"
     fi
-    
+
     cd - > /dev/null
-    
+
     # Show package info
     local size=$(du -h "$output_file" | cut -f1)
     log_success "Packaged ${lambda_name} (${size})"
@@ -317,21 +317,21 @@ upload_lambda() {
     local lambda_dir="${SOURCE_DIR}/${lambda_name}"
     local zip_file="${lambda_dir}/${lambda_name}.zip"
     local s3_key="lambdas/${ENVIRONMENT}/${lambda_name}.zip"
-    
+
     log_info "Uploading ${lambda_name} to s3://${S3_BUCKET}/${s3_key}..."
-    
+
     if [[ ! -f "$zip_file" ]]; then
         log_error "Package not found: $zip_file"
         return 1
     fi
-    
+
     aws s3 cp "$zip_file" "s3://${S3_BUCKET}/${s3_key}" \
         --region "$AWS_REGION" \
         --only-show-errors
-    
+
     # Calculate and display hash
     local hash=$(openssl dgst -sha256 -binary "$zip_file" | openssl enc -base64)
-    
+
     log_success "Uploaded ${lambda_name}"
     echo -e "  ${BLUE}S3 URI:${NC} s3://${S3_BUCKET}/${s3_key}"
     echo -e "  ${BLUE}Hash:${NC}   ${hash}"
@@ -340,7 +340,7 @@ upload_lambda() {
 # Generate Terraform/Terragrunt variable output
 generate_terraform_output() {
     local lambdas=("$@")
-    
+
     echo ""
     echo -e "${GREEN}========================================${NC}"
     echo -e "${GREEN}Terraform Variable Output${NC}"
@@ -350,7 +350,7 @@ generate_terraform_output() {
     echo "# (or set use_placeholder_lambda = false and update source_hash)"
     echo ""
     echo "lambdas = {"
-    
+
     for lambda_name in "${lambdas[@]}"; do
         local zip_file="${SOURCE_DIR}/${lambda_name}/${lambda_name}.zip"
         if [[ -f "$zip_file" ]]; then
@@ -361,7 +361,7 @@ generate_terraform_output() {
             echo "  }"
         fi
     done
-    
+
     echo "}"
     echo ""
 }
@@ -370,7 +370,7 @@ generate_terraform_output() {
 main() {
     parse_args "$@"
     validate_requirements
-    
+
     echo ""
     echo -e "${GREEN}========================================${NC}"
     echo -e "${GREEN}Lambda Build & Deploy${NC}"
@@ -381,32 +381,32 @@ main() {
         echo -e "S3 Bucket:   ${BLUE}${S3_BUCKET}${NC}"
     fi
     echo ""
-    
+
     # Get lambdas to build
     mapfile -t lambdas < <(get_lambdas)
-    
+
     if [[ ${#lambdas[@]} -eq 0 ]]; then
         log_warn "No lambdas found to build"
         exit 0
     fi
-    
+
     log_info "Found ${#lambdas[@]} lambda(s) to process"
-    
+
     # Process each lambda
     for lambda_name in "${lambdas[@]}"; do
         echo ""
         echo -e "${YELLOW}--- Processing: ${lambda_name} ---${NC}"
-        
+
         if [[ "$CLEAN" == true ]]; then
             clean_lambda "$lambda_name"
         fi
-        
+
         # Check if rebuild is needed
         if needs_rebuild "$lambda_name"; then
             build_lambda "$lambda_name"
             package_lambda "$lambda_name"
             save_source_hash "$lambda_name"
-            
+
             if [[ "$NO_UPLOAD" == false ]]; then
                 upload_lambda "$lambda_name"
             fi
@@ -414,13 +414,13 @@ main() {
             log_success "Skipping ${lambda_name} - no changes detected"
         fi
     done
-    
+
     # Generate terraform output
     generate_terraform_output "${lambdas[@]}"
-    
+
     echo ""
     log_success "All lambdas processed successfully!"
-    
+
     if [[ "$NO_UPLOAD" == false ]]; then
         echo ""
         echo -e "${YELLOW}Next steps:${NC}"

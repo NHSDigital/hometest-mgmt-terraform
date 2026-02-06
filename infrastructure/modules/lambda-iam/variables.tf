@@ -92,6 +92,12 @@ variable "sqs_queue_arns" {
   default     = []
 }
 
+variable "enable_sqs_access" {
+  description = "Whether to enable SQS access policy. Use this instead of relying on sqs_queue_arns length to avoid count unknown at plan time issues."
+  type        = bool
+  default     = false
+}
+
 # Custom Policies
 variable "custom_policies" {
   description = "Map of custom policy names to policy JSON documents"

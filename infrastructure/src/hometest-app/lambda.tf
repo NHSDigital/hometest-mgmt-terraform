@@ -7,30 +7,34 @@ locals {
   # This supports both old (api1_env_vars) and new (lambdas map) configurations
   legacy_lambdas = length(var.lambdas) == 0 ? {
     "api1-handler" = {
-      description     = "API 1 Handler Lambda"
-      handler         = "index.handler"
-      runtime         = null
-      timeout         = null
-      memory_size     = null
-      zip_path        = null
-      s3_key          = "lambdas/${var.environment}/api1-handler.zip"
-      source_hash     = var.api1_lambda_hash
-      environment     = var.api1_env_vars
-      api_path_prefix = "api1"
+      description                    = "API 1 Handler Lambda"
+      handler                        = "index.handler"
+      runtime                        = null
+      timeout                        = null
+      memory_size                    = null
+      zip_path                       = null
+      s3_key                         = "lambdas/${var.environment}/api1-handler.zip"
+      source_hash                    = var.api1_lambda_hash
+      environment                    = var.api1_env_vars
+      api_path_prefix                = "api1"
       reserved_concurrent_executions = -1
+      sqs_trigger                    = false
+      secrets_arn                    = null
     }
     "api2-handler" = {
-      description     = "API 2 Handler Lambda"
-      handler         = "index.handler"
-      runtime         = null
-      timeout         = null
-      memory_size     = null
-      zip_path        = null
-      s3_key          = "lambdas/${var.environment}/api2-handler.zip"
-      source_hash     = var.api2_lambda_hash
-      environment     = var.api2_env_vars
-      api_path_prefix = "api2"
+      description                    = "API 2 Handler Lambda"
+      handler                        = "index.handler"
+      runtime                        = null
+      timeout                        = null
+      memory_size                    = null
+      zip_path                       = null
+      s3_key                         = "lambdas/${var.environment}/api2-handler.zip"
+      source_hash                    = var.api2_lambda_hash
+      environment                    = var.api2_env_vars
+      api_path_prefix                = "api2"
       reserved_concurrent_executions = -1
+      sqs_trigger                    = false
+      secrets_arn                    = null
     }
   } : {}
 
@@ -64,9 +68,9 @@ module "lambdas" {
 
   # Deployment: local zip file (Terraform uploads) or placeholder
   use_placeholder = var.use_placeholder_lambda
-  
+
   # When not using placeholder, use local zip file - Terraform uploads it directly
-  filename         = var.use_placeholder_lambda ? null : local.lambda_zip_paths[each.key]
+  filename = var.use_placeholder_lambda ? null : local.lambda_zip_paths[each.key]
   source_code_hash = var.use_placeholder_lambda ? null : (
     each.value.source_hash != null ? each.value.source_hash : (
       fileexists(local.lambda_zip_paths[each.key]) ? filebase64sha256(local.lambda_zip_paths[each.key]) : null

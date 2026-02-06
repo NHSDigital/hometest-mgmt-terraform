@@ -3,88 +3,18 @@
 # Deployment with: cd dev1/hometest-app && terragrunt apply
 # Dependencies: network (VPC/Route53), shared_services (WAF/ACM/KMS)
 #
-# This configuration automatically:
-# 1. Builds and packages all Lambda functions
-# 2. Uploads them to S3
-# 3. Deploys the infrastructure with Terraform
+# This configuration inherits terraform source and hooks from _envcommon/hometest-app.hcl
+# Dependencies and inputs are defined here as they reference dependency outputs.
 # ---------------------------------------------------------------------------------------------------------------------
 
 include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
-terraform {
-  source = "${get_repo_root()}/infrastructure//src/hometest-app"
-
-  # ---------------------------------------------------------------------------
-  # BUILD HOOKS
-  # These hooks build and package artifacts locally BEFORE terraform runs.
-  # Terraform then uploads and deploys the Lambda functions.
-  # ---------------------------------------------------------------------------
-
-  # Build and package Lambda code locally (Terraform uploads and deploys)
-  before_hook "build_lambdas" {
-    commands = ["apply", "plan"]
-    execute  = [
-      "${get_repo_root()}/scripts/build-lambdas.sh",
-      "--environment", "dev1",
-      "--source-dir", "${get_repo_root()}/examples/lambdas",
-      "--no-upload"
-    ]
-  }
-
-  # Build SPA before apply (if examples/spa exists)
-  before_hook "build_spa" {
-    commands = ["apply"]
-    execute  = [
-      "bash", "-c",
-      <<-EOF
-        SPA_DIR="${get_repo_root()}/examples/spa"
-        if [[ -d "$SPA_DIR" ]] && [[ -f "$SPA_DIR/package.json" ]]; then
-          echo "Building SPA..."
-          cd "$SPA_DIR"
-          npm ci --silent 2>/dev/null || npm install --silent
-          npm run build --silent 2>/dev/null || true
-        else
-          echo "No SPA found at $SPA_DIR, skipping..."
-        fi
-      EOF
-    ]
-  }
-
-  # Upload SPA to S3 after terraform creates the bucket
-  after_hook "upload_spa" {
-    commands     = ["apply"]
-    run_on_error = false
-    execute      = [
-      "bash", "-c",
-      <<-EOF
-        SPA_DIST="${get_repo_root()}/examples/spa/dist"
-        if [[ -d "$SPA_DIST" ]]; then
-          # Get the SPA bucket from terraform output (hook runs in .terragrunt-cache)
-          SPA_BUCKET=$(terraform output -raw spa_bucket_id 2>/dev/null || echo "")
-          if [[ -n "$SPA_BUCKET" ]]; then
-            echo "Uploading SPA to s3://$SPA_BUCKET..."
-            aws s3 sync "$SPA_DIST" "s3://$SPA_BUCKET" \
-              --delete \
-              --cache-control "max-age=31536000" \
-              --exclude "index.html" \
-              --region eu-west-2
-            # Upload index.html with no-cache
-            aws s3 cp "$SPA_DIST/index.html" "s3://$SPA_BUCKET/index.html" \
-              --cache-control "no-cache, no-store, must-revalidate" \
-              --region eu-west-2
-            # aws cloudfront create-invalidation --distribution-id E3Q4UN89X6P7B1 --paths "/*" --output text
-            echo "SPA uploaded successfully!"
-          else
-            echo "Could not determine SPA bucket, skipping upload..."
-          fi
-        else
-          echo "No SPA dist found, skipping upload..."
-        fi
-      EOF
-    ]
-  }
+include "envcommon" {
+  path           = "${dirname(find_in_parent_folders("root.hcl"))}/_envcommon/hometest-app.hcl"
+  expose         = true
+  merge_strategy = "deep"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -116,34 +46,19 @@ dependency "shared_services" {
     acm_cloudfront_certificate_arn  = "arn:aws:acm:us-east-1:123456789012:certificate/mock-cert"
     deployment_artifacts_bucket_id  = "mock-deployment-bucket"
     deployment_artifacts_bucket_arn = "arn:aws:s3:::mock-deployment-bucket"
+    api_config_secret_arn           = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:mock-secret"
+    api_config_secret_name          = "mock/secret/name"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# LOCALS
-# ---------------------------------------------------------------------------------------------------------------------
-
-locals {
-  account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
-  global_vars  = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
-
-  project_name = local.global_vars.locals.project_name
-  account_id   = local.account_vars.locals.aws_account_id
-  environment  = "dev1"
-
-  # Domain configuration
-  base_domain = "hometest.service.nhs.uk"
-  env_domain  = "${local.environment}.${local.base_domain}"
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# INPUTS
+# INPUTS - Uses locals from envcommon and dependencies defined above
 # ---------------------------------------------------------------------------------------------------------------------
 
 inputs = {
-  project_name = local.project_name
-  environment  = local.environment
+  project_name = include.envcommon.locals.project_name
+  environment  = include.envcommon.locals.environment
 
   # Dependencies from network
   vpc_id                    = dependency.network.outputs.vpc_id
@@ -157,79 +72,72 @@ inputs = {
   deployment_bucket_id  = dependency.shared_services.outputs.deployment_artifacts_bucket_id
   deployment_bucket_arn = dependency.shared_services.outputs.deployment_artifacts_bucket_arn
 
-  # Lambda Configuration - Global defaults
+  # Lambda Configuration - Use defaults from envcommon
   enable_vpc_access  = true
-  # https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
-  lambda_runtime     = "nodejs24.x"
-  lambda_timeout     = 30
-  lambda_memory_size = 256
-  log_retention_days = 14
+  lambda_runtime     = include.envcommon.locals.lambda_runtime
+  lambda_timeout     = include.envcommon.locals.lambda_timeout
+  lambda_memory_size = include.envcommon.locals.lambda_memory_size
+  log_retention_days = include.envcommon.locals.log_retention_days
 
   # Lambda code deployment - hooks build and upload automatically
-  # Set to true for initial infrastructure deployment without code
   use_placeholder_lambda = false
 
   # Base path where lambda zip files are located after build
-  # Build script creates: <base_path>/<lambda-name>/<lambda-name>.zip
   lambdas_base_path = "${get_repo_root()}/examples/lambdas"
 
   # =============================================================================
   # LAMBDA DEFINITIONS MAP
-  # Define all lambdas here - each gets an API Gateway if api_path_prefix is set
   # =============================================================================
   lambdas = {
     # User Service API - accessible at /api1/*
     "api1-handler" = {
-      description     = "User Service API Handler"
-      api_path_prefix = "api1"  # Creates API Gateway at /api1/*
+      description     = "User Service API Handler with Secrets Manager"
+      api_path_prefix = "api1"
       timeout         = 30
       memory_size     = 256
+      secrets_arn     = dependency.shared_services.outputs.api_config_secret_arn
       environment = {
         API_NAME    = "users"
         API_VERSION = "v1"
+        SECRET_NAME = dependency.shared_services.outputs.api_config_secret_name
       }
     }
 
     # Order Service API - accessible at /api2/*
     "api2-handler" = {
-      description     = "Order Service API Handler"
-      api_path_prefix = "api2"  # Creates API Gateway at /api2/*
+      description     = "Order Service API Handler with SQS integration"
+      api_path_prefix = "api2"
       timeout         = 30
       memory_size     = 256
       environment = {
-        API_NAME    = "orders"
-        API_VERSION = "v1"
+        API_NAME      = "orders"
+        API_VERSION   = "v1"
+        SQS_QUEUE_URL = "https://sqs.eu-west-2.amazonaws.com/${include.envcommon.locals.account_id}/${include.envcommon.locals.project_name}-${include.envcommon.locals.environment}-events"
       }
     }
 
-    # Example: Add more lambdas easily
-    # "api3-handler" = {
-    #   description     = "Product Service API"
-    #   api_path_prefix = "api3"
-    #   environment     = { API_NAME = "products" }
-    # }
-    #
-    # "background-worker" = {
-    #   description = "Background processing worker (no API Gateway)"
-    #   timeout     = 300
-    #   memory_size = 1024
-    #   # No api_path_prefix = no API Gateway created
-    # }
+    # SQS Message Processor - triggered by SQS events (no API Gateway)
+    "sqs-processor" = {
+      description = "SQS Event Processor - processes messages from queue"
+      sqs_trigger = true
+      timeout     = 60
+      memory_size = 256
+      environment = {
+        PROCESSOR_NAME = "event-processor"
+      }
+    }
   }
 
   # API Gateway Configuration
-  api_stage_name             = "v1"
-  api_endpoint_type          = "REGIONAL"
-  api_throttling_burst_limit = 1000
-  api_throttling_rate_limit  = 2000
+  api_stage_name             = include.envcommon.locals.api_stage_name
+  api_endpoint_type          = include.envcommon.locals.api_endpoint_type
+  api_throttling_burst_limit = include.envcommon.locals.api_throttling_burst_limit
+  api_throttling_rate_limit  = include.envcommon.locals.api_throttling_rate_limit
 
-  # Single custom domain for everything
-  # - dev1.hometest.service.nhs.uk -> SPA
-  # - dev1.hometest.service.nhs.uk/api1/* -> API 1
-  # - dev1.hometest.service.nhs.uk/api2/* -> API 2
-  custom_domain_name  = local.env_domain
+  # Domain configuration
+  custom_domain_name  = include.envcommon.locals.env_domain
   acm_certificate_arn = dependency.shared_services.outputs.acm_cloudfront_certificate_arn
 
   # CloudFront Configuration
-  cloudfront_price_class = "PriceClass_100"
+  cloudfront_price_class = include.envcommon.locals.cloudfront_price_class
 }

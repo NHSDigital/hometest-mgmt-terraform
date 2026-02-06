@@ -29,6 +29,19 @@ interface HealthStatus {
   version: string;
 }
 
+interface SecretInfo {
+  message: string;
+  secretKeys?: string[];
+  secretLength?: number;
+  timestamp: string;
+}
+
+interface SqsMessage {
+  messageId: string;
+  status: string;
+  timestamp: string;
+}
+
 interface ApiState<T> {
   data: T | null;
   loading: boolean;
@@ -43,6 +56,13 @@ function App() {
   // API 2 state (Orders)
   const [api2Health, setApi2Health] = useState<ApiState<HealthStatus>>({ data: null, loading: true, error: null });
   const [orders, setOrders] = useState<ApiState<Order[]>>({ data: null, loading: false, error: null });
+
+  // Secrets Manager state
+  const [secretInfo, setSecretInfo] = useState<ApiState<SecretInfo>>({ data: null, loading: false, error: null });
+
+  // SQS state
+  const [sqsMessages, setSqsMessages] = useState<SqsMessage[]>([]);
+  const [sqsSending, setSqsSending] = useState(false);
 
   // Fetch helper
   const fetchApi = useCallback(async <T,>(url: string): Promise<T> => {
@@ -132,6 +152,63 @@ function App() {
       console.error('Failed to create order:', err);
     }
   }, [fetchOrders]);
+
+  // Fetch secret info from API 1
+  const fetchSecretInfo = useCallback(async () => {
+    setSecretInfo({ data: null, loading: true, error: null });
+    try {
+      const response = await fetchApi<SecretInfo>(`${API1_URL}/secret`);
+      setSecretInfo({ data: response, loading: false, error: null });
+    } catch (err) {
+      setSecretInfo({
+        data: null,
+        loading: false,
+        error: err instanceof Error ? err.message : 'Failed to fetch secret info'
+      });
+    }
+  }, [fetchApi]);
+
+  // Send test message to SQS (via API 2)
+  const sendSqsMessage = useCallback(async (messageType: string) => {
+    setSqsSending(true);
+    try {
+      const response = await fetch(`${API2_URL}/queue`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: messageType,
+          payload: {
+            testId: `test-${Date.now()}`,
+            source: 'spa-demo',
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setSqsMessages(prev => [
+          {
+            messageId: result.messageId || `msg-${Date.now()}`,
+            status: 'sent',
+            timestamp: new Date().toISOString(),
+          },
+          ...prev.slice(0, 9), // Keep last 10 messages
+        ]);
+      }
+    } catch (err) {
+      console.error('Failed to send SQS message:', err);
+      setSqsMessages(prev => [
+        {
+          messageId: `error-${Date.now()}`,
+          status: 'failed',
+          timestamp: new Date().toISOString(),
+        },
+        ...prev.slice(0, 9),
+      ]);
+    } finally {
+      setSqsSending(false);
+    }
+  }, []);
 
   return (
     <>
@@ -302,6 +379,131 @@ function App() {
                 </tbody>
               </table>
             )}
+          </div>
+        </div>
+
+        {/* New Features Section */}
+        <div className="grid grid-2">
+          {/* Secrets Manager Demo */}
+          <div className="card">
+            <div className="card-header">
+              🔐 Secrets Manager Demo (API 1)
+            </div>
+            <div className="card-body">
+              <p style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--nhs-mid-grey)' }}>
+                Demonstrates secure secret retrieval from AWS Secrets Manager.
+                The API returns metadata only - actual secret values are never exposed.
+              </p>
+              <button
+                className="btn btn-primary"
+                onClick={fetchSecretInfo}
+                disabled={secretInfo.loading}
+                style={{ marginBottom: '16px' }}
+              >
+                {secretInfo.loading ? <><span className="loading-spinner"></span> Loading...</> : '🔑 Fetch Secret Info'}
+              </button>
+
+              {secretInfo.error && (
+                <div className="error-message">{secretInfo.error}</div>
+              )}
+
+              {secretInfo.data && (
+                <div style={{
+                  background: 'var(--nhs-pale-grey)',
+                  padding: '16px',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}>
+                  <strong>✅ {secretInfo.data.message}</strong>
+                  {secretInfo.data.secretKeys && (
+                    <div style={{ marginTop: '12px' }}>
+                      <strong>Secret Keys:</strong>
+                      <ul style={{ margin: '8px 0 0 20px', padding: 0 }}>
+                        {secretInfo.data.secretKeys.map(key => (
+                          <li key={key}><code>{key}</code></li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <div style={{ marginTop: '12px', color: 'var(--nhs-mid-grey)' }}>
+                    Retrieved: {new Date(secretInfo.data.timestamp).toLocaleString()}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* SQS Demo */}
+          <div className="card">
+            <div className="card-header">
+              📨 SQS Event Queue Demo (API 2)
+            </div>
+            <div className="card-body">
+              <p style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--nhs-mid-grey)' }}>
+                Send messages to SQS queue. Messages are processed by the sqs-processor Lambda.
+              </p>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => sendSqsMessage('ORDER_CREATED')}
+                  disabled={sqsSending}
+                >
+                  {sqsSending ? <span className="loading-spinner"></span> : '📦'} Order Event
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => sendSqsMessage('USER_REGISTERED')}
+                  disabled={sqsSending}
+                >
+                  👤 User Event
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => sendSqsMessage('NOTIFICATION')}
+                  disabled={sqsSending}
+                >
+                  🔔 Notification
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => sendSqsMessage('TEST_MESSAGE')}
+                  disabled={sqsSending}
+                >
+                  🧪 Test
+                </button>
+              </div>
+
+              {sqsMessages.length > 0 && (
+                <div style={{
+                  background: 'var(--nhs-pale-grey)',
+                  padding: '12px',
+                  borderRadius: '4px',
+                  maxHeight: '200px',
+                  overflowY: 'auto'
+                }}>
+                  <strong style={{ fontSize: '14px' }}>Recent Messages:</strong>
+                  <ul style={{ margin: '8px 0 0', padding: 0, listStyle: 'none', fontSize: '13px' }}>
+                    {sqsMessages.map((msg, idx) => (
+                      <li key={idx} style={{
+                        padding: '6px 0',
+                        borderBottom: idx < sqsMessages.length - 1 ? '1px solid #ddd' : 'none',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                        <code style={{ fontSize: '12px' }}>{msg.messageId.slice(0, 20)}...</code>
+                        <span style={{
+                          color: msg.status === 'sent' ? 'var(--nhs-green)' : 'var(--nhs-error-colour)',
+                          fontWeight: 500
+                        }}>
+                          {msg.status === 'sent' ? '✓ Sent' : '✗ Failed'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -165,16 +165,18 @@ variable "lambda_sqs_queue_arns" {
 variable "lambdas" {
   description = "Map of Lambda function configurations. Each key is the lambda name."
   type = map(object({
-    description     = optional(string, "Lambda function")
-    handler         = optional(string, "index.handler")
-    runtime         = optional(string, null) # null = use var.lambda_runtime
-    timeout         = optional(number, null) # null = use var.lambda_timeout
-    memory_size     = optional(number, null) # null = use var.lambda_memory_size
-    zip_path        = optional(string, null) # Local path to zip file (Terraform uploads directly)
-    s3_key          = optional(string, null) # S3 key if already uploaded
-    source_hash     = optional(string, null) # Source code hash for updates
-    environment     = optional(map(string), {})
-    api_path_prefix = optional(string, null) # API Gateway path prefix (e.g., "api1" -> /api1/*)
+    description                    = optional(string, "Lambda function")
+    handler                        = optional(string, "index.handler")
+    runtime                        = optional(string, null) # null = use var.lambda_runtime
+    timeout                        = optional(number, null) # null = use var.lambda_timeout
+    memory_size                    = optional(number, null) # null = use var.lambda_memory_size
+    zip_path                       = optional(string, null) # Local path to zip file (Terraform uploads directly)
+    s3_key                         = optional(string, null) # S3 key if already uploaded
+    source_hash                    = optional(string, null) # Source code hash for updates
+    environment                    = optional(map(string), {})
+    api_path_prefix                = optional(string, null) # API Gateway path prefix (e.g., "api1" -> /api1/*)
+    sqs_trigger                    = optional(bool, false)  # Enable SQS event source mapping
+    secrets_arn                    = optional(string, null) # Secrets Manager ARN for this lambda
     reserved_concurrent_executions = optional(number, -1)
   }))
   default = {}
@@ -184,8 +186,12 @@ variable "lambdas" {
   #   "api1-handler" = {
   #     description     = "User service API"
   #     api_path_prefix = "api1"
-  #     zip_path        = "../../../examples/lambdas/api1-handler/api1-handler.zip"
+  #     secrets_arn     = "arn:aws:secretsmanager:eu-west-2:123456789:secret:my-secret"
   #     environment     = { API_NAME = "users" }
+  #   }
+  #   "sqs-processor" = {
+  #     description = "SQS message processor"
+  #     sqs_trigger = true  # Triggered by SQS queue
   #   }
   # }
 }

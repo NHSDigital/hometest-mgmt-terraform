@@ -293,7 +293,7 @@ resource "aws_iam_role_policy" "dynamodb_access" {
 ################################################################################
 
 resource "aws_iam_role_policy" "sqs_access" {
-  count = length(var.sqs_queue_arns) > 0 ? 1 : 0
+  count = var.enable_sqs_access ? 1 : 0
 
   name = "${local.role_name}-sqs-access"
   role = aws_iam_role.lambda_execution.id
