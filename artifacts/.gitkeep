@@ -1,0 +1,3 @@
+# .gitkeep - placeholder for artifacts directory
+# This directory is used for Lambda deployment packages
+# Build artifacts with: make package-lambda

@@ -123,3 +123,9 @@ venv/
 
 # Ignore Terraform lock file
 .terraform.lock.hcl
+
+# Ignore cloned service repository
+.hometest-service/
+
+# Ignore Lambda artifacts
+artifacts/*.zip

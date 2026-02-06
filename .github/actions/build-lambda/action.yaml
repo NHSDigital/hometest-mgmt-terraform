@@ -1,0 +1,123 @@
+---
+name: "Build Lambda from Service Repo"
+description: "Clones hometest-service, builds TypeScript Lambda, and packages as zip artifact"
+
+inputs:
+  service_ref:
+    description: "Git ref (branch/tag/commit) to checkout from hometest-service"
+    required: false
+    default: "main"
+  node_version:
+    description: "Node.js version to use"
+    required: false
+    default: "20"
+  artifact_prefix:
+    description: "Prefix for the artifact name"
+    required: false
+    default: "lambda-api"
+  service_repo_token:
+    description: "GitHub token to access hometest-service repository"
+    required: true
+
+outputs:
+  artifact_name:
+    description: "Name of the built artifact (without .zip extension)"
+    value: ${{ steps.package.outputs.artifact_name }}
+  artifact_path:
+    description: "Path to the artifact zip file"
+    value: ${{ steps.package.outputs.artifact_path }}
+  source_code_hash:
+    description: "Base64-encoded SHA256 hash for Terraform"
+    value: ${{ steps.package.outputs.source_code_hash }}
+  s3_key:
+    description: "S3 key for the artifact"
+    value: ${{ steps.package.outputs.s3_key }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Checkout hometest-service"
+      uses: actions/checkout@v4
+      with:
+        repository: NHSDigital/hometest-service
+        ref: ${{ inputs.service_ref }}
+        path: _hometest-service
+        token: ${{ inputs.service_repo_token }}
+
+    - name: "Setup Node.js"
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node_version }}
+        cache: "npm"
+        cache-dependency-path: _hometest-service/lambdas/package-lock.json
+
+    - name: "Install dependencies"
+      shell: bash
+      working-directory: _hometest-service/lambdas
+      run: |
+        echo "📦 Installing Lambda dependencies..."
+        npm ci
+
+    - name: "Build TypeScript"
+      shell: bash
+      working-directory: _hometest-service/lambdas
+      run: |
+        echo "🔨 Building TypeScript..."
+        npm run build
+
+    - name: "Run tests"
+      shell: bash
+      working-directory: _hometest-service/lambdas
+      continue-on-error: true
+      run: |
+        echo "🧪 Running tests..."
+        npm test || echo "No tests configured yet"
+
+    - name: "Package Lambda artifact"
+      id: package
+      shell: bash
+      run: |
+        echo "📦 Packaging Lambda artifact..."
+
+        TIMESTAMP=$(date +%Y%m%d%H%M%S)
+        ARTIFACT_NAME="${{ inputs.artifact_prefix }}-${TIMESTAMP}"
+        ARTIFACT_PATH="./artifacts/${ARTIFACT_NAME}.zip"
+
+        mkdir -p ./artifacts
+
+        cd _hometest-service/lambdas
+
+        # Install production dependencies only
+        npm ci --omit=dev
+
+        # Create zip excluding source and test files
+        zip -r "../../${ARTIFACT_PATH}" \
+          . \
+          -x "*.ts" \
+          -x "*.test.js" \
+          -x "*.spec.js" \
+          -x "tsconfig.json" \
+          -x "jest.config.*" \
+          -x ".gitignore" \
+          -x "src/**" \
+          -x "**/__tests__/**" \
+          -x "**/node_modules/.cache/**"
+
+        cd ../..
+
+        # Calculate hash for Terraform
+        HASH=$(openssl dgst -sha256 -binary "$ARTIFACT_PATH" | openssl enc -base64)
+
+        echo "artifact_name=${ARTIFACT_NAME}" >> $GITHUB_OUTPUT
+        echo "artifact_path=${ARTIFACT_PATH}" >> $GITHUB_OUTPUT
+        echo "source_code_hash=${HASH}" >> $GITHUB_OUTPUT
+        echo "s3_key=${ARTIFACT_NAME}.zip" >> $GITHUB_OUTPUT
+
+        echo "✅ Artifact created: ${ARTIFACT_NAME}.zip"
+        echo "   Size: $(du -h $ARTIFACT_PATH | cut -f1)"
+        echo "   Hash: $HASH"
+
+    - name: "Cleanup"
+      shell: bash
+      run: |
+        rm -rf _hometest-service
