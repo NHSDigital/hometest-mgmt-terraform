@@ -85,38 +85,53 @@ inputs = {
 
   # =============================================================================
   # LAMBDA DEFINITIONS - hometest-service lambdas
+  # Based on hometest-service/local-environment/infra/main.tf configuration
   # =============================================================================
   lambdas = {
     # Hello World Lambda - simple health check
+    # API path: /hello-world
     "hello-world-lambda" = {
       description     = "Hello World Lambda - Health Check"
-      api_path_prefix = "hello"
+      api_path_prefix = "hello-world"
+      handler         = "index.handler"
       timeout         = 30
       memory_size     = 256
       environment = {
-        ENVIRONMENT = include.envcommon.locals.environment
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = include.envcommon.locals.environment
       }
     }
 
     # Eligibility Test Info Lambda
+    # API path: /test-order/info (GET)
     "eligibility-test-info-lambda" = {
-      description     = "Eligibility Test Info Service"
-      api_path_prefix = "eligibility"
+      description     = "Eligibility Test Info Service - Returns test eligibility information"
+      api_path_prefix = "test-order"  # Will handle /test-order/* routes
+      handler         = "index.handler"
       timeout         = 30
       memory_size     = 256
       environment = {
-        ENVIRONMENT = include.envcommon.locals.environment
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = include.envcommon.locals.environment
+        DATABASE_URL = "postgresql://app_user:PLACEHOLDER@rds-endpoint:5432/mydb?currentSchema=hometest"
       }
     }
 
-    # Order Router Lambda - SQS triggered, no API endpoint
+    # Order Router Lambda - Handles order submissions to supplier
+    # API path: /test-order/order (POST) - but configured as SQS processor for async processing
     "order-router-lambda" = {
-      description = "Order Router Service - SQS Processor"
-      sqs_trigger = true  # Triggered by SQS queue, no API Gateway integration
-      timeout     = 60    # Longer timeout for queue processing
+      description = "Order Router Service - Routes orders to supplier via SQS processing"
+      sqs_trigger = true  # Triggered by SQS queue for async order processing
+      handler     = "index.handler"
+      timeout     = 60    # Longer timeout for external API calls
       memory_size = 512
       environment = {
-        ENVIRONMENT = include.envcommon.locals.environment
+        NODE_OPTIONS                = "--enable-source-maps"
+        ENVIRONMENT                 = include.envcommon.locals.environment
+        SUPPLIER_BASE_URL           = "https://supplier-api.example.com"
+        SUPPLIER_OAUTH_TOKEN_PATH   = "/oauth/token"
+        SUPPLIER_CLIENT_ID          = "supplier-client"
+        SUPPLIER_CLIENT_SECRET_NAME = "${include.envcommon.locals.project_name}/${include.envcommon.locals.environment}/supplier-oauth-client-secret"
       }
     }
   }
