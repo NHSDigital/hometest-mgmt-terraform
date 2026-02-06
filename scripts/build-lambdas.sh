@@ -2,6 +2,7 @@
 #===============================================================================
 # Lambda Build and Deploy Script
 # Builds, packages, and uploads Lambda functions to S3
+# Only rebuilds lambdas when source code changes (uses hash-based caching)
 #
 # Usage:
 #   ./scripts/build-lambdas.sh [options]
@@ -14,12 +15,14 @@
 #   -r, --region         AWS region (default: eu-west-2)
 #   -n, --no-upload      Build and package only, don't upload to S3
 #   -c, --clean          Clean build artifacts before building
+#   -f, --force          Force rebuild even if source hasn't changed
 #   -h, --help           Show this help message
 #
 # Examples:
 #   ./scripts/build-lambdas.sh -e dev1
 #   ./scripts/build-lambdas.sh -e dev1 -l api1-handler
 #   ./scripts/build-lambdas.sh -e dev1 --no-upload
+#   ./scripts/build-lambdas.sh -e dev1 --force    # Force rebuild all
 #===============================================================================
 
 set -euo pipefail
@@ -41,6 +44,7 @@ S3_BUCKET=""
 AWS_REGION="${AWS_REGION:-eu-west-2}"
 NO_UPLOAD=false
 CLEAN=false
+FORCE_BUILD=false
 PROJECT_NAME="nhs-hometest"
 
 # Logging functions
@@ -85,6 +89,10 @@ parse_args() {
                 ;;
             -c|--clean)
                 CLEAN=true
+                shift
+                ;;
+            -f|--force)
+                FORCE_BUILD=true
                 shift
                 ;;
             -h|--help)
@@ -171,7 +179,67 @@ clean_lambda() {
     
     log_info "Cleaning ${lambda_name}..."
     
-    rm -rf "${lambda_dir}/dist" "${lambda_dir}/node_modules" "${lambda_dir}/*.zip" 2>/dev/null || true
+    rm -rf "${lambda_dir}/dist" "${lambda_dir}/node_modules" "${lambda_dir}/*.zip" "${lambda_dir}/.source_hash" 2>/dev/null || true
+}
+
+# Calculate hash of source files (excluding build artifacts)
+calculate_source_hash() {
+    local lambda_dir=$1
+    
+    # Hash all source files: *.ts, *.js, package.json, tsconfig.json
+    # Exclude node_modules, dist, zip files
+    find "$lambda_dir" \
+        -type f \
+        \( -name "*.ts" -o -name "*.js" -o -name "package.json" -o -name "tsconfig.json" -o -name "package-lock.json" \) \
+        ! -path "*/node_modules/*" \
+        ! -path "*/dist/*" \
+        -print0 2>/dev/null | \
+        sort -z | \
+        xargs -0 cat 2>/dev/null | \
+        openssl dgst -sha256 | \
+        awk '{print $2}'
+}
+
+# Check if lambda needs rebuilding
+needs_rebuild() {
+    local lambda_name=$1
+    local lambda_dir="${SOURCE_DIR}/${lambda_name}"
+    local hash_file="${lambda_dir}/.source_hash"
+    local zip_file="${lambda_dir}/${lambda_name}.zip"
+    
+    # Force rebuild if requested
+    if [[ "$FORCE_BUILD" == true ]]; then
+        return 0  # needs rebuild
+    fi
+    
+    # Rebuild if zip doesn't exist
+    if [[ ! -f "$zip_file" ]]; then
+        return 0  # needs rebuild
+    fi
+    
+    # Rebuild if no previous hash
+    if [[ ! -f "$hash_file" ]]; then
+        return 0  # needs rebuild
+    fi
+    
+    # Compare current source hash with stored hash
+    local current_hash=$(calculate_source_hash "$lambda_dir")
+    local stored_hash=$(cat "$hash_file" 2>/dev/null)
+    
+    if [[ "$current_hash" != "$stored_hash" ]]; then
+        return 0  # needs rebuild
+    fi
+    
+    return 1  # no rebuild needed
+}
+
+# Save source hash after successful build
+save_source_hash() {
+    local lambda_name=$1
+    local lambda_dir="${SOURCE_DIR}/${lambda_name}"
+    local hash_file="${lambda_dir}/.source_hash"
+    
+    calculate_source_hash "$lambda_dir" > "$hash_file"
 }
 
 # Build a single lambda
@@ -333,11 +401,17 @@ main() {
             clean_lambda "$lambda_name"
         fi
         
-        build_lambda "$lambda_name"
-        package_lambda "$lambda_name"
-        
-        if [[ "$NO_UPLOAD" == false ]]; then
-            upload_lambda "$lambda_name"
+        # Check if rebuild is needed
+        if needs_rebuild "$lambda_name"; then
+            build_lambda "$lambda_name"
+            package_lambda "$lambda_name"
+            save_source_hash "$lambda_name"
+            
+            if [[ "$NO_UPLOAD" == false ]]; then
+                upload_lambda "$lambda_name"
+            fi
+        else
+            log_success "Skipping ${lambda_name} - no changes detected"
         fi
     done
     

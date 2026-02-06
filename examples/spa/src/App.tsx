@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// API endpoints - these are replaced at build time
-const API1_URL = import.meta.env.VITE_API1_URL || 'https://api1.dev1.hometest.service.nhs.uk';
-const API2_URL = import.meta.env.VITE_API2_URL || 'https://api2.dev1.hometest.service.nhs.uk';
+// API endpoints - these are path-based under the same domain
+// CloudFront routes /api1/* to API Gateway 1 and /api2/* to API Gateway 2
+const API1_URL = import.meta.env.VITE_API1_URL || '/api1';
+const API2_URL = import.meta.env.VITE_API2_URL || '/api2';
 
 interface User {
   id: string;

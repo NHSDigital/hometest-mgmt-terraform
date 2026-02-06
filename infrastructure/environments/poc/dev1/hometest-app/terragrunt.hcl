@@ -21,7 +21,7 @@ terraform {
   # These hooks build and package artifacts locally BEFORE terraform runs.
   # Terraform then uploads and deploys the Lambda functions.
   # ---------------------------------------------------------------------------
-  
+
   # Build and package Lambda code locally (Terraform uploads and deploys)
   before_hook "build_lambdas" {
     commands = ["apply", "plan"]
@@ -61,8 +61,8 @@ terraform {
       <<-EOF
         SPA_DIST="${get_repo_root()}/examples/spa/dist"
         if [[ -d "$SPA_DIST" ]]; then
-          # Get the SPA bucket from terraform output
-          SPA_BUCKET=$(terragrunt output -raw spa_bucket_id 2>/dev/null || echo "")
+          # Get the SPA bucket from terraform output (hook runs in .terragrunt-cache)
+          SPA_BUCKET=$(terraform output -raw spa_bucket_id 2>/dev/null || echo "")
           if [[ -n "$SPA_BUCKET" ]]; then
             echo "Uploading SPA to s3://$SPA_BUCKET..."
             aws s3 sync "$SPA_DIST" "s3://$SPA_BUCKET" \
@@ -74,6 +74,7 @@ terraform {
             aws s3 cp "$SPA_DIST/index.html" "s3://$SPA_BUCKET/index.html" \
               --cache-control "no-cache, no-store, must-revalidate" \
               --region eu-west-2
+            # aws cloudfront create-invalidation --distribution-id E3Q4UN89X6P7B1 --paths "/*" --output text
             echo "SPA uploaded successfully!"
           else
             echo "Could not determine SPA bucket, skipping upload..."

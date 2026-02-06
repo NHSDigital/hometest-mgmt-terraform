@@ -128,3 +128,4 @@ venv/
 node_modules
 dist
 *.zip
+.source_hash

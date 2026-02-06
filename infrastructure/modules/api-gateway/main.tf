@@ -146,10 +146,14 @@ resource "aws_api_gateway_deployment" "this" {
 
 ################################################################################
 # API Gateway Account (for CloudWatch logging)
+# This is a regional setting - only one needed per AWS account/region
 ################################################################################
 
 resource "aws_api_gateway_account" "this" {
   cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch.arn
+
+  # Must wait for the IAM role policy to be fully applied
+  depends_on = [aws_iam_role_policy.api_gateway_cloudwatch]
 }
 
 ################################################################################

@@ -8,9 +8,6 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
   },
-  define: {
-    // These will be replaced at build time
-    'import.meta.env.VITE_API1_URL': JSON.stringify(process.env.VITE_API1_URL || 'https://api1.dev1.hometest.service.nhs.uk'),
-    'import.meta.env.VITE_API2_URL': JSON.stringify(process.env.VITE_API2_URL || 'https://api2.dev1.hometest.service.nhs.uk'),
-  }
+  // Note: API URLs are now path-based (/api1, /api2) and configured in App.tsx
+  // CloudFront routes these paths to the appropriate API Gateway origins
 })
