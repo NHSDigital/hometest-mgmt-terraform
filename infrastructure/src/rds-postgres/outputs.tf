@@ -7,9 +7,9 @@ output "vpc_id" {
   value       = local.vpc_id
 }
 
-output "subnet_ids" {
-  description = "The IDs of the database subnets"
-  value       = local.subnet_ids
+output "db_subnet_group_name" {
+  description = "The name of the DB subnet group used"
+  value       = var.db_subnet_group_name
 }
 
 ################################################################################

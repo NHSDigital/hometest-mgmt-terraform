@@ -1,77 +1,16 @@
 ################################################################################
-# Data Sources
+# Data Sources - Reference Network Module Resources
 ################################################################################
-
-data "aws_availability_zones" "available" {
-  state = "available"
-}
 
 locals {
   resource_prefix = "${var.project_name}-${var.aws_account_shortname}-${var.environment}"
 
-  # Use provided VPC or create new one
-  vpc_id     = var.create_vpc ? aws_vpc.main[0].id : var.vpc_id
-  subnet_ids = var.create_vpc ? aws_subnet.database[*].id : var.subnet_ids
+  # Use VPC from network module (passed via variables from Terragrunt dependency)
+  vpc_id = var.vpc_id
 
   common_tags = merge(var.tags, {
     Component = "database"
   })
-}
-
-################################################################################
-# VPC (Optional - for POC environments)
-################################################################################
-
-resource "aws_vpc" "main" {
-  count = var.create_vpc ? 1 : 0
-
-  cidr_block           = var.vpc_cidr
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-
-  tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-vpc"
-  })
-}
-
-resource "aws_internet_gateway" "main" {
-  count = var.create_vpc ? 1 : 0
-
-  vpc_id = aws_vpc.main[0].id
-
-  tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-igw"
-  })
-}
-
-resource "aws_subnet" "database" {
-  count = var.create_vpc ? var.vpc_azs_count : 0
-
-  vpc_id            = aws_vpc.main[0].id
-  cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index + 20)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-db-subnet-${count.index + 1}"
-    Tier = "database"
-  })
-}
-
-resource "aws_route_table" "database" {
-  count = var.create_vpc ? 1 : 0
-
-  vpc_id = aws_vpc.main[0].id
-
-  tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-db-rt"
-  })
-}
-
-resource "aws_route_table_association" "database" {
-  count = var.create_vpc ? var.vpc_azs_count : 0
-
-  subnet_id      = aws_subnet.database[count.index].id
-  route_table_id = aws_route_table.database[0].id
 }
 
 ################################################################################
@@ -83,7 +22,9 @@ module "rds_postgres" {
 
   identifier = "${local.resource_prefix}-postgres"
   vpc_id     = local.vpc_id
-  subnet_ids = local.subnet_ids
+
+  # Use DB subnet group from network module
+  db_subnet_group_name = var.db_subnet_group_name
 
   # Engine configuration
   engine_version         = var.postgres_engine_version

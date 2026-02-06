@@ -1,5 +1,46 @@
 # rds-postgres
 
+## Overview
+
+This module deploys an RDS PostgreSQL instance in the VPC and data subnets created by the `network` module.
+
+**Important:** This module depends on the network module being deployed first. It uses Terraform remote state to reference:
+- VPC ID from `data.terraform_remote_state.network.outputs.vpc_id`
+- Data subnet IDs from `data.terraform_remote_state.network.outputs.data_subnet_ids`
+
+## Prerequisites
+
+1. Deploy the `network` module first
+2. Ensure the network module's Terraform state is stored in S3
+3. Set `create_db_subnet_group = true` in the network module (default)
+4. Provide the `terraform_state_bucket` variable to this module
+
+## Usage
+
+```hcl
+module "rds_postgres" {
+  source = "./src/rds-postgres"
+
+  # Required variables
+  aws_region            = "eu-west-2"
+  aws_account_id        = "123456789012"
+  aws_account_shortname = "poc"
+  project_name          = "hometest"
+  environment           = "core"
+
+  # Terraform state bucket (for network module reference)
+  terraform_state_bucket = "my-terraform-state-bucket"
+
+  # Database configuration
+  instance_class    = "db.t4g.micro"
+  allocated_storage = 20
+  multi_az          = false
+
+  # Security
+  allowed_security_group_ids = [module.network.lambda_security_group_id]
+}
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -10,9 +51,7 @@
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.28.0 |
+No providers.
 
 ## Modules
 
@@ -22,14 +61,7 @@
 
 ## Resources
 
-| Name | Type |
-|------|------|
-| [aws_internet_gateway.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway) | resource |
-| [aws_route_table.database](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
-| [aws_route_table_association.database](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
-| [aws_subnet.database](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
-| [aws_vpc.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) | resource |
-| [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
+No resources.
 
 ## Inputs
 
@@ -46,8 +78,8 @@
 | <a name="input_backup_retention_period"></a> [backup\_retention\_period](#input\_backup\_retention\_period) | The days to retain backups for | `number` | `7` | no |
 | <a name="input_backup_window"></a> [backup\_window](#input\_backup\_window) | The daily time range during which automated backups are created | `string` | `"03:00-04:00"` | no |
 | <a name="input_create_parameter_group"></a> [create\_parameter\_group](#input\_create\_parameter\_group) | Whether to create a parameter group | `bool` | `true` | no |
-| <a name="input_create_vpc"></a> [create\_vpc](#input\_create\_vpc) | Create a new VPC for the database (for POC/dev only) | `bool` | `false` | no |
 | <a name="input_db_name"></a> [db\_name](#input\_db\_name) | The name of the database to create when the DB instance is created | `string` | `"postgres"` | no |
+| <a name="input_db_subnet_group_name"></a> [db\_subnet\_group\_name](#input\_db\_subnet\_group\_name) | DB subnet group name from network module (passed via Terragrunt dependency) | `string` | n/a | yes |
 | <a name="input_deletion_protection"></a> [deletion\_protection](#input\_deletion\_protection) | If the DB instance should have deletion protection enabled | `bool` | `false` | no |
 | <a name="input_enabled_cloudwatch_logs_exports"></a> [enabled\_cloudwatch\_logs\_exports](#input\_enabled\_cloudwatch\_logs\_exports) | List of log types to enable for exporting to CloudWatch logs | `list(string)` | <pre>[<br/>  "postgresql"<br/>]</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., dev, staging, prod) | `string` | n/a | yes |
@@ -70,12 +102,9 @@
 | <a name="input_skip_final_snapshot"></a> [skip\_final\_snapshot](#input\_skip\_final\_snapshot) | Determines whether a final DB snapshot is created before the DB instance is deleted | `bool` | `false` | no |
 | <a name="input_storage_encrypted"></a> [storage\_encrypted](#input\_storage\_encrypted) | Specifies whether the DB instance is encrypted | `bool` | `true` | no |
 | <a name="input_storage_type"></a> [storage\_type](#input\_storage\_type) | One of 'standard' (magnetic), 'gp2' (general purpose SSD), 'gp3', or 'io1' (provisioned IOPS SSD) | `string` | `"gp3"` | no |
-| <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | Subnet IDs for the database (required if use\_default\_vpc is false) | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags for all resources | `map(string)` | `{}` | no |
 | <a name="input_username"></a> [username](#input\_username) | Username for the master DB user | `string` | `"postgres"` | no |
-| <a name="input_vpc_azs_count"></a> [vpc\_azs\_count](#input\_vpc\_azs\_count) | Number of availability zones to use (only used if create\_vpc is true) | `number` | `2` | no |
-| <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | CIDR block for the VPC (only used if create\_vpc is true) | `string` | `"10.0.0.0/16"` | no |
-| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID (required if create\_vpc is false) | `string` | `""` | no |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID from network module (passed via Terragrunt dependency) | `string` | n/a | yes |
 
 ## Outputs
 
@@ -90,7 +119,7 @@
 | <a name="output_db_instance_name"></a> [db\_instance\_name](#output\_db\_instance\_name) | The database name |
 | <a name="output_db_instance_port"></a> [db\_instance\_port](#output\_db\_instance\_port) | The database port |
 | <a name="output_db_instance_username"></a> [db\_instance\_username](#output\_db\_instance\_username) | The master username for the database |
+| <a name="output_db_subnet_group_name"></a> [db\_subnet\_group\_name](#output\_db\_subnet\_group\_name) | The name of the DB subnet group used |
 | <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | The ID of the security group |
-| <a name="output_subnet_ids"></a> [subnet\_ids](#output\_subnet\_ids) | The IDs of the database subnets |
 | <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | The ID of the VPC |
 <!-- END_TF_DOCS -->
