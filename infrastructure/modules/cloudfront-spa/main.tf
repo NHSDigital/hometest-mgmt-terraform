@@ -333,6 +333,12 @@ resource "aws_cloudfront_distribution" "spa" {
 # CloudFront Function for SPA Routing
 ################################################################################
 
+locals {
+  # Build regex pattern from API prefixes for the SPA routing function
+  # Example: "api1|api2|hello-world|test-order" 
+  api_prefixes_pattern = join("|", [for k, v in local.api_origins_map : k])
+}
+
 resource "aws_cloudfront_function" "spa_routing" {
   count = var.enable_spa_routing ? 1 : 0
 
@@ -341,7 +347,12 @@ resource "aws_cloudfront_function" "spa_routing" {
   comment = "SPA routing function for ${local.distribution_name}"
   publish = true
 
-  code = file("${path.module}/functions/spa_routing.js")
+  # Template the function with actual API prefixes
+  code = replace(
+    file("${path.module}/functions/spa_routing.js"),
+    "$${API_PREFIXES_PATTERN}",
+    local.api_prefixes_pattern != "" ? local.api_prefixes_pattern : "api"
+  )
 }
 
 ################################################################################

@@ -87,7 +87,7 @@ inputs = {
 
   # Lambda Configuration
   enable_vpc_access  = true
-  enable_sqs_access  = true # Required for order-router-lambda SQS trigger
+  enable_sqs_access  = true  # Required for order-router-lambda SQS trigger
   lambda_runtime     = include.envcommon.locals.lambda_runtime
   lambda_timeout     = include.envcommon.locals.lambda_timeout
   lambda_memory_size = include.envcommon.locals.lambda_memory_size
@@ -107,10 +107,19 @@ inputs = {
   # =============================================================================
   # LAMBDA DEFINITIONS - hometest-service lambdas
   # Based on hometest-service/local-environment/infra/main.tf configuration
+  # 
+  # CloudFront Routing (path-based) - spa_routing.js is templated with these prefixes:
+  # - / and /*           → S3 SPA (Next.js)
+  # - /hello-world/*     → API Gateway → hello-world-lambda
+  # - /test-order/*      → API Gateway → eligibility-test-info-lambda
+  # 
+  # SQS-triggered (no CloudFront/API Gateway):
+  # - order-router-lambda → Processes orders from SQS queue asynchronously
   # =============================================================================
   lambdas = {
     # Hello World Lambda - simple health check
-    # API path: /hello-world
+    # CloudFront: /hello-world/* → API Gateway → Lambda
+    # Matches local: api_path = "hello-world"
     "hello-world-lambda" = {
       description     = "Hello World Lambda - Health Check"
       api_path_prefix = "hello-world"
@@ -124,10 +133,12 @@ inputs = {
     }
 
     # Eligibility Test Info Lambda
-    # API path: /test-order/info (GET)
+    # CloudFront: /test-order/* → API Gateway → Lambda
+    # Handles: GET /test-order/info (returns test eligibility information)
+    # Matches local: api_path = "test-order/info"
     "eligibility-test-info-lambda" = {
       description     = "Eligibility Test Info Service - Returns test eligibility information"
-      api_path_prefix = "test-order" # Will handle /test-order/* routes
+      api_path_prefix = "test-order"
       handler         = "index.handler"
       timeout         = 30
       memory_size     = 256
@@ -139,13 +150,15 @@ inputs = {
       }
     }
 
-    # Order Router Lambda - Handles order submissions to supplier
-    # API path: /test-order/order (POST) - but configured as SQS processor for async processing
+    # Order Router Lambda - SQS triggered for async order processing
+    # NOT exposed via API Gateway - processes orders from SQS queue
+    # Orders are submitted to SQS via eligibility-test-info-lambda or directly
+    # Matches local: api_path = "test-order/order" (but async via SQS here)
     "order-router-lambda" = {
-      description = "Order Router Service - Routes orders to supplier via SQS processing"
-      sqs_trigger = true # Triggered by SQS queue for async order processing
+      description = "Order Router Service - Processes orders from SQS queue"
+      sqs_trigger = true  # Triggered by SQS, no API Gateway endpoint
       handler     = "index.handler"
-      timeout     = 60 # Longer timeout for external API calls
+      timeout     = 60    # Longer timeout for external API calls to supplier
       memory_size = 512
       environment = {
         NODE_OPTIONS                = "--enable-source-maps"
