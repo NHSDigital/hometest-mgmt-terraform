@@ -189,7 +189,7 @@ inputs = {
 
   # Lambda Configuration
   enable_vpc_access  = true
-  enable_sqs_access  = false
+  enable_sqs_access  = true  # Required for order-router-lambda SQS trigger
   lambda_runtime     = include.envcommon.locals.lambda_runtime
   lambda_timeout     = include.envcommon.locals.lambda_timeout
   lambda_memory_size = include.envcommon.locals.lambda_memory_size
@@ -227,12 +227,12 @@ inputs = {
       }
     }
 
-    # Order Router Lambda
+    # Order Router Lambda - SQS triggered, no API endpoint
     "order-router-lambda" = {
-      description     = "Order Router Service"
-      api_path_prefix = "orders"
-      timeout         = 30
-      memory_size     = 256
+      description = "Order Router Service - SQS Processor"
+      sqs_trigger = true  # Triggered by SQS queue, no API Gateway integration
+      timeout     = 60    # Longer timeout for queue processing
+      memory_size = 512
       environment = {
         ENVIRONMENT = include.envcommon.locals.environment
       }
