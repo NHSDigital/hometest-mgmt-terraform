@@ -88,7 +88,7 @@ inputs = {
 
   # =============================================================================
   # LAMBDA DEFINITIONS MAP
-  # 
+  #
   # CloudFront Routing (path-based) - spa_routing.js is templated with these prefixes:
   # - / and /*      → S3 SPA (Vite)
   # - /api1/*       → API Gateway → api1-handler

@@ -335,7 +335,7 @@ resource "aws_cloudfront_distribution" "spa" {
 
 locals {
   # Build regex pattern from API prefixes for the SPA routing function
-  # Example: "api1|api2|hello-world|test-order" 
+  # Example: "api1|api2|hello-world|test-order"
   api_prefixes_pattern = join("|", [for k, v in local.api_origins_map : k])
 }
 
