@@ -74,6 +74,7 @@ inputs = {
 
   # Lambda Configuration - Use defaults from envcommon
   enable_vpc_access  = true
+  enable_sqs_access  = false
   lambda_runtime     = include.envcommon.locals.lambda_runtime
   lambda_timeout     = include.envcommon.locals.lambda_timeout
   lambda_memory_size = include.envcommon.locals.lambda_memory_size
@@ -112,18 +113,7 @@ inputs = {
       environment = {
         API_NAME      = "orders"
         API_VERSION   = "v1"
-        SQS_QUEUE_URL = "https://sqs.eu-west-2.amazonaws.com/${include.envcommon.locals.account_id}/${include.envcommon.locals.project_name}-${include.envcommon.locals.environment}-events"
-      }
-    }
-
-    # SQS Message Processor - triggered by SQS events (no API Gateway)
-    "sqs-processor" = {
-      description = "SQS Event Processor - processes messages from queue"
-      sqs_trigger = true
-      timeout     = 60
-      memory_size = 256
-      environment = {
-        PROCESSOR_NAME = "event-processor"
+        # SQS_QUEUE_URL = "https://sqs.eu-west-2.amazonaws.com/${include.envcommon.locals.account_id}/${include.envcommon.locals.project_name}-${include.envcommon.locals.environment}-events"
       }
     }
   }
