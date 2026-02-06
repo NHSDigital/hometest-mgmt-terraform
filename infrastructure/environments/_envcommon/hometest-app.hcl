@@ -30,6 +30,17 @@ locals {
   base_domain = "hometest.service.nhs.uk"
   env_domain  = "${local.environment}.${local.base_domain}"
 
+  # ---------------------------------------------------------------------------
+  # SOURCE PATHS - Can be overridden via env.hcl in each environment
+  # ---------------------------------------------------------------------------
+  # Check if env.hcl has path overrides, otherwise use defaults
+  # Default: hometest-service repo (production code)
+  lambdas_source_dir = try(local.env_vars.locals.lambdas_source_dir, "/home/mikee/git/kainos/code/nhs/code/hometest-service/lambdas")
+  lambdas_base_path  = try(local.env_vars.locals.lambdas_base_path, "${local.lambdas_source_dir}/src")
+  spa_source_dir     = try(local.env_vars.locals.spa_source_dir, "/home/mikee/git/kainos/code/nhs/code/hometest-service/ui")
+  spa_dist_dir       = try(local.env_vars.locals.spa_dist_dir, "${local.spa_source_dir}/out")
+  spa_type           = try(local.env_vars.locals.spa_type, "nextjs")  # "nextjs" or "vite"
+
   # Lambda Configuration Defaults
   # https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
   lambda_runtime     = "nodejs24.x"
@@ -62,33 +73,59 @@ terraform {
   # BUILD HOOKS
   # These hooks build and package artifacts locally BEFORE terraform runs.
   # Terraform then uploads and deploys the Lambda functions.
+  # Paths are configurable via locals: lambdas_source_dir, spa_source_dir, spa_type
   # ---------------------------------------------------------------------------
 
   # Build and package Lambda code locally (Terraform uploads and deploys)
   before_hook "build_lambdas" {
     commands = ["apply", "plan"]
     execute  = [
-      "${get_repo_root()}/scripts/build-lambdas.sh",
-      "--environment", local.environment,
-      "--source-dir", "${get_repo_root()}/examples/lambdas",
-      "--no-upload"
+      "bash", "-c",
+      <<-EOF
+        LAMBDAS_DIR="${local.lambdas_source_dir}"
+        if [[ -d "$LAMBDAS_DIR" ]]; then
+          echo "Building lambdas from $LAMBDAS_DIR..."
+          cd "$LAMBDAS_DIR"
+          npm ci --silent 2>/dev/null || npm install --silent
+          npm run build --silent 2>/dev/null || true
+          
+          # Package each lambda from dist to src (for Terraform to find)
+          if [[ -d "dist" ]]; then
+            for lambda_dist in dist/*/; do
+              lambda_name=$(basename "$lambda_dist")
+              if [[ -d "src/$lambda_name" ]]; then
+                echo "Packaging $lambda_name..."
+                cd "dist/$lambda_name"
+                zip -rq "../../src/$lambda_name/$lambda_name.zip" . 2>/dev/null || true
+                cd "$LAMBDAS_DIR"
+              fi
+            done
+          fi
+          echo "Lambda build complete!"
+        else
+          echo "Lambdas directory not found at $LAMBDAS_DIR"
+          exit 1
+        fi
+      EOF
     ]
   }
 
-  # Build SPA before apply (if examples/spa exists)
+  # Build SPA before apply
   before_hook "build_spa" {
     commands = ["apply"]
     execute  = [
       "bash", "-c",
       <<-EOF
-        SPA_DIR="${get_repo_root()}/examples/spa"
+        SPA_DIR="${local.spa_source_dir}"
+        SPA_TYPE="${local.spa_type}"
         if [[ -d "$SPA_DIR" ]] && [[ -f "$SPA_DIR/package.json" ]]; then
-          echo "Building SPA..."
+          echo "Building $SPA_TYPE SPA from $SPA_DIR..."
           cd "$SPA_DIR"
           npm ci --silent 2>/dev/null || npm install --silent
           npm run build --silent 2>/dev/null || true
+          echo "SPA build complete!"
         else
-          echo "No SPA found at $SPA_DIR, skipping..."
+          echo "SPA not found at $SPA_DIR, skipping..."
         fi
       EOF
     ]
@@ -101,21 +138,55 @@ terraform {
     execute      = [
       "bash", "-c",
       <<-EOF
-        SPA_DIST="${get_repo_root()}/examples/spa/dist"
+        SPA_TYPE="${local.spa_type}"
+        SPA_DIST="${local.spa_dist_dir}"
+        
+        # Fallback paths based on SPA type
+        if [[ ! -d "$SPA_DIST" ]]; then
+          if [[ "$SPA_TYPE" == "nextjs" ]]; then
+            SPA_DIST="${local.spa_source_dir}/build"
+          else
+            SPA_DIST="${local.spa_source_dir}/dist"
+          fi
+        fi
+        
         if [[ -d "$SPA_DIST" ]]; then
-          # Get the SPA bucket from terraform output (hook runs in .terragrunt-cache)
           SPA_BUCKET=$(terraform output -raw spa_bucket_id 2>/dev/null || echo "")
           if [[ -n "$SPA_BUCKET" ]]; then
-            echo "Uploading SPA to s3://$SPA_BUCKET..."
-            aws s3 sync "$SPA_DIST" "s3://$SPA_BUCKET" \
-              --delete \
-              --cache-control "max-age=31536000" \
-              --exclude "index.html" \
-              --region eu-west-2
-            # Upload index.html with no-cache
-            aws s3 cp "$SPA_DIST/index.html" "s3://$SPA_BUCKET/index.html" \
-              --cache-control "no-cache, no-store, must-revalidate" \
-              --region eu-west-2
+            echo "Uploading $SPA_TYPE SPA from $SPA_DIST to s3://$SPA_BUCKET..."
+            
+            if [[ "$SPA_TYPE" == "nextjs" ]]; then
+              # Next.js specific upload with proper caching
+              aws s3 sync "$SPA_DIST" "s3://$SPA_BUCKET" \
+                --delete \
+                --cache-control "max-age=31536000" \
+                --exclude "*.html" \
+                --exclude "_next/data/*" \
+                --region eu-west-2
+              # HTML files with no-cache
+              aws s3 cp "$SPA_DIST" "s3://$SPA_BUCKET" \
+                --recursive \
+                --exclude "*" \
+                --include "*.html" \
+                --cache-control "no-cache, no-store, must-revalidate" \
+                --region eu-west-2
+              # _next/data with short cache
+              if [[ -d "$SPA_DIST/_next/data" ]]; then
+                aws s3 sync "$SPA_DIST/_next/data" "s3://$SPA_BUCKET/_next/data" \
+                  --cache-control "max-age=60" \
+                  --region eu-west-2
+              fi
+            else
+              # Vite/standard SPA upload
+              aws s3 sync "$SPA_DIST" "s3://$SPA_BUCKET" \
+                --delete \
+                --cache-control "max-age=31536000" \
+                --exclude "index.html" \
+                --region eu-west-2
+              aws s3 cp "$SPA_DIST/index.html" "s3://$SPA_BUCKET/index.html" \
+                --cache-control "no-cache, no-store, must-revalidate" \
+                --region eu-west-2
+            fi
             echo "SPA uploaded successfully!"
 
             # Invalidate CloudFront cache
@@ -127,14 +198,12 @@ terraform {
                 --paths "/*" \
                 --output text
               echo "CloudFront cache invalidation initiated!"
-            else
-              echo "Could not determine CloudFront distribution ID, skipping invalidation..."
             fi
           else
             echo "Could not determine SPA bucket, skipping upload..."
           fi
         else
-          echo "No SPA dist found, skipping upload..."
+          echo "No SPA dist found at $SPA_DIST, skipping upload..."
         fi
       EOF
     ]

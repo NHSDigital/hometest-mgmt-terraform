@@ -3,7 +3,7 @@
 # Deployment with: cd dev3/hometest-app && terragrunt apply
 # Dependencies: network (VPC/Route53), shared_services (WAF/ACM/KMS)
 #
-# This environment uses lambdas and UI from the hometest-service repository.
+# This environment uses the default hometest-service repo (lambdas and Next.js UI).
 # ---------------------------------------------------------------------------------------------------------------------
 
 include "root" {
@@ -14,124 +14,6 @@ include "envcommon" {
   path           = "${dirname(find_in_parent_folders("root.hcl"))}/_envcommon/hometest-app.hcl"
   expose         = true
   merge_strategy = "deep"
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# TERRAFORM OVERRIDES - Use hometest-service repo for lambdas and SPA
-# ---------------------------------------------------------------------------------------------------------------------
-
-terraform {
-  # Override build hooks to use hometest-service repo
-  before_hook "build_lambdas" {
-    commands = ["apply", "plan"]
-    execute  = [
-      "bash", "-c",
-      <<-EOF
-        LAMBDAS_DIR="/home/mikee/git/kainos/code/nhs/code/hometest-service/lambdas"
-        if [[ -d "$LAMBDAS_DIR" ]]; then
-          echo "Building lambdas from hometest-service repo..."
-          cd "$LAMBDAS_DIR"
-          npm ci --silent 2>/dev/null || npm install --silent
-          npm run build --silent 2>/dev/null || true
-          
-          # Package each lambda
-          for lambda_dir in src/*/; do
-            lambda_name=$(basename "$lambda_dir")
-            if [[ -d "dist/$lambda_name" ]]; then
-              echo "Packaging $lambda_name..."
-              mkdir -p "$lambda_dir"
-              cd "dist/$lambda_name"
-              zip -rq "../../src/$lambda_name/$lambda_name.zip" . 2>/dev/null || true
-              cd "$LAMBDAS_DIR"
-            fi
-          done
-          echo "Lambda build complete!"
-        else
-          echo "hometest-service lambdas not found at $LAMBDAS_DIR"
-          exit 1
-        fi
-      EOF
-    ]
-  }
-
-  # Build Next.js SPA before apply
-  before_hook "build_spa" {
-    commands = ["apply"]
-    execute  = [
-      "bash", "-c",
-      <<-EOF
-        SPA_DIR="/home/mikee/git/kainos/code/nhs/code/hometest-service/ui"
-        if [[ -d "$SPA_DIR" ]] && [[ -f "$SPA_DIR/package.json" ]]; then
-          echo "Building Next.js SPA from hometest-service repo..."
-          cd "$SPA_DIR"
-          npm ci --silent 2>/dev/null || npm install --silent
-          npm run build --silent 2>/dev/null || true
-          echo "SPA build complete!"
-        else
-          echo "hometest-service UI not found at $SPA_DIR"
-          exit 1
-        fi
-      EOF
-    ]
-  }
-
-  # Upload Next.js static export to S3
-  after_hook "upload_spa" {
-    commands     = ["apply"]
-    run_on_error = false
-    execute      = [
-      "bash", "-c",
-      <<-EOF
-        # Next.js static export goes to 'out' directory (or 'build' if using export)
-        SPA_DIST="/home/mikee/git/kainos/code/nhs/code/hometest-service/ui/out"
-        if [[ ! -d "$SPA_DIST" ]]; then
-          SPA_DIST="/home/mikee/git/kainos/code/nhs/code/hometest-service/ui/build"
-        fi
-        
-        if [[ -d "$SPA_DIST" ]]; then
-          SPA_BUCKET=$(terraform output -raw spa_bucket_id 2>/dev/null || echo "")
-          if [[ -n "$SPA_BUCKET" ]]; then
-            echo "Uploading Next.js SPA to s3://$SPA_BUCKET..."
-            aws s3 sync "$SPA_DIST" "s3://$SPA_BUCKET" \
-              --delete \
-              --cache-control "max-age=31536000" \
-              --exclude "index.html" \
-              --exclude "_next/data/*" \
-              --region eu-west-2
-            # Upload HTML files with no-cache
-            aws s3 cp "$SPA_DIST" "s3://$SPA_BUCKET" \
-              --recursive \
-              --exclude "*" \
-              --include "*.html" \
-              --cache-control "no-cache, no-store, must-revalidate" \
-              --region eu-west-2
-            # Upload _next/data with short cache
-            if [[ -d "$SPA_DIST/_next/data" ]]; then
-              aws s3 sync "$SPA_DIST/_next/data" "s3://$SPA_BUCKET/_next/data" \
-                --cache-control "max-age=60" \
-                --region eu-west-2
-            fi
-            echo "SPA uploaded successfully!"
-
-            # Invalidate CloudFront cache
-            CLOUDFRONT_ID=$(terraform output -raw cloudfront_distribution_id 2>/dev/null || echo "")
-            if [[ -n "$CLOUDFRONT_ID" ]]; then
-              echo "Invalidating CloudFront cache for distribution $CLOUDFRONT_ID..."
-              aws cloudfront create-invalidation \
-                --distribution-id "$CLOUDFRONT_ID" \
-                --paths "/*" \
-                --output text
-              echo "CloudFront cache invalidation initiated!"
-            fi
-          else
-            echo "Could not determine SPA bucket, skipping upload..."
-          fi
-        else
-          echo "No SPA dist found at expected locations, skipping upload..."
-        fi
-      EOF
-    ]
-  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -198,8 +80,8 @@ inputs = {
   # Lambda code deployment
   use_placeholder_lambda = false
 
-  # Base path for hometest-service lambdas
-  lambdas_base_path = "/home/mikee/git/kainos/code/nhs/code/hometest-service/lambdas/src"
+  # Base path for hometest-service lambdas (uses default from envcommon)
+  lambdas_base_path = include.envcommon.locals.lambdas_base_path
 
   # =============================================================================
   # LAMBDA DEFINITIONS - hometest-service lambdas

@@ -74,6 +74,7 @@ inputs = {
 
   # Lambda Configuration - Use defaults from envcommon
   enable_vpc_access  = true
+  enable_sqs_access  = true  # Required for sqs-processor lambda
   lambda_runtime     = include.envcommon.locals.lambda_runtime
   lambda_timeout     = include.envcommon.locals.lambda_timeout
   lambda_memory_size = include.envcommon.locals.lambda_memory_size
