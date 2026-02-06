@@ -1,121 +1,112 @@
 ################################################################################
-# API Gateway 1 - First API
-# Accessed via CloudFront at /api1/*
+# API Gateways - Dynamic Creation from Lambda Map
+# Each lambda with api_path_prefix gets its own API Gateway
 ################################################################################
 
-module "api_gateway_1" {
-  source = "../../modules/api-gateway"
+locals {
+  # Get unique API path prefixes from lambdas
+  api_prefixes = toset([for k, v in local.api_lambdas : v.api_path_prefix])
 
-  project_name    = var.project_name
-  environment     = var.environment
-  api_name_suffix = "api1"
-
-  stage_name           = var.api_stage_name
-  endpoint_type        = var.api_endpoint_type
-  xray_tracing_enabled = true
-  log_retention_days   = var.log_retention_days
-
-  throttling_burst_limit = var.api_throttling_burst_limit
-  throttling_rate_limit  = var.api_throttling_rate_limit
-
-  cloudwatch_kms_key_arn = var.kms_key_arn
-
-  # No custom domain - accessed via CloudFront path-based routing
-  custom_domain_name  = null
-  acm_certificate_arn = null
-
-  # No WAF at API Gateway level - WAF is attached to CloudFront
-  waf_web_acl_arn = null
-
-  tags = var.tags
+  # Map of api_prefix to lambda name (for integration)
+  api_to_lambda = { for k, v in local.api_lambdas : v.api_path_prefix => k }
 }
 
 ################################################################################
-# API Gateway 2 - Second API
-# Accessed via CloudFront at /api2/*
+# API Gateway REST APIs
 ################################################################################
 
-module "api_gateway_2" {
-  source = "../../modules/api-gateway"
+resource "aws_api_gateway_rest_api" "apis" {
+  for_each = local.api_prefixes
 
-  project_name    = var.project_name
-  environment     = var.environment
-  api_name_suffix = "api2"
+  name        = "${var.project_name}-${var.environment}-${each.key}"
+  description = "API Gateway for ${each.key} - ${var.project_name} ${var.environment}"
 
-  stage_name           = var.api_stage_name
-  endpoint_type        = var.api_endpoint_type
-  xray_tracing_enabled = true
-  log_retention_days   = var.log_retention_days
+  endpoint_configuration {
+    types = [var.api_endpoint_type]
+  }
 
-  throttling_burst_limit = var.api_throttling_burst_limit
-  throttling_rate_limit  = var.api_throttling_rate_limit
-
-  cloudwatch_kms_key_arn = var.kms_key_arn
-
-  # No custom domain - accessed via CloudFront path-based routing
-  custom_domain_name  = null
-  acm_certificate_arn = null
-
-  # No WAF at API Gateway level - WAF is attached to CloudFront
-  waf_web_acl_arn = null
-
-  tags = var.tags
+  tags = merge(var.tags, {
+    Name      = "${var.project_name}-${var.environment}-${each.key}"
+    ApiPrefix = each.key
+  })
 }
 
 ################################################################################
-# API Gateway 1 - Lambda Integration
+# API Gateway Resources and Methods (Proxy Integration)
 ################################################################################
 
-resource "aws_api_gateway_resource" "api1_proxy" {
-  rest_api_id = module.api_gateway_1.rest_api_id
-  parent_id   = module.api_gateway_1.rest_api_root_resource_id
+# Proxy resource for catch-all routing
+resource "aws_api_gateway_resource" "proxy" {
+  for_each = local.api_prefixes
+
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  parent_id   = aws_api_gateway_rest_api.apis[each.key].root_resource_id
   path_part   = "{proxy+}"
 }
 
-resource "aws_api_gateway_method" "api1_proxy_any" {
-  rest_api_id   = module.api_gateway_1.rest_api_id
-  resource_id   = aws_api_gateway_resource.api1_proxy.id
+# ANY method on proxy resource
+resource "aws_api_gateway_method" "proxy_any" {
+  for_each = local.api_prefixes
+
+  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id   = aws_api_gateway_resource.proxy[each.key].id
   http_method   = "ANY"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_integration" "api1_proxy" {
-  rest_api_id             = module.api_gateway_1.rest_api_id
-  resource_id             = aws_api_gateway_resource.api1_proxy.id
-  http_method             = aws_api_gateway_method.api1_proxy_any.http_method
+# Lambda integration for proxy
+resource "aws_api_gateway_integration" "proxy" {
+  for_each = local.api_prefixes
+
+  rest_api_id             = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id             = aws_api_gateway_resource.proxy[each.key].id
+  http_method             = aws_api_gateway_method.proxy_any[each.key].http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = module.api1_lambda.function_invoke_arn
+  uri                     = module.lambdas[local.api_to_lambda[each.key]].function_invoke_arn
 }
 
-resource "aws_api_gateway_method" "api1_root" {
-  rest_api_id   = module.api_gateway_1.rest_api_id
-  resource_id   = module.api_gateway_1.rest_api_root_resource_id
+# ANY method on root
+resource "aws_api_gateway_method" "root" {
+  for_each = local.api_prefixes
+
+  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id   = aws_api_gateway_rest_api.apis[each.key].root_resource_id
   http_method   = "ANY"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_integration" "api1_root" {
-  rest_api_id             = module.api_gateway_1.rest_api_id
-  resource_id             = module.api_gateway_1.rest_api_root_resource_id
-  http_method             = aws_api_gateway_method.api1_root.http_method
+# Lambda integration for root
+resource "aws_api_gateway_integration" "root" {
+  for_each = local.api_prefixes
+
+  rest_api_id             = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id             = aws_api_gateway_rest_api.apis[each.key].root_resource_id
+  http_method             = aws_api_gateway_method.root[each.key].http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = module.api1_lambda.function_invoke_arn
+  uri                     = module.lambdas[local.api_to_lambda[each.key]].function_invoke_arn
 }
 
-# CORS OPTIONS for API 1
-resource "aws_api_gateway_method" "api1_options" {
-  rest_api_id   = module.api_gateway_1.rest_api_id
-  resource_id   = aws_api_gateway_resource.api1_proxy.id
+################################################################################
+# CORS OPTIONS Methods
+################################################################################
+
+resource "aws_api_gateway_method" "options" {
+  for_each = local.api_prefixes
+
+  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id   = aws_api_gateway_resource.proxy[each.key].id
   http_method   = "OPTIONS"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_integration" "api1_options" {
-  rest_api_id = module.api_gateway_1.rest_api_id
-  resource_id = aws_api_gateway_resource.api1_proxy.id
-  http_method = aws_api_gateway_method.api1_options.http_method
+resource "aws_api_gateway_integration" "options" {
+  for_each = local.api_prefixes
+
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id = aws_api_gateway_resource.proxy[each.key].id
+  http_method = aws_api_gateway_method.options[each.key].http_method
   type        = "MOCK"
 
   request_templates = {
@@ -123,10 +114,12 @@ resource "aws_api_gateway_integration" "api1_options" {
   }
 }
 
-resource "aws_api_gateway_method_response" "api1_options" {
-  rest_api_id = module.api_gateway_1.rest_api_id
-  resource_id = aws_api_gateway_resource.api1_proxy.id
-  http_method = aws_api_gateway_method.api1_options.http_method
+resource "aws_api_gateway_method_response" "options" {
+  for_each = local.api_prefixes
+
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id = aws_api_gateway_resource.proxy[each.key].id
+  http_method = aws_api_gateway_method.options[each.key].http_method
   status_code = "200"
 
   response_parameters = {
@@ -136,11 +129,13 @@ resource "aws_api_gateway_method_response" "api1_options" {
   }
 }
 
-resource "aws_api_gateway_integration_response" "api1_options" {
-  rest_api_id = module.api_gateway_1.rest_api_id
-  resource_id = aws_api_gateway_resource.api1_proxy.id
-  http_method = aws_api_gateway_method.api1_options.http_method
-  status_code = aws_api_gateway_method_response.api1_options.status_code
+resource "aws_api_gateway_integration_response" "options" {
+  for_each = local.api_prefixes
+
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id = aws_api_gateway_resource.proxy[each.key].id
+  http_method = aws_api_gateway_method.options[each.key].http_method
+  status_code = aws_api_gateway_method_response.options[each.key].status_code
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
@@ -150,106 +145,74 @@ resource "aws_api_gateway_integration_response" "api1_options" {
 }
 
 ################################################################################
-# API Gateway 2 - Lambda Integration
+# API Gateway Stages
 ################################################################################
 
-resource "aws_api_gateway_resource" "api2_proxy" {
-  rest_api_id = module.api_gateway_2.rest_api_id
-  parent_id   = module.api_gateway_2.rest_api_root_resource_id
-  path_part   = "{proxy+}"
-}
+resource "aws_api_gateway_stage" "apis" {
+  for_each = local.api_prefixes
 
-resource "aws_api_gateway_method" "api2_proxy_any" {
-  rest_api_id   = module.api_gateway_2.rest_api_id
-  resource_id   = aws_api_gateway_resource.api2_proxy.id
-  http_method   = "ANY"
-  authorization = "NONE"
-}
+  deployment_id = aws_api_gateway_deployment.apis[each.key].id
+  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
+  stage_name    = var.api_stage_name
 
-resource "aws_api_gateway_integration" "api2_proxy" {
-  rest_api_id             = module.api_gateway_2.rest_api_id
-  resource_id             = aws_api_gateway_resource.api2_proxy.id
-  http_method             = aws_api_gateway_method.api2_proxy_any.http_method
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = module.api2_lambda.function_invoke_arn
-}
+  xray_tracing_enabled = true
 
-resource "aws_api_gateway_method" "api2_root" {
-  rest_api_id   = module.api_gateway_2.rest_api_id
-  resource_id   = module.api_gateway_2.rest_api_root_resource_id
-  http_method   = "ANY"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "api2_root" {
-  rest_api_id             = module.api_gateway_2.rest_api_id
-  resource_id             = module.api_gateway_2.rest_api_root_resource_id
-  http_method             = aws_api_gateway_method.api2_root.http_method
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = module.api2_lambda.function_invoke_arn
-}
-
-# CORS OPTIONS for API 2
-resource "aws_api_gateway_method" "api2_options" {
-  rest_api_id   = module.api_gateway_2.rest_api_id
-  resource_id   = aws_api_gateway_resource.api2_proxy.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "api2_options" {
-  rest_api_id = module.api_gateway_2.rest_api_id
-  resource_id = aws_api_gateway_resource.api2_proxy.id
-  http_method = aws_api_gateway_method.api2_options.http_method
-  type        = "MOCK"
-
-  request_templates = {
-    "application/json" = jsonencode({ statusCode = 200 })
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gateway[each.key].arn
+    format = jsonencode({
+      requestId         = "$context.requestId"
+      ip                = "$context.identity.sourceIp"
+      requestTime       = "$context.requestTime"
+      httpMethod        = "$context.httpMethod"
+      routeKey          = "$context.routeKey"
+      status            = "$context.status"
+      protocol          = "$context.protocol"
+      responseLength    = "$context.responseLength"
+      integrationError  = "$context.integrationErrorMessage"
+      errorMessage      = "$context.error.message"
+      integrationLatency = "$context.integrationLatency"
+    })
   }
+
+  tags = merge(var.tags, {
+    Name      = "${var.project_name}-${var.environment}-${each.key}-${var.api_stage_name}"
+    ApiPrefix = each.key
+  })
 }
 
-resource "aws_api_gateway_method_response" "api2_options" {
-  rest_api_id = module.api_gateway_2.rest_api_id
-  resource_id = aws_api_gateway_resource.api2_proxy.id
-  http_method = aws_api_gateway_method.api2_options.http_method
-  status_code = "200"
+################################################################################
+# API Gateway CloudWatch Log Groups
+################################################################################
 
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-  }
-}
+resource "aws_cloudwatch_log_group" "api_gateway" {
+  for_each = local.api_prefixes
 
-resource "aws_api_gateway_integration_response" "api2_options" {
-  rest_api_id = module.api_gateway_2.rest_api_id
-  resource_id = aws_api_gateway_resource.api2_proxy.id
-  http_method = aws_api_gateway_method.api2_options.http_method
-  status_code = aws_api_gateway_method_response.api2_options.status_code
+  name              = "/aws/apigateway/${var.project_name}-${var.environment}-${each.key}"
+  retention_in_days = var.log_retention_days
+  kms_key_id        = var.kms_key_arn
 
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-  }
+  tags = merge(var.tags, {
+    Name      = "${var.project_name}-${var.environment}-${each.key}-logs"
+    ApiPrefix = each.key
+  })
 }
 
 ################################################################################
 # API Gateway Deployments
 ################################################################################
 
-resource "aws_api_gateway_deployment" "api1" {
-  rest_api_id = module.api_gateway_1.rest_api_id
+resource "aws_api_gateway_deployment" "apis" {
+  for_each = local.api_prefixes
+
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
 
   triggers = {
     redeployment = sha1(jsonencode([
-      aws_api_gateway_resource.api1_proxy.id,
-      aws_api_gateway_method.api1_proxy_any.id,
-      aws_api_gateway_method.api1_root.id,
-      aws_api_gateway_integration.api1_proxy.id,
-      aws_api_gateway_integration.api1_root.id,
+      aws_api_gateway_resource.proxy[each.key].id,
+      aws_api_gateway_method.proxy_any[each.key].id,
+      aws_api_gateway_method.root[each.key].id,
+      aws_api_gateway_integration.proxy[each.key].id,
+      aws_api_gateway_integration.root[each.key].id,
     ]))
   }
 
@@ -258,32 +221,28 @@ resource "aws_api_gateway_deployment" "api1" {
   }
 
   depends_on = [
-    aws_api_gateway_integration.api1_proxy,
-    aws_api_gateway_integration.api1_root,
-    aws_api_gateway_integration.api1_options,
+    aws_api_gateway_integration.proxy,
+    aws_api_gateway_integration.root,
+    aws_api_gateway_integration.options,
   ]
 }
 
-resource "aws_api_gateway_deployment" "api2" {
-  rest_api_id = module.api_gateway_2.rest_api_id
+################################################################################
+# API Gateway Method Settings (Throttling)
+################################################################################
 
-  triggers = {
-    redeployment = sha1(jsonencode([
-      aws_api_gateway_resource.api2_proxy.id,
-      aws_api_gateway_method.api2_proxy_any.id,
-      aws_api_gateway_method.api2_root.id,
-      aws_api_gateway_integration.api2_proxy.id,
-      aws_api_gateway_integration.api2_root.id,
-    ]))
+resource "aws_api_gateway_method_settings" "apis" {
+  for_each = local.api_prefixes
+
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  stage_name  = aws_api_gateway_stage.apis[each.key].stage_name
+  method_path = "*/*"
+
+  settings {
+    throttling_burst_limit = var.api_throttling_burst_limit
+    throttling_rate_limit  = var.api_throttling_rate_limit
+    metrics_enabled        = true
+    logging_level          = "INFO"
+    data_trace_enabled     = false # Don't log request/response data
   }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  depends_on = [
-    aws_api_gateway_integration.api2_proxy,
-    aws_api_gateway_integration.api2_root,
-    aws_api_gateway_integration.api2_options,
-  ]
 }

@@ -2,8 +2,7 @@
 # CloudFront SPA Distribution
 # Single domain with path-based routing:
 # - / -> SPA (S3)
-# - /api1/* -> API Gateway 1
-# - /api2/* -> API Gateway 2
+# - /{api_path_prefix}/* -> API Gateway (dynamic from lambdas map)
 ################################################################################
 
 module "cloudfront_spa" {
@@ -19,14 +18,10 @@ module "cloudfront_spa" {
   s3_kms_key_arn                        = var.kms_key_arn
   s3_noncurrent_version_expiration_days = 30
 
-  # API Gateway origins for path-based routing
+  # Dynamic API Gateway origins from lambdas map
   api_origins = {
-    api1 = {
-      domain_name = "${module.api_gateway_1.rest_api_id}.execute-api.${local.region}.amazonaws.com"
-      origin_path = "/${var.api_stage_name}"
-    }
-    api2 = {
-      domain_name = "${module.api_gateway_2.rest_api_id}.execute-api.${local.region}.amazonaws.com"
+    for prefix in local.api_prefixes : prefix => {
+      domain_name = "${aws_api_gateway_rest_api.apis[prefix].id}.execute-api.${local.region}.amazonaws.com"
       origin_path = "/${var.api_stage_name}"
     }
   }
@@ -52,7 +47,6 @@ module "cloudfront_spa" {
   tags = var.tags
 
   depends_on = [
-    aws_api_gateway_deployment.api1,
-    aws_api_gateway_deployment.api2
+    aws_api_gateway_deployment.apis
   ]
 }

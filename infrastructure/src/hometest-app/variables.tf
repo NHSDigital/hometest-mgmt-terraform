@@ -161,28 +161,63 @@ variable "lambda_sqs_queue_arns" {
   default     = []
 }
 
-# Lambda Code Hashes
+# Lambda Definitions Map
+variable "lambdas" {
+  description = "Map of Lambda function configurations. Each key is the lambda name."
+  type = map(object({
+    description     = optional(string, "Lambda function")
+    handler         = optional(string, "index.handler")
+    runtime         = optional(string, null) # null = use var.lambda_runtime
+    timeout         = optional(number, null) # null = use var.lambda_timeout
+    memory_size     = optional(number, null) # null = use var.lambda_memory_size
+    zip_path        = optional(string, null) # Local path to zip file (Terraform uploads directly)
+    s3_key          = optional(string, null) # S3 key if already uploaded
+    source_hash     = optional(string, null) # Source code hash for updates
+    environment     = optional(map(string), {})
+    api_path_prefix = optional(string, null) # API Gateway path prefix (e.g., "api1" -> /api1/*)
+    reserved_concurrent_executions = optional(number, -1)
+  }))
+  default = {}
+
+  # Example:
+  # lambdas = {
+  #   "api1-handler" = {
+  #     description     = "User service API"
+  #     api_path_prefix = "api1"
+  #     zip_path        = "../../../examples/lambdas/api1-handler/api1-handler.zip"
+  #     environment     = { API_NAME = "users" }
+  #   }
+  # }
+}
+
+# Base path for lambda zip files (relative to terraform source)
+variable "lambdas_base_path" {
+  description = "Base path where lambda zip files are located"
+  type        = string
+  default     = "../../../examples/lambdas"
+}
+
+# Legacy variables (deprecated - use lambdas map instead)
 variable "api1_lambda_hash" {
-  description = "Source code hash for API 1 Lambda"
+  description = "DEPRECATED: Use lambdas map instead"
   type        = string
   default     = null
 }
 
 variable "api2_lambda_hash" {
-  description = "Source code hash for API 2 Lambda"
+  description = "DEPRECATED: Use lambdas map instead"
   type        = string
   default     = null
 }
 
-# Lambda Environment Variables
 variable "api1_env_vars" {
-  description = "Additional environment variables for API 1 Lambda"
+  description = "DEPRECATED: Use lambdas map instead"
   type        = map(string)
   default     = {}
 }
 
 variable "api2_env_vars" {
-  description = "Additional environment variables for API 2 Lambda"
+  description = "DEPRECATED: Use lambdas map instead"
   type        = map(string)
   default     = {}
 }

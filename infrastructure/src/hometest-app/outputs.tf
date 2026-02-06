@@ -3,7 +3,7 @@
 ################################################################################
 
 #------------------------------------------------------------------------------
-# Lambda Functions
+# Lambda Functions (Dynamic)
 #------------------------------------------------------------------------------
 
 output "lambda_execution_role_arn" {
@@ -11,38 +11,62 @@ output "lambda_execution_role_arn" {
   value       = module.lambda_iam.role_arn
 }
 
+output "lambda_functions" {
+  description = "Map of all Lambda function details"
+  value = {
+    for name, lambda in module.lambdas : name => {
+      function_name = lambda.function_name
+      function_arn  = lambda.function_arn
+      invoke_arn    = lambda.function_invoke_arn
+    }
+  }
+}
+
+# Legacy outputs for backwards compatibility
 output "api1_lambda_arn" {
-  description = "ARN of the API 1 Lambda"
-  value       = module.api1_lambda.function_arn
+  description = "ARN of the API 1 Lambda (legacy - use lambda_functions instead)"
+  value       = try(module.lambdas["api1-handler"].function_arn, null)
 }
 
 output "api1_lambda_name" {
-  description = "Name of the API 1 Lambda"
-  value       = module.api1_lambda.function_name
+  description = "Name of the API 1 Lambda (legacy - use lambda_functions instead)"
+  value       = try(module.lambdas["api1-handler"].function_name, null)
 }
 
 output "api2_lambda_arn" {
-  description = "ARN of the API 2 Lambda"
-  value       = module.api2_lambda.function_arn
+  description = "ARN of the API 2 Lambda (legacy - use lambda_functions instead)"
+  value       = try(module.lambdas["api2-handler"].function_arn, null)
 }
 
 output "api2_lambda_name" {
-  description = "Name of the API 2 Lambda"
-  value       = module.api2_lambda.function_name
+  description = "Name of the API 2 Lambda (legacy - use lambda_functions instead)"
+  value       = try(module.lambdas["api2-handler"].function_name, null)
 }
 
 #------------------------------------------------------------------------------
-# API Gateway
+# API Gateway (Dynamic)
 #------------------------------------------------------------------------------
 
+output "api_gateways" {
+  description = "Map of all API Gateway details"
+  value = {
+    for prefix in local.api_prefixes : prefix => {
+      rest_api_id   = aws_api_gateway_rest_api.apis[prefix].id
+      execution_arn = aws_api_gateway_rest_api.apis[prefix].execution_arn
+      invoke_url    = aws_api_gateway_stage.apis[prefix].invoke_url
+    }
+  }
+}
+
+# Legacy outputs for backwards compatibility
 output "api1_gateway_id" {
-  description = "ID of API Gateway 1"
-  value       = module.api_gateway_1.rest_api_id
+  description = "ID of API Gateway 1 (legacy - use api_gateways instead)"
+  value       = try(aws_api_gateway_rest_api.apis["api1"].id, null)
 }
 
 output "api2_gateway_id" {
-  description = "ID of API Gateway 2"
-  value       = module.api_gateway_2.rest_api_id
+  description = "ID of API Gateway 2 (legacy - use api_gateways instead)"
+  value       = try(aws_api_gateway_rest_api.apis["api2"].id, null)
 }
 
 #------------------------------------------------------------------------------
@@ -80,37 +104,45 @@ output "spa_url" {
 }
 
 #------------------------------------------------------------------------------
-# Environment URLs Summary
+# Environment URLs Summary (Dynamic)
 # All services accessible via single domain with path-based routing
 #------------------------------------------------------------------------------
 
 output "environment_urls" {
   description = "All environment URLs"
-  value = {
-    base_url = var.custom_domain_name != null ? "https://${var.custom_domain_name}" : module.cloudfront_spa.distribution_url
-    ui       = var.custom_domain_name != null ? "https://${var.custom_domain_name}" : module.cloudfront_spa.distribution_url
-    api1     = var.custom_domain_name != null ? "https://${var.custom_domain_name}/api1" : "${module.cloudfront_spa.distribution_url}/api1"
-    api2     = var.custom_domain_name != null ? "https://${var.custom_domain_name}/api2" : "${module.cloudfront_spa.distribution_url}/api2"
-  }
+  value = merge(
+    {
+      base_url = var.custom_domain_name != null ? "https://${var.custom_domain_name}" : module.cloudfront_spa.distribution_url
+      ui       = var.custom_domain_name != null ? "https://${var.custom_domain_name}" : module.cloudfront_spa.distribution_url
+    },
+    {
+      for prefix in local.api_prefixes : prefix => (
+        var.custom_domain_name != null 
+          ? "https://${var.custom_domain_name}/${prefix}" 
+          : "${module.cloudfront_spa.distribution_url}/${prefix}"
+      )
+    }
+  )
 }
 
 #------------------------------------------------------------------------------
-# Deployment Commands
+# Deployment Info
 #------------------------------------------------------------------------------
 
-output "deploy_commands" {
-  description = "Commands to deploy application code"
-  value       = <<-EOT
-# Deploy API 1 Lambda:
-aws s3 cp api1-handler.zip s3://${var.deployment_bucket_id}/lambdas/${var.environment}/
-aws lambda update-function-code --function-name ${module.api1_lambda.function_name} --s3-bucket ${var.deployment_bucket_id} --s3-key lambdas/${var.environment}/api1-handler.zip
+output "deployment_bucket" {
+  description = "S3 bucket for deployment artifacts"
+  value       = var.deployment_bucket_id
+}
 
-# Deploy API 2 Lambda:
-aws s3 cp api2-handler.zip s3://${var.deployment_bucket_id}/lambdas/${var.environment}/
-aws lambda update-function-code --function-name ${module.api2_lambda.function_name} --s3-bucket ${var.deployment_bucket_id} --s3-key lambdas/${var.environment}/api2-handler.zip
-
-# Deploy SPA:
-aws s3 sync ./dist s3://${module.cloudfront_spa.s3_bucket_id} --delete
-aws cloudfront create-invalidation --distribution-id ${module.cloudfront_spa.distribution_id} --paths "/*"
-EOT
+output "deployment_info" {
+  description = "Information for CI/CD deployments"
+  value = {
+    environment    = var.environment
+    spa_bucket     = module.cloudfront_spa.s3_bucket_id
+    cloudfront_id  = module.cloudfront_spa.distribution_id
+    deploy_bucket  = var.deployment_bucket_id
+    lambda_prefix  = "lambdas/${var.environment}"
+    lambdas        = [for name, _ in local.all_lambdas : name]
+    api_prefixes   = [for prefix in local.api_prefixes : prefix]
+  }
 }

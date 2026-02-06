@@ -70,11 +70,14 @@ resource "aws_lambda_function" "this" {
   timeout       = var.timeout
   memory_size   = var.memory_size
 
-  # Deployment package - either S3 or placeholder
-  s3_bucket         = var.use_placeholder ? null : var.s3_bucket
-  s3_key            = var.use_placeholder ? null : var.s3_key
-  s3_object_version = var.use_placeholder ? null : var.s3_object_version
-  filename          = var.use_placeholder ? data.archive_file.placeholder[0].output_path : null
+  # Deployment package priority:
+  # 1. Placeholder (for initial deployment)
+  # 2. Local filename (Terraform uploads directly)
+  # 3. S3 bucket/key (pre-uploaded package)
+  filename          = var.use_placeholder ? data.archive_file.placeholder[0].output_path : var.filename
+  s3_bucket         = var.use_placeholder || var.filename != null ? null : var.s3_bucket
+  s3_key            = var.use_placeholder || var.filename != null ? null : var.s3_key
+  s3_object_version = var.use_placeholder || var.filename != null ? null : var.s3_object_version
   source_code_hash  = var.use_placeholder ? data.archive_file.placeholder[0].output_base64sha256 : var.source_code_hash
 
   # VPC Configuration (optional)

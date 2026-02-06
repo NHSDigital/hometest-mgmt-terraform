@@ -42,6 +42,12 @@ variable "s3_object_version" {
   default     = null
 }
 
+variable "filename" {
+  description = "Path to the local zip file for Lambda deployment (Terraform uploads directly)"
+  type        = string
+  default     = null
+}
+
 variable "source_code_hash" {
   description = "Base64-encoded SHA256 hash of the deployment package"
   type        = string
