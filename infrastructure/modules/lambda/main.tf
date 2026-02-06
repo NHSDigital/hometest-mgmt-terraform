@@ -121,9 +121,9 @@ resource "aws_lambda_function" "this" {
   tags = local.common_tags
 
   timeouts {
-    create = "2m"  # Custom create timeout (e.g., 10 minutes)
-    update = "2m"   # Custom update timeout
-    delete = "2m"   # Custom delete timeout for durable executions
+    create = "2m" # Custom create timeout (e.g., 10 minutes)
+    update = "2m" # Custom update timeout
+    delete = "2m" # Custom delete timeout for durable executions
   }
 }
 

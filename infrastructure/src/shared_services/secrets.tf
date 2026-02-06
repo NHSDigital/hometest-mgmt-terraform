@@ -22,8 +22,8 @@ resource "aws_secretsmanager_secret_version" "api_config" {
     api_key       = "demo-api-key-${var.environment}"
     database_host = "db.${var.environment}.internal"
     feature_flags = {
-      new_ui_enabled    = true
-      beta_features     = false
+      new_ui_enabled = true
+      beta_features  = false
     }
     # In production, these would be actual secrets
     # populated through CI/CD or manual configuration

@@ -25,7 +25,7 @@ terraform {
   # Build and package Lambda code locally (Terraform uploads and deploys)
   before_hook "build_lambdas" {
     commands = ["apply", "plan"]
-    execute  = [
+    execute = [
       "${get_repo_root()}/scripts/build-lambdas.sh",
       "--environment", "dev1",
       "--source-dir", "${get_repo_root()}/examples/lambdas",
@@ -36,7 +36,7 @@ terraform {
   # Build SPA before apply (if examples/spa exists)
   before_hook "build_spa" {
     commands = ["apply"]
-    execute  = [
+    execute = [
       "bash", "-c",
       <<-EOF
         SPA_DIR="${get_repo_root()}/examples/spa"
@@ -56,7 +56,7 @@ terraform {
   after_hook "upload_spa" {
     commands     = ["apply"]
     run_on_error = false
-    execute      = [
+    execute = [
       "bash", "-c",
       <<-EOF
         SPA_DIST="${get_repo_root()}/examples/spa/dist"
@@ -172,7 +172,7 @@ inputs = {
   deployment_bucket_arn = dependency.shared_services.outputs.deployment_artifacts_bucket_arn
 
   # Lambda Configuration - Global defaults
-  enable_vpc_access  = true
+  enable_vpc_access = true
   # https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
   lambda_runtime     = "nodejs24.x"
   lambda_timeout     = 30
@@ -196,7 +196,7 @@ inputs = {
     # Demonstrates Secrets Manager integration
     "api1-handler" = {
       description     = "User Service API Handler with Secrets Manager"
-      api_path_prefix = "api1"  # Creates API Gateway at /api1/*
+      api_path_prefix = "api1" # Creates API Gateway at /api1/*
       timeout         = 30
       memory_size     = 256
       secrets_arn     = dependency.shared_services.outputs.api_config_secret_arn
@@ -210,7 +210,7 @@ inputs = {
     # Order Service API - accessible at /api2/*
     "api2-handler" = {
       description     = "Order Service API Handler"
-      api_path_prefix = "api2"  # Creates API Gateway at /api2/*
+      api_path_prefix = "api2" # Creates API Gateway at /api2/*
       timeout         = 30
       memory_size     = 256
       environment = {
@@ -223,8 +223,8 @@ inputs = {
     # Demonstrates event-driven architecture with SQS
     "sqs-processor" = {
       description = "SQS Event Processor - processes messages from queue"
-      sqs_trigger = true  # Enables SQS event source mapping
-      timeout     = 60    # Longer timeout for batch processing
+      sqs_trigger = true # Enables SQS event source mapping
+      timeout     = 60   # Longer timeout for batch processing
       memory_size = 256
       environment = {
         PROCESSOR_NAME = "event-processor"

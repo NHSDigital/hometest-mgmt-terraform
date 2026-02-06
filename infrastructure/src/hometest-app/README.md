@@ -223,45 +223,42 @@ After deployment, you'll have access to:
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.28.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.28.0 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_api1_lambda"></a> [api1\_lambda](#module\_api1\_lambda) | ../../modules/lambda | n/a |
-| <a name="module_api2_lambda"></a> [api2\_lambda](#module\_api2\_lambda) | ../../modules/lambda | n/a |
-| <a name="module_api_gateway_1"></a> [api\_gateway\_1](#module\_api\_gateway\_1) | ../../modules/api-gateway | n/a |
-| <a name="module_api_gateway_2"></a> [api\_gateway\_2](#module\_api\_gateway\_2) | ../../modules/api-gateway | n/a |
 | <a name="module_cloudfront_spa"></a> [cloudfront\_spa](#module\_cloudfront\_spa) | ../../modules/cloudfront-spa | n/a |
 | <a name="module_lambda_iam"></a> [lambda\_iam](#module\_lambda\_iam) | ../../modules/lambda-iam | n/a |
+| <a name="module_lambdas"></a> [lambdas](#module\_lambdas) | ../../modules/lambda | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [aws_api_gateway_deployment.api1](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_deployment) | resource |
-| [aws_api_gateway_deployment.api2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_deployment) | resource |
-| [aws_api_gateway_integration.api1_options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
-| [aws_api_gateway_integration.api1_proxy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
-| [aws_api_gateway_integration.api1_root](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
-| [aws_api_gateway_integration.api2_options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
-| [aws_api_gateway_integration.api2_proxy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
-| [aws_api_gateway_integration.api2_root](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
-| [aws_api_gateway_integration_response.api1_options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration_response) | resource |
-| [aws_api_gateway_integration_response.api2_options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration_response) | resource |
-| [aws_api_gateway_method.api1_options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method) | resource |
-| [aws_api_gateway_method.api1_proxy_any](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method) | resource |
-| [aws_api_gateway_method.api1_root](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method) | resource |
-| [aws_api_gateway_method.api2_options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method) | resource |
-| [aws_api_gateway_method.api2_proxy_any](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method) | resource |
-| [aws_api_gateway_method.api2_root](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method) | resource |
-| [aws_api_gateway_method_response.api1_options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method_response) | resource |
-| [aws_api_gateway_method_response.api2_options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method_response) | resource |
-| [aws_api_gateway_resource.api1_proxy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_resource) | resource |
-| [aws_api_gateway_resource.api2_proxy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_resource) | resource |
-| [aws_lambda_permission.api1](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
-| [aws_lambda_permission.api2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_api_gateway_account.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_account) | resource |
+| [aws_api_gateway_deployment.apis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_deployment) | resource |
+| [aws_api_gateway_integration.options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
+| [aws_api_gateway_integration.proxy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
+| [aws_api_gateway_integration.root](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
+| [aws_api_gateway_integration_response.options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration_response) | resource |
+| [aws_api_gateway_method.options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method) | resource |
+| [aws_api_gateway_method.proxy_any](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method) | resource |
+| [aws_api_gateway_method.root](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method) | resource |
+| [aws_api_gateway_method_response.options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method_response) | resource |
+| [aws_api_gateway_method_settings.apis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method_settings) | resource |
+| [aws_api_gateway_resource.proxy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_resource) | resource |
+| [aws_api_gateway_rest_api.apis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_rest_api) | resource |
+| [aws_api_gateway_stage.apis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_stage) | resource |
+| [aws_cloudwatch_log_group.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_iam_role.api_gateway_cloudwatch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy.api_gateway_cloudwatch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_lambda_event_source_mapping.sqs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_event_source_mapping) | resource |
+| [aws_lambda_permission.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_sqs_queue.dlq](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
+| [aws_sqs_queue.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
+| [aws_sqs_queue_policy.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue_policy) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
@@ -270,10 +267,10 @@ After deployment, you'll have access to:
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_acm_certificate_arn"></a> [acm\_certificate\_arn](#input\_acm\_certificate\_arn) | ACM certificate ARN for CloudFront (us-east-1, from shared\_services) | `string` | `null` | no |
-| <a name="input_api1_env_vars"></a> [api1\_env\_vars](#input\_api1\_env\_vars) | Additional environment variables for API 1 Lambda | `map(string)` | `{}` | no |
-| <a name="input_api1_lambda_hash"></a> [api1\_lambda\_hash](#input\_api1\_lambda\_hash) | Source code hash for API 1 Lambda | `string` | `null` | no |
-| <a name="input_api2_env_vars"></a> [api2\_env\_vars](#input\_api2\_env\_vars) | Additional environment variables for API 2 Lambda | `map(string)` | `{}` | no |
-| <a name="input_api2_lambda_hash"></a> [api2\_lambda\_hash](#input\_api2\_lambda\_hash) | Source code hash for API 2 Lambda | `string` | `null` | no |
+| <a name="input_api1_env_vars"></a> [api1\_env\_vars](#input\_api1\_env\_vars) | DEPRECATED: Use lambdas map instead | `map(string)` | `{}` | no |
+| <a name="input_api1_lambda_hash"></a> [api1\_lambda\_hash](#input\_api1\_lambda\_hash) | DEPRECATED: Use lambdas map instead | `string` | `null` | no |
+| <a name="input_api2_env_vars"></a> [api2\_env\_vars](#input\_api2\_env\_vars) | DEPRECATED: Use lambdas map instead | `map(string)` | `{}` | no |
+| <a name="input_api2_lambda_hash"></a> [api2\_lambda\_hash](#input\_api2\_lambda\_hash) | DEPRECATED: Use lambdas map instead | `string` | `null` | no |
 | <a name="input_api_endpoint_type"></a> [api\_endpoint\_type](#input\_api\_endpoint\_type) | API Gateway endpoint type | `string` | `"REGIONAL"` | no |
 | <a name="input_api_stage_name"></a> [api\_stage\_name](#input\_api\_stage\_name) | API Gateway stage name | `string` | `"v1"` | no |
 | <a name="input_api_throttling_burst_limit"></a> [api\_throttling\_burst\_limit](#input\_api\_throttling\_burst\_limit) | API Gateway throttling burst limit | `number` | `1000` | no |
@@ -302,6 +299,8 @@ After deployment, you'll have access to:
 | <a name="input_lambda_ssm_parameter_arns"></a> [lambda\_ssm\_parameter\_arns](#input\_lambda\_ssm\_parameter\_arns) | SSM parameter ARNs for Lambda access | `list(string)` | `[]` | no |
 | <a name="input_lambda_subnet_ids"></a> [lambda\_subnet\_ids](#input\_lambda\_subnet\_ids) | Private subnet IDs for Lambda VPC configuration (from network) | `list(string)` | `[]` | no |
 | <a name="input_lambda_timeout"></a> [lambda\_timeout](#input\_lambda\_timeout) | Lambda timeout in seconds | `number` | `30` | no |
+| <a name="input_lambdas"></a> [lambdas](#input\_lambdas) | Map of Lambda function configurations. Each key is the lambda name. | <pre>map(object({<br/>    description                    = optional(string, "Lambda function")<br/>    handler                        = optional(string, "index.handler")<br/>    runtime                        = optional(string, null) # null = use var.lambda_runtime<br/>    timeout                        = optional(number, null) # null = use var.lambda_timeout<br/>    memory_size                    = optional(number, null) # null = use var.lambda_memory_size<br/>    zip_path                       = optional(string, null) # Local path to zip file (Terraform uploads directly)<br/>    s3_key                         = optional(string, null) # S3 key if already uploaded<br/>    source_hash                    = optional(string, null) # Source code hash for updates<br/>    environment                    = optional(map(string), {})<br/>    api_path_prefix                = optional(string, null) # API Gateway path prefix (e.g., "api1" -> /api1/*)<br/>    sqs_trigger                    = optional(bool, false)  # Enable SQS event source mapping<br/>    secrets_arn                    = optional(string, null) # Secrets Manager ARN for this lambda<br/>    reserved_concurrent_executions = optional(number, -1)<br/>  }))</pre> | `{}` | no |
+| <a name="input_lambdas_base_path"></a> [lambdas\_base\_path](#input\_lambdas\_base\_path) | Base path where lambda zip files are located | `string` | `"../../../examples/lambdas"` | no |
 | <a name="input_log_retention_days"></a> [log\_retention\_days](#input\_log\_retention\_days) | CloudWatch log retention in days | `number` | `14` | no |
 | <a name="input_permissions_policy"></a> [permissions\_policy](#input\_permissions\_policy) | Permissions Policy header | `string` | `"accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project | `string` | n/a | yes |
@@ -316,19 +315,27 @@ After deployment, you'll have access to:
 
 | Name | Description |
 |------|-------------|
-| <a name="output_api1_gateway_id"></a> [api1\_gateway\_id](#output\_api1\_gateway\_id) | ID of API Gateway 1 |
-| <a name="output_api1_lambda_arn"></a> [api1\_lambda\_arn](#output\_api1\_lambda\_arn) | ARN of the API 1 Lambda |
-| <a name="output_api1_lambda_name"></a> [api1\_lambda\_name](#output\_api1\_lambda\_name) | Name of the API 1 Lambda |
-| <a name="output_api2_gateway_id"></a> [api2\_gateway\_id](#output\_api2\_gateway\_id) | ID of API Gateway 2 |
-| <a name="output_api2_lambda_arn"></a> [api2\_lambda\_arn](#output\_api2\_lambda\_arn) | ARN of the API 2 Lambda |
-| <a name="output_api2_lambda_name"></a> [api2\_lambda\_name](#output\_api2\_lambda\_name) | Name of the API 2 Lambda |
+| <a name="output_api1_gateway_id"></a> [api1\_gateway\_id](#output\_api1\_gateway\_id) | ID of API Gateway 1 (legacy - use api\_gateways instead) |
+| <a name="output_api1_lambda_arn"></a> [api1\_lambda\_arn](#output\_api1\_lambda\_arn) | ARN of the API 1 Lambda (legacy - use lambda\_functions instead) |
+| <a name="output_api1_lambda_name"></a> [api1\_lambda\_name](#output\_api1\_lambda\_name) | Name of the API 1 Lambda (legacy - use lambda\_functions instead) |
+| <a name="output_api2_gateway_id"></a> [api2\_gateway\_id](#output\_api2\_gateway\_id) | ID of API Gateway 2 (legacy - use api\_gateways instead) |
+| <a name="output_api2_lambda_arn"></a> [api2\_lambda\_arn](#output\_api2\_lambda\_arn) | ARN of the API 2 Lambda (legacy - use lambda\_functions instead) |
+| <a name="output_api2_lambda_name"></a> [api2\_lambda\_name](#output\_api2\_lambda\_name) | Name of the API 2 Lambda (legacy - use lambda\_functions instead) |
+| <a name="output_api_gateways"></a> [api\_gateways](#output\_api\_gateways) | Map of all API Gateway details |
 | <a name="output_cloudfront_distribution_arn"></a> [cloudfront\_distribution\_arn](#output\_cloudfront\_distribution\_arn) | CloudFront distribution ARN |
 | <a name="output_cloudfront_distribution_id"></a> [cloudfront\_distribution\_id](#output\_cloudfront\_distribution\_id) | CloudFront distribution ID |
 | <a name="output_cloudfront_domain_name"></a> [cloudfront\_domain\_name](#output\_cloudfront\_domain\_name) | CloudFront distribution domain name |
-| <a name="output_deploy_commands"></a> [deploy\_commands](#output\_deploy\_commands) | Commands to deploy application code |
+| <a name="output_deployment_bucket"></a> [deployment\_bucket](#output\_deployment\_bucket) | S3 bucket for deployment artifacts |
+| <a name="output_deployment_info"></a> [deployment\_info](#output\_deployment\_info) | Information for CI/CD deployments |
 | <a name="output_environment_urls"></a> [environment\_urls](#output\_environment\_urls) | All environment URLs |
 | <a name="output_lambda_execution_role_arn"></a> [lambda\_execution\_role\_arn](#output\_lambda\_execution\_role\_arn) | ARN of the Lambda execution role |
+| <a name="output_lambda_functions"></a> [lambda\_functions](#output\_lambda\_functions) | Map of all Lambda function details |
+| <a name="output_lambda_functions_detail"></a> [lambda\_functions\_detail](#output\_lambda\_functions\_detail) | Map of Lambda function details |
 | <a name="output_spa_bucket_arn"></a> [spa\_bucket\_arn](#output\_spa\_bucket\_arn) | S3 bucket ARN for SPA static assets |
 | <a name="output_spa_bucket_id"></a> [spa\_bucket\_id](#output\_spa\_bucket\_id) | S3 bucket ID for SPA static assets |
 | <a name="output_spa_url"></a> [spa\_url](#output\_spa\_url) | Full URL for SPA |
+| <a name="output_sqs_dlq_arn"></a> [sqs\_dlq\_arn](#output\_sqs\_dlq\_arn) | ARN of the SQS dead letter queue |
+| <a name="output_sqs_dlq_url"></a> [sqs\_dlq\_url](#output\_sqs\_dlq\_url) | URL of the SQS dead letter queue |
+| <a name="output_sqs_queue_arn"></a> [sqs\_queue\_arn](#output\_sqs\_queue\_arn) | ARN of the SQS queue |
+| <a name="output_sqs_queue_url"></a> [sqs\_queue\_url](#output\_sqs\_queue\_url) | URL of the SQS queue |
 <!-- END_TF_DOCS -->

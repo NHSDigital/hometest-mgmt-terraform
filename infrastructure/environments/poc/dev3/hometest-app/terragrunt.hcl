@@ -49,6 +49,22 @@ dependency "shared_services" {
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
+dependency "rds_postgres" {
+  config_path = "../../core/rds-postgres"
+
+  mock_outputs = {
+    db_instance_endpoint               = "mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com:5432"
+    db_instance_address                = "mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com"
+    db_instance_port                   = 5432
+    db_instance_name                   = "hometest_poc"
+    db_instance_username               = "postgres"
+    db_instance_master_user_secret_arn = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:rds-mock-secret"
+    connection_string                  = "postgresql://postgres@mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest_poc"
+    security_group_id                  = "sg-mock-rds"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # INPUTS - Configured for hometest-service lambdas
 # ---------------------------------------------------------------------------------------------------------------------
@@ -71,11 +87,16 @@ inputs = {
 
   # Lambda Configuration
   enable_vpc_access  = true
-  enable_sqs_access  = true  # Required for order-router-lambda SQS trigger
+  enable_sqs_access  = true # Required for order-router-lambda SQS trigger
   lambda_runtime     = include.envcommon.locals.lambda_runtime
   lambda_timeout     = include.envcommon.locals.lambda_timeout
   lambda_memory_size = include.envcommon.locals.lambda_memory_size
   log_retention_days = include.envcommon.locals.log_retention_days
+
+  # IAM Permissions - Grant Lambda access to RDS secrets
+  lambda_secrets_arns = [
+    dependency.rds_postgres.outputs.db_instance_master_user_secret_arn
+  ]
 
   # Lambda code deployment
   use_placeholder_lambda = false
@@ -106,14 +127,15 @@ inputs = {
     # API path: /test-order/info (GET)
     "eligibility-test-info-lambda" = {
       description     = "Eligibility Test Info Service - Returns test eligibility information"
-      api_path_prefix = "test-order"  # Will handle /test-order/* routes
+      api_path_prefix = "test-order" # Will handle /test-order/* routes
       handler         = "index.handler"
       timeout         = 30
       memory_size     = 256
       environment = {
-        NODE_OPTIONS = "--enable-source-maps"
-        ENVIRONMENT  = include.envcommon.locals.environment
-        DATABASE_URL = "postgresql://app_user:PLACEHOLDER@rds-endpoint:5432/mydb?currentSchema=hometest"
+        NODE_OPTIONS  = "--enable-source-maps"
+        ENVIRONMENT   = include.envcommon.locals.environment
+        DATABASE_URL  = "${dependency.rds_postgres.outputs.connection_string}?currentSchema=hometest"
+        DB_SECRET_ARN = dependency.rds_postgres.outputs.db_instance_master_user_secret_arn
       }
     }
 
@@ -121,9 +143,9 @@ inputs = {
     # API path: /test-order/order (POST) - but configured as SQS processor for async processing
     "order-router-lambda" = {
       description = "Order Router Service - Routes orders to supplier via SQS processing"
-      sqs_trigger = true  # Triggered by SQS queue for async order processing
+      sqs_trigger = true # Triggered by SQS queue for async order processing
       handler     = "index.handler"
-      timeout     = 60    # Longer timeout for external API calls
+      timeout     = 60 # Longer timeout for external API calls
       memory_size = 512
       environment = {
         NODE_OPTIONS                = "--enable-source-maps"

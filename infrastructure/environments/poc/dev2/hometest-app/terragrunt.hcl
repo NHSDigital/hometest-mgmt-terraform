@@ -111,8 +111,8 @@ inputs = {
       timeout         = 30
       memory_size     = 256
       environment = {
-        API_NAME      = "orders"
-        API_VERSION   = "v1"
+        API_NAME    = "orders"
+        API_VERSION = "v1"
         # SQS_QUEUE_URL = "https://sqs.eu-west-2.amazonaws.com/${include.envcommon.locals.account_id}/${include.envcommon.locals.project_name}-${include.envcommon.locals.environment}-events"
       }
     }

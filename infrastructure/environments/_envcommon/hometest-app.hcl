@@ -39,7 +39,7 @@ locals {
   lambdas_base_path  = try(local.env_vars.locals.lambdas_base_path, "${local.lambdas_source_dir}/src")
   spa_source_dir     = try(local.env_vars.locals.spa_source_dir, "/home/mikee/git/kainos/code/nhs/code/hometest-service/ui")
   spa_dist_dir       = try(local.env_vars.locals.spa_dist_dir, "${local.spa_source_dir}/out")
-  spa_type           = try(local.env_vars.locals.spa_type, "nextjs")  # "nextjs" or "vite"
+  spa_type           = try(local.env_vars.locals.spa_type, "nextjs") # "nextjs" or "vite"
 
   # Lambda Configuration Defaults
   # https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
@@ -79,7 +79,7 @@ terraform {
   # Build and package Lambda code locally (Terraform uploads and deploys)
   before_hook "build_lambdas" {
     commands = ["apply", "plan"]
-    execute  = [
+    execute = [
       "bash", "-c",
       <<-EOF
         LAMBDAS_DIR="${local.lambdas_source_dir}"
@@ -88,7 +88,7 @@ terraform {
           cd "$LAMBDAS_DIR"
           npm ci --silent 2>/dev/null || npm install --silent
           npm run build --silent 2>/dev/null || true
-          
+
           # Package each lambda from dist to src (for Terraform to find)
           if [[ -d "dist" ]]; then
             for lambda_dist in dist/*/; do
@@ -113,7 +113,7 @@ terraform {
   # Build SPA before apply
   before_hook "build_spa" {
     commands = ["apply"]
-    execute  = [
+    execute = [
       "bash", "-c",
       <<-EOF
         SPA_DIR="${local.spa_source_dir}"
@@ -135,12 +135,12 @@ terraform {
   after_hook "upload_spa" {
     commands     = ["apply"]
     run_on_error = false
-    execute      = [
+    execute = [
       "bash", "-c",
       <<-EOF
         SPA_TYPE="${local.spa_type}"
         SPA_DIST="${local.spa_dist_dir}"
-        
+
         # Fallback paths based on SPA type
         if [[ ! -d "$SPA_DIST" ]]; then
           if [[ "$SPA_TYPE" == "nextjs" ]]; then
@@ -149,12 +149,12 @@ terraform {
             SPA_DIST="${local.spa_source_dir}/dist"
           fi
         fi
-        
+
         if [[ -d "$SPA_DIST" ]]; then
           SPA_BUCKET=$(terraform output -raw spa_bucket_id 2>/dev/null || echo "")
           if [[ -n "$SPA_BUCKET" ]]; then
             echo "Uploading $SPA_TYPE SPA from $SPA_DIST to s3://$SPA_BUCKET..."
-            
+
             if [[ "$SPA_TYPE" == "nextjs" ]]; then
               # Next.js specific upload with proper caching
               aws s3 sync "$SPA_DIST" "s3://$SPA_BUCKET" \
