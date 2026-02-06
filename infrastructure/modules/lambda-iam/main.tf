@@ -112,6 +112,10 @@ resource "aws_iam_role_policy" "xray" {
 
 ################################################################################
 # VPC Access Policy (optional)
+# Required for Lambda functions deployed in a VPC.
+# Note: These permissions must be granted on Resource "*" as Lambda creates
+# ENIs during function creation and the specific resource ARN is not known
+# in advance. Security is enforced through VPC security groups.
 ################################################################################
 
 resource "aws_iam_role_policy" "vpc_access" {
@@ -134,11 +138,6 @@ resource "aws_iam_role_policy" "vpc_access" {
           "ec2:UnassignPrivateIpAddresses"
         ]
         Resource = "*"
-        Condition = {
-          StringEquals = {
-            "ec2:Vpc" = var.vpc_id
-          }
-        }
       }
     ]
   })

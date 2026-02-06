@@ -123,3 +123,7 @@ venv/
 
 # Ignore Terraform lock file
 .terraform.lock.hcl
+
+.node_modules
+node_modules
+dist
