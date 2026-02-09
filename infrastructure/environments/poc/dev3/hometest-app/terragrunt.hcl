@@ -87,7 +87,7 @@ inputs = {
 
   # Lambda Configuration
   enable_vpc_access  = true
-  enable_sqs_access  = true # Required for order-router-lambda SQS trigger
+  enable_sqs_access  = true  # Required for order-router-lambda SQS trigger
   lambda_runtime     = include.envcommon.locals.lambda_runtime
   lambda_timeout     = include.envcommon.locals.lambda_timeout
   lambda_memory_size = include.envcommon.locals.lambda_memory_size
@@ -156,9 +156,9 @@ inputs = {
     # Matches local: api_path = "test-order/order" (but async via SQS here)
     "order-router-lambda" = {
       description = "Order Router Service - Processes orders from SQS queue"
-      sqs_trigger = true # Triggered by SQS, no API Gateway endpoint
+      sqs_trigger = true  # Triggered by SQS, no API Gateway endpoint
       handler     = "index.handler"
-      timeout     = 60 # Longer timeout for external API calls to supplier
+      timeout     = 60    # Longer timeout for external API calls to supplier
       memory_size = 512
       environment = {
         NODE_OPTIONS                = "--enable-source-maps"
