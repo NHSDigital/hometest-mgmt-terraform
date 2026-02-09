@@ -20,7 +20,7 @@ module "goose_migrator_lambda" {
 
   function_name          = "goose-migrator"
   handler                = "main"
-  runtime                = "go1.x"
+  runtime                = "provided.al2023"
   create_role            = false
   lambda_role            = aws_iam_role.lambda_goose_migrator.arn
   timeout                = 300
@@ -33,10 +33,19 @@ module "goose_migrator_lambda" {
     DB_URL = var.db_url
   }
 
-  architectures = ["amd64"]
+  architectures = ["arm64"]
 
   source_path = [
-    "src/main.go"
+    {
+      path = "${path.module}/src"
+      commands = [
+        "GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o migrations main.go",
+        ":zip",
+      ]
+      patterns = [
+        "!.*",
+        "migrations",
+      ]
+    }
   ]
-  runtime_package_install_command = "go mod tidy"
 }

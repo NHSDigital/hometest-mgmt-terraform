@@ -40,11 +40,14 @@ module "liquibase_migrator_lambda" {
 
   architectures = ["amd64"]
 
-  build_command = "./gradlew buildZip"
-  artifact_path = "build/distributions/*.zip"
   source_path = [
-    "src/LiquibaseMigrator.java",
-    "src/db/changelog/*.xml",
-    "build.gradle"
+    {
+      path = "${path.module}/src"
+      commands = [
+        "gradle build -i",
+        "cd build/output",
+        ":zip",
+      ]
+    }
   ]
 }
