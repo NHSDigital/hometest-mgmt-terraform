@@ -16,24 +16,24 @@ resource "aws_iam_role_policy_attachment" "lambda_liquibase_migrator_attach" {
 
 module "liquibase_migrator_lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "7.4.0"
+  version = "8.5.0"
 
-  function_name = "liquibase-migrator"
-  handler       = "com.example.LiquibaseMigrator::handleRequest"
-  runtime       = "java25"
-  create_role   = false
-  lambda_role   = var.lambda_role_arn
-  timeout       = 120
-  memory_size   = 512
-  publish       = true
+  function_name          = "liquibase-migrator"
+  handler                = "com.example.LiquibaseMigrator::handleRequest"
+  runtime                = "java25"
+  create_role            = false
+  lambda_role            = var.lambda_role_arn
+  timeout                = 300
+  memory_size            = 512
+  publish                = true
   vpc_subnet_ids         = var.subnet_ids
   vpc_security_group_ids = var.security_group_ids
 
   environment_variables = {
-    DB_USERNAME = var.db_username
-    DB_ADDRESS  = var.db_address
-    DB_PORT     = var.db_port
-    DB_NAME     = var.db_name
+    DB_USERNAME   = var.db_username
+    DB_ADDRESS    = var.db_address
+    DB_PORT       = var.db_port
+    DB_NAME       = var.db_name
     DB_SECRET_ARN = var.db_secret_arn
   }
 
@@ -44,8 +44,4 @@ module "liquibase_migrator_lambda" {
     "src/db/changelog/db.changelog-master.xml",
     "build.gradle"
   ]
-}
-
-output "lambda_function_name" {
-  value = module.liquibase_migrator_lambda.lambda_function_name
 }

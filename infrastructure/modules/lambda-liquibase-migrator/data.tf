@@ -9,7 +9,7 @@ data "aws_iam_policy_document" "lambda_assume_role" {
   }
 }
 
-data "aws_iam_policy_document" "lambda_liquibase_migrator_policy" {
+data "aws_iam_policy_document" "lambda_goose_migrator_policy" {
   statement {
     effect = "Allow"
     actions = [
@@ -20,13 +20,13 @@ data "aws_iam_policy_document" "lambda_liquibase_migrator_policy" {
     resources = ["arn:aws:logs:*:*:*"]
   }
   statement {
-    effect = "Allow"
-    actions = ["secretsmanager:GetSecretValue"]
+    effect    = "Allow"
+    actions   = ["secretsmanager:GetSecretValue"]
     resources = ["*"]
   }
   statement {
-    effect = "Allow"
-    actions = ["rds-db:connect"]
+    effect    = "Allow"
+    actions   = ["rds-db:connect"]
     resources = ["*"]
   }
   statement {
