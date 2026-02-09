@@ -37,43 +37,18 @@ variable "environment" {
 }
 
 ################################################################################
-# Network Configuration
+# Network Configuration - References from Network Module
+# VPC and DB subnet group are passed from Terragrunt dependency on network module
 ################################################################################
 
-variable "create_vpc" {
-  description = "Create a new VPC for the database (for POC/dev only)"
-  type        = bool
-  default     = false
-}
-
-variable "vpc_cidr" {
-  description = "CIDR block for the VPC (only used if create_vpc is true)"
-  type        = string
-  default     = "10.0.0.0/16"
-}
-
-variable "vpc_azs_count" {
-  description = "Number of availability zones to use (only used if create_vpc is true)"
-  type        = number
-  default     = 2
-}
-
 variable "vpc_id" {
-  description = "VPC ID (required if create_vpc is false)"
+  description = "VPC ID from network module (passed via Terragrunt dependency)"
   type        = string
-  default     = ""
 }
 
-variable "subnet_ids" {
-  description = "Subnet IDs for the database (required if use_default_vpc is false)"
-  type        = list(string)
-  default     = []
-}
-
-variable "publicly_accessible" {
-  description = "Whether the database should be publicly accessible"
-  type        = bool
-  default     = false
+variable "db_subnet_group_name" {
+  description = "DB subnet group name from network module (passed via Terragrunt dependency)"
+  type        = string
 }
 
 variable "allowed_cidr_blocks" {
@@ -86,6 +61,12 @@ variable "allowed_security_group_ids" {
   description = "List of security group IDs allowed to connect to the database"
   type        = list(string)
   default     = []
+}
+
+variable "publicly_accessible" {
+  description = "Whether the database should be publicly accessible"
+  type        = bool
+  default     = false
 }
 
 ################################################################################

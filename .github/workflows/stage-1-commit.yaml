@@ -141,5 +141,8 @@ jobs:
       #   with:
       #     role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
       #     aws-region: "eu-west-2"
+      - name: Run mise
+        uses: ./.github/actions/install-mise
+
       - name: Run pre-commit checks
         uses: ./.github/actions/perform-pre-commit

@@ -79,12 +79,6 @@ variable "state_bucket_retention_days" {
   default     = 90
 }
 
-variable "enable_dynamodb_point_in_time_recovery" {
-  description = "Enable point-in-time recovery for DynamoDB lock table"
-  type        = bool
-  default     = true
-}
-
 variable "kms_key_deletion_window_days" {
   description = "Number of days before KMS key is deleted"
   type        = number

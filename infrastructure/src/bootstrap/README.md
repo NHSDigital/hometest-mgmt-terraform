@@ -237,7 +237,6 @@ No modules.
 | Name | Type |
 |------|------|
 | [aws_account_region.disabled](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/account_region) | resource |
-| [aws_dynamodb_table.tfstate_lock](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_table) | resource |
 | [aws_iam_openid_connect_provider.github](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider) | resource |
 | [aws_iam_policy.deny_regions](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.gha_permissions_boundary](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
@@ -272,7 +271,6 @@ No modules.
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account ID for resources | `string` | n/a | yes |
 | <a name="input_aws_account_shortname"></a> [aws\_account\_shortname](#input\_aws\_account\_shortname) | AWS account short name/alias for resource naming | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region for resources | `string` | n/a | yes |
-| <a name="input_enable_dynamodb_point_in_time_recovery"></a> [enable\_dynamodb\_point\_in\_time\_recovery](#input\_enable\_dynamodb\_point\_in\_time\_recovery) | Enable point-in-time recovery for DynamoDB lock table | `bool` | `true` | no |
 | <a name="input_enable_state_bucket_logging"></a> [enable\_state\_bucket\_logging](#input\_enable\_state\_bucket\_logging) | Enable access logging for the state bucket | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., mgmt, dev, staging, prod) | `string` | `"mgmt"` | no |
 | <a name="input_github_allow_all_branches"></a> [github\_allow\_all\_branches](#input\_github\_allow\_all\_branches) | Allow all branches to assume the OIDC role (disables branch restrictions). Use with caution in production. | `bool` | `false` | no |
@@ -293,8 +291,6 @@ No modules.
 | <a name="output_denied_regions"></a> [denied\_regions](#output\_denied\_regions) | List of all AWS regions denied via IAM policy |
 | <a name="output_deny_regions_policy_arn"></a> [deny\_regions\_policy\_arn](#output\_deny\_regions\_policy\_arn) | ARN of the IAM policy that denies non-allowed regions |
 | <a name="output_disabled_opt_in_regions"></a> [disabled\_opt\_in\_regions](#output\_disabled\_opt\_in\_regions) | List of opt-in AWS regions that have been disabled |
-| <a name="output_dynamodb_table_arn"></a> [dynamodb\_table\_arn](#output\_dynamodb\_table\_arn) | ARN of the DynamoDB table for state locking |
-| <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | Name of the DynamoDB table for state locking |
 | <a name="output_gha_oidc_role_arn"></a> [gha\_oidc\_role\_arn](#output\_gha\_oidc\_role\_arn) | ARN of the GitHub Actions OIDC role (store as AWS\_ROLE\_ARN in GitHub secrets) |
 | <a name="output_gha_oidc_role_name"></a> [gha\_oidc\_role\_name](#output\_gha\_oidc\_role\_name) | Name of the GitHub Actions OIDC role |
 | <a name="output_github_oidc_provider_arn"></a> [github\_oidc\_provider\_arn](#output\_github\_oidc\_provider\_arn) | ARN of the GitHub OIDC provider |

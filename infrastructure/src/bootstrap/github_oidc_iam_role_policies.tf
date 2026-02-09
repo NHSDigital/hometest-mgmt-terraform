@@ -9,42 +9,17 @@ resource "aws_iam_role_policy" "gha_tfstate" {
 }
 
 data "aws_iam_policy_document" "tfstate_policy" {
-  # S3 State Bucket - List permissions
+  # S3 State Bucket - Full access for state management
   statement {
-    sid    = "S3StateBucketList"
+    sid    = "S3StateBucketAccess"
     effect = "Allow"
     actions = [
-      "s3:ListBucket",
-      "s3:GetBucketVersioning",
-      "s3:GetBucketLocation"
+      "s3:*"
     ]
-    resources = [aws_s3_bucket.tfstate.arn]
-  }
-
-  # S3 State Bucket - Object permissions
-  statement {
-    sid    = "S3StateObjects"
-    effect = "Allow"
-    actions = [
-      "s3:GetObject",
-      "s3:GetObjectVersion",
-      "s3:PutObject",
-      "s3:DeleteObject"
+    resources = [
+      aws_s3_bucket.tfstate.arn,
+      "${aws_s3_bucket.tfstate.arn}/*"
     ]
-    resources = ["${aws_s3_bucket.tfstate.arn}/*"]
-  }
-
-  # DynamoDB Lock Table
-  statement {
-    sid    = "DynamoDBLockTable"
-    effect = "Allow"
-    actions = [
-      "dynamodb:GetItem",
-      "dynamodb:PutItem",
-      "dynamodb:DeleteItem",
-      "dynamodb:DescribeTable"
-    ]
-    resources = [aws_dynamodb_table.tfstate_lock.arn]
   }
 
   # KMS Key for State Encryption
@@ -52,19 +27,16 @@ data "aws_iam_policy_document" "tfstate_policy" {
     sid    = "KMSStateEncryption"
     effect = "Allow"
     actions = [
-      "kms:Encrypt",
-      "kms:Decrypt",
-      "kms:ReEncrypt*",
-      "kms:GenerateDataKey*",
-      "kms:DescribeKey"
+      "kms:*"
     ]
     resources = [aws_kms_key.tfstate.arn]
   }
 }
 
 ################################################################################
-# IAM Policy for Terraform Infrastructure Management
-# Customize based on your infrastructure needs
+# IAM Policy for Terraform Infrastructure Management (POC - Simplified)
+# Note: This is a permissive policy for POC environments
+# For production, implement least-privilege access
 ################################################################################
 
 resource "aws_iam_role_policy" "gha_infrastructure" {
@@ -74,264 +46,102 @@ resource "aws_iam_role_policy" "gha_infrastructure" {
 }
 
 data "aws_iam_policy_document" "infrastructure_policy" {
-  # Read-only access for Terraform planning
+  # Full access to common AWS services for POC deployment
   statement {
-    sid    = "ReadOnlyAccess"
+    sid    = "POCFullAccess"
     effect = "Allow"
     actions = [
-      # EC2 Read
-      "ec2:Describe*",
-      "ec2:Get*",
+      # Networking
+      "ec2:*",
+      "vpc:*",
+      "network-firewall:*",
 
-      # VPC Read
-      "vpc:Describe*",
+      # Compute
+      "lambda:*",
+      "ecr:*",
 
-      # IAM Read (for planning)
-      "iam:GetRole",
-      "iam:GetRolePolicy",
-      "iam:GetPolicy",
-      "iam:GetPolicyVersion",
-      "iam:ListRolePolicies",
-      "iam:ListAttachedRolePolicies",
-      "iam:ListPolicyVersions",
-      "iam:ListRoles",
-      "iam:ListPolicies",
+      # Storage
+      "s3:*",
+      "dynamodb:*",
 
-      # Lambda Read
-      "lambda:GetFunction",
-      "lambda:GetFunctionConfiguration",
-      "lambda:ListFunctions",
-      "lambda:GetPolicy",
+      # Security & Encryption
+      "kms:*",
+      "secretsmanager:*",
+      "ssm:*",
 
-      # S3 Read (for other buckets)
-      "s3:GetBucketPolicy",
-      "s3:GetBucketAcl",
-      "s3:GetBucketCORS",
-      "s3:GetBucketVersioning",
-      "s3:GetBucketLocation",
-      "s3:GetEncryptionConfiguration",
-      "s3:GetBucketTagging",
-      "s3:GetBucketLogging",
-      "s3:GetLifecycleConfiguration",
-      "s3:GetBucketPublicAccessBlock",
-      "s3:ListBucket",
-      "s3:ListAllMyBuckets",
+      # API & Messaging
+      "apigateway:*",
+      "sns:*",
+      "sqs:*",
 
-      # CloudWatch Read
-      "logs:DescribeLogGroups",
-      "logs:DescribeLogStreams",
-      "logs:GetLogEvents",
+      # DNS & CDN
+      "route53:*",
+      "cloudfront:*",
+      "acm:*",
 
-      # SNS Read
-      "sns:GetTopicAttributes",
-      "sns:ListTopics",
+      # Monitoring
+      "logs:*",
+      "cloudwatch:*",
 
-      # SQS Read
-      "sqs:GetQueueAttributes",
-      "sqs:ListQueues",
+      # Resource Management
+      "resource-groups:*",
+      "tag:*",
 
-      # SSM Read
-      "ssm:GetParameter",
-      "ssm:GetParameters",
-      "ssm:GetParametersByPath",
-      "ssm:DescribeParameters",
+      # Identity
+      "cognito-idp:*",
+      "cognito-identity:*",
 
-      # Secrets Manager Read
-      "secretsmanager:DescribeSecret",
-      "secretsmanager:GetResourcePolicy",
+      # Data Streaming
+      "firehose:*",
+      "kinesis:*",
 
-      # API Gateway Read
-      "apigateway:GET",
-
-      # DynamoDB Read
-      "dynamodb:DescribeTable",
-      "dynamodb:ListTables",
-
-      # Route53 Read
-      "route53:GetHostedZone",
-      "route53:ListHostedZones",
-      "route53:ListResourceRecordSets",
-
-      # ACM Read
-      "acm:DescribeCertificate",
-      "acm:ListCertificates",
-
-      # CloudFront Read
-      "cloudfront:GetDistribution",
-      "cloudfront:ListDistributions",
-
-      # ECR Read
-      "ecr:DescribeRepositories",
-      "ecr:DescribeImages",
-      "ecr:ListImages",
-      "ecr:GetRepositoryPolicy",
-      "ecr:GetLifecyclePolicy",
+      # Database
+      "rds:*",
 
       # STS
-      "sts:GetCallerIdentity"
+      "sts:GetCallerIdentity",
+      "sts:AssumeRole"
     ]
     resources = ["*"]
   }
 
-  #-----------------------------------------------------------------------------
-  # Lambda Web App Deployment Permissions
-  # Required for deploying Lambda container-based web applications
-  #-----------------------------------------------------------------------------
-
+  # IAM permissions scoped to project resources
   statement {
-    sid    = "ECRAccess"
+    sid    = "IAMProjectAccess"
     effect = "Allow"
     actions = [
-      "ecr:CreateRepository",
-      "ecr:DeleteRepository",
-      "ecr:PutLifecyclePolicy",
-      "ecr:DeleteLifecyclePolicy",
-      "ecr:SetRepositoryPolicy",
-      "ecr:DeleteRepositoryPolicy",
-      "ecr:TagResource",
-      "ecr:UntagResource",
-      "ecr:GetAuthorizationToken",
-      "ecr:BatchCheckLayerAvailability",
-      "ecr:GetDownloadUrlForLayer",
-      "ecr:BatchGetImage",
-      "ecr:InitiateLayerUpload",
-      "ecr:UploadLayerPart",
-      "ecr:CompleteLayerUpload",
-      "ecr:PutImage"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "LambdaAccess"
-    effect = "Allow"
-    actions = [
-      "lambda:CreateFunction",
-      "lambda:DeleteFunction",
-      "lambda:UpdateFunctionCode",
-      "lambda:UpdateFunctionConfiguration",
-      "lambda:GetFunction",
-      "lambda:GetFunctionConfiguration",
-      "lambda:ListFunctions",
-      "lambda:GetPolicy",
-      "lambda:AddPermission",
-      "lambda:RemovePermission",
-      "lambda:CreateFunctionUrlConfig",
-      "lambda:UpdateFunctionUrlConfig",
-      "lambda:DeleteFunctionUrlConfig",
-      "lambda:GetFunctionUrlConfig",
-      "lambda:InvokeFunction",
-      "lambda:TagResource",
-      "lambda:UntagResource",
-      "lambda:ListTags",
-      "lambda:PutFunctionConcurrency",
-      "lambda:DeleteFunctionConcurrency"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "APIGatewayAccess"
-    effect = "Allow"
-    actions = [
-      "apigateway:*"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "CloudWatchLogsAccess"
-    effect = "Allow"
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:DeleteLogGroup",
-      "logs:PutRetentionPolicy",
-      "logs:DeleteRetentionPolicy",
-      "logs:TagLogGroup",
-      "logs:UntagLogGroup",
-      "logs:DescribeLogGroups",
-      "logs:DescribeLogStreams",
-      "logs:GetLogEvents"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "CloudWatchAlarmsAccess"
-    effect = "Allow"
-    actions = [
-      "cloudwatch:PutMetricAlarm",
-      "cloudwatch:DeleteAlarms",
-      "cloudwatch:DescribeAlarms",
-      "cloudwatch:EnableAlarmActions",
-      "cloudwatch:DisableAlarmActions",
-      "cloudwatch:TagResource",
-      "cloudwatch:UntagResource"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "IAMRoleManagement"
-    effect = "Allow"
-    actions = [
-      "iam:CreateRole",
-      "iam:DeleteRole",
-      "iam:GetRole",
-      "iam:UpdateRole",
-      "iam:UpdateAssumeRolePolicy",
-      "iam:PassRole",
-      "iam:TagRole",
-      "iam:UntagRole",
-      "iam:AttachRolePolicy",
-      "iam:DetachRolePolicy",
-      "iam:PutRolePolicy",
-      "iam:DeleteRolePolicy",
-      "iam:GetRolePolicy",
-      "iam:ListRolePolicies",
-      "iam:ListAttachedRolePolicies",
-      "iam:CreatePolicy",
-      "iam:DeletePolicy",
-      "iam:GetPolicy",
-      "iam:GetPolicyVersion",
-      "iam:ListPolicyVersions",
-      "iam:CreatePolicyVersion",
-      "iam:DeletePolicyVersion"
+      "iam:*"
     ]
     resources = [
       "arn:aws:iam::*:role/${var.project_name}-*",
-      "arn:aws:iam::*:policy/${var.project_name}-*"
+      "arn:aws:iam::*:policy/${var.project_name}-*",
+      "arn:aws:iam::*:role/aws-service-role/*"
     ]
   }
 
-  # Write access - CUSTOMIZE BASED ON YOUR NEEDS
-  # Start with read-only and add write permissions as needed
-  # Example: Uncomment and modify for your use case
+  # IAM read access for all resources
+  statement {
+    sid    = "IAMReadAccess"
+    effect = "Allow"
+    actions = [
+      "iam:Get*",
+      "iam:List*",
+      "iam:PassRole"
+    ]
+    resources = ["*"]
+  }
 
-  # statement {
-  #   sid    = "EC2WriteAccess"
-  #   effect = "Allow"
-  #   actions = [
-  #     "ec2:CreateVpc",
-  #     "ec2:DeleteVpc",
-  #     "ec2:CreateSubnet",
-  #     "ec2:DeleteSubnet",
-  #     "ec2:CreateSecurityGroup",
-  #     "ec2:DeleteSecurityGroup",
-  #     "ec2:AuthorizeSecurityGroupIngress",
-  #     "ec2:RevokeSecurityGroupIngress",
-  #     "ec2:AuthorizeSecurityGroupEgress",
-  #     "ec2:RevokeSecurityGroupEgress",
-  #     "ec2:CreateTags",
-  #     "ec2:DeleteTags"
-  #   ]
-  #   resources = ["*"]
-  #   condition {
-  #     test     = "StringEquals"
-  #     variable = "aws:RequestedRegion"
-  #     values   = [var.aws_region]
-  #   }
-  # }
+  # Allow creating service-linked roles
+  statement {
+    sid    = "IAMServiceLinkedRoles"
+    effect = "Allow"
+    actions = [
+      "iam:CreateServiceLinkedRole",
+      "iam:DeleteServiceLinkedRole",
+      "iam:GetServiceLinkedRoleDeletionStatus"
+    ]
+    resources = ["*"]
+  }
 }
 
 ################################################################################
@@ -346,7 +156,7 @@ resource "aws_iam_role_policy_attachment" "additional_policies" {
 
 ################################################################################
 # Permissions Boundary (Optional but Recommended)
-# Prevents privilege escalation
+# Prevents privilege escalation - even for POC
 ################################################################################
 
 resource "aws_iam_policy" "gha_permissions_boundary" {
@@ -365,16 +175,11 @@ resource "aws_iam_policy" "gha_permissions_boundary" {
           "lambda:*",
           "logs:*",
           "ec2:*",
-          "iam:Get*",
-          "iam:List*",
-          "iam:PassRole",
+          "network-firewall:*",
+          "iam:*",
           "ssm:*",
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret",
-          "kms:Encrypt",
-          "kms:Decrypt",
-          "kms:GenerateDataKey*",
-          "kms:DescribeKey",
+          "secretsmanager:*",
+          "kms:*",
           "sns:*",
           "sqs:*",
           "apigateway:*",
@@ -382,13 +187,15 @@ resource "aws_iam_policy" "gha_permissions_boundary" {
           "acm:*",
           "cloudfront:*",
           "cloudwatch:*",
-          "sts:GetCallerIdentity",
-          "sts:AssumeRole"
+          "ecr:*",
+          "resource-groups:*",
+          "tag:*",
+          "sts:*"
         ]
         Resource = "*"
       },
       {
-        Sid    = "DenyIAMWrite"
+        Sid    = "DenyIAMUserManagement"
         Effect = "Deny"
         Action = [
           "iam:CreateUser",

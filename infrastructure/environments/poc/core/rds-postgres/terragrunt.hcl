@@ -14,13 +14,28 @@ terraform {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# Dependencies - RDS requires network module to be deployed first
+# ---------------------------------------------------------------------------------------------------------------------
+dependency "network" {
+  config_path = "../network"
+
+  # Mock outputs for plan operations when network hasn't been deployed yet
+  mock_outputs = {
+    vpc_id          = "vpc-mock-12345678"
+    data_subnet_ids = ["subnet-mock-1", "subnet-mock-2"]
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # POC Environment Configuration
 # PostgreSQL 18.1 on db.t4g.micro (cheapest ARM-based instance)
-# Creating a simple VPC for the database
+# Uses VPC and DB subnet group from the network module
 # ---------------------------------------------------------------------------------------------------------------------
 inputs = {
-  # Create a simple VPC for POC
-  create_vpc = true
+  # Network configuration from dependency
+  vpc_id               = dependency.network.outputs.vpc_id
+  db_subnet_group_name = dependency.network.outputs.db_subnet_group_name
 
   # Storage autoscaling - reduced for POC (default is 100 GB)
   max_allocated_storage = 50
