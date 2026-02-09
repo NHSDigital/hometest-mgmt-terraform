@@ -20,7 +20,7 @@ module "liquibase_migrator_lambda" {
 
   function_name = "liquibase-migrator"
   handler       = "com.example.LiquibaseMigrator::handleRequest"
-  runtime       = "java17"
+  runtime       = "java25"
   create_role   = false
   lambda_role   = var.lambda_role_arn
   timeout       = 120

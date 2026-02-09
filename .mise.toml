@@ -30,7 +30,7 @@ go = "1.21.0"
 gradle = "8.7"
 
 # https://adoptium.net/temurin/releases/
-java = "temurin-17.0.10"
+java = "temurin-25.0.0"
 
 ## Security scanning
 
