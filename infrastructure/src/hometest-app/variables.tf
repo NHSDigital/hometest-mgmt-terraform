@@ -161,6 +161,12 @@ variable "lambda_sqs_queue_arns" {
   default     = []
 }
 
+variable "lambda_additional_kms_key_arns" {
+  description = "Additional KMS key ARNs for Lambda to decrypt secrets (e.g., secrets encrypted with different keys)"
+  type        = list(string)
+  default     = []
+}
+
 # Lambda Definitions Map
 variable "lambdas" {
   description = "Map of Lambda function configurations. Each key is the lambda name."

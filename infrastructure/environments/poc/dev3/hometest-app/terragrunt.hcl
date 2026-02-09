@@ -93,9 +93,18 @@ inputs = {
   lambda_memory_size = include.envcommon.locals.lambda_memory_size
   log_retention_days = include.envcommon.locals.log_retention_days
 
-  # IAM Permissions - Grant Lambda access to RDS secrets
+  # IAM Permissions - Grant Lambda access to secrets
+  # Note: AWS Secrets Manager ARNs have a random suffix, use -* wildcard to match
   lambda_secrets_arns = [
-    dependency.rds_postgres.outputs.db_instance_master_user_secret_arn
+    dependency.rds_postgres.outputs.db_instance_master_user_secret_arn,
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/preventex-dev-client-secret-*"
+  ]
+
+  # KMS keys for secrets encrypted with different keys than shared_services KMS
+  # Get the KMS key ARN with: aws secretsmanager describe-secret --secret-id nhs-hometest/dev/preventex-dev-client-secret --query 'KmsKeyId'
+  lambda_additional_kms_key_arns = [
+    # TODO: Add the KMS key ARN used by preventex-dev-client-secret
+    # "arn:aws:kms:eu-west-2:781863586270:key/YOUR-KEY-ID-HERE"
   ]
 
   # Lambda code deployment
@@ -156,17 +165,20 @@ inputs = {
     # Matches local: api_path = "test-order/order" (but async via SQS here)
     "order-router-lambda" = {
       description = "Order Router Service - Processes orders from SQS queue"
-      sqs_trigger = true  # Triggered by SQS, no API Gateway endpoint
+      sqs_trigger = false  # Triggered by SQS, no API Gateway endpoint
+      api_path_prefix = "order-router" # Not used for routing since this is SQS-triggered, but included for consistency
       handler     = "index.handler"
       timeout     = 60    # Longer timeout for external API calls to supplier
       memory_size = 512
       environment = {
         NODE_OPTIONS                = "--enable-source-maps"
         ENVIRONMENT                 = include.envcommon.locals.environment
-        SUPPLIER_BASE_URL           = "https://supplier-api.example.com"
-        SUPPLIER_OAUTH_TOKEN_PATH   = "/oauth/token"
-        SUPPLIER_CLIENT_ID          = "supplier-client"
-        SUPPLIER_CLIENT_SECRET_NAME = "${include.envcommon.locals.project_name}/${include.envcommon.locals.environment}/supplier-oauth-client-secret"
+        SUPPLIER_BASE_URL           = "https://func-nhshometest-dev.azurewebsites.net/"
+        SUPPLIER_OAUTH_TOKEN_PATH   = "/api/oauth"
+        SUPPLIER_CLIENT_ID          = "7e9b8f16-4686-46f4-903e-2d364774fc82"
+        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/preventex-dev-client-secret"
+        SUPPLIER_ORDER_PATH         = "/api/order"
+        # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
       }
     }
   }

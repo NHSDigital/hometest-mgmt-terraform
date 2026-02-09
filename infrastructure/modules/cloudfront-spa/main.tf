@@ -265,10 +265,30 @@ resource "aws_cloudfront_distribution" "spa" {
   }
 
   # Dynamic API path behaviors (supports multiple APIs with different paths)
+  # Pattern: /{prefix}/* for paths like /order-router/something
   dynamic "ordered_cache_behavior" {
     for_each = local.api_origins_map
     content {
       path_pattern     = "/${ordered_cache_behavior.key}/*"
+      allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods   = ["GET", "HEAD"]
+      target_origin_id = "API-${ordered_cache_behavior.key}"
+
+      # No caching for API calls
+      cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # CachingDisabled
+      origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # AllViewerExceptHostHeader
+
+      viewer_protocol_policy = "redirect-to-https"
+      compress               = true
+    }
+  }
+
+  # API root path behaviors (exact match for /{prefix} without trailing path)
+  # Pattern: /{prefix} for paths like /order-router (no trailing slash or content)
+  dynamic "ordered_cache_behavior" {
+    for_each = local.api_origins_map
+    content {
+      path_pattern     = "/${ordered_cache_behavior.key}"
       allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
       cached_methods   = ["GET", "HEAD"]
       target_origin_id = "API-${ordered_cache_behavior.key}"

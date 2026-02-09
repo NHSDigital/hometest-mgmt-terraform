@@ -32,7 +32,10 @@ module "lambda_iam" {
 
   secrets_arns        = local.all_secrets_arns
   ssm_parameter_arns  = var.lambda_ssm_parameter_arns
-  kms_key_arns        = var.kms_key_arn != null ? [var.kms_key_arn] : []
+  kms_key_arns        = concat(
+    var.kms_key_arn != null ? [var.kms_key_arn] : [],
+    var.lambda_additional_kms_key_arns
+  )
   s3_bucket_arns      = concat([var.deployment_bucket_arn], var.lambda_s3_bucket_arns)
   dynamodb_table_arns = var.lambda_dynamodb_table_arns
   sqs_queue_arns      = local.sqs_queue_arns
