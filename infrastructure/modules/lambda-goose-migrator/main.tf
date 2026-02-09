@@ -38,6 +38,5 @@ module "goose_migrator_lambda" {
   source_path = [
     "src/main.go"
   ]
-  
   runtime_package_install_command = "go mod tidy"
 }

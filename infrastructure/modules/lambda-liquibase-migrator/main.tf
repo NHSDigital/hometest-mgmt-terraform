@@ -42,7 +42,6 @@ module "liquibase_migrator_lambda" {
 
   build_command = "./gradlew buildZip"
   artifact_path = "build/distributions/*.zip"
-  
   source_path = [
     "src/LiquibaseMigrator.java",
     "src/db/changelog/db.changelog-master.xml",
