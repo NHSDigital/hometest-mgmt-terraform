@@ -34,8 +34,10 @@ module "goose_migrator_lambda" {
   }
 
   architectures = ["amd64"]
+
   source_path = [
     "src/main.go"
   ]
+  
   runtime_package_install_command = "go mod tidy"
 }

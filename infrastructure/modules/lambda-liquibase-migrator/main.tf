@@ -1,5 +1,5 @@
 resource "aws_iam_role" "lambda_liquibase_migrator" {
-  name = "lambda-liquibase-migrator-role"
+  name               = "lambda-liquibase-migrator-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
@@ -22,12 +22,13 @@ module "liquibase_migrator_lambda" {
   handler                = "com.example.LiquibaseMigrator::handleRequest"
   runtime                = "java25"
   create_role            = false
-  lambda_role            = var.lambda_role_arn
+  lambda_role            = aws_iam_role.lambda_goose_migrator.arn
   timeout                = 300
-  memory_size            = 512
+  memory_size            = 128
   publish                = true
   vpc_subnet_ids         = var.subnet_ids
   vpc_security_group_ids = var.security_group_ids
+
 
   environment_variables = {
     DB_USERNAME   = var.db_username
@@ -37,9 +38,12 @@ module "liquibase_migrator_lambda" {
     DB_SECRET_ARN = var.db_secret_arn
   }
 
+  architectures = ["amd64"]
+
   build_command = "./gradlew buildZip"
   artifact_path = "build/distributions/*.zip"
-  source_path   = [
+  
+  source_path = [
     "src/LiquibaseMigrator.java",
     "src/db/changelog/db.changelog-master.xml",
     "build.gradle"
