@@ -23,4 +23,9 @@ task buildZip(type: Zip) {
     }
 }
 
+    // Include all compiled classes
+    from("$buildDir/classes/java/main") {
+        into ''
+    }
+
 build.dependsOn buildZip

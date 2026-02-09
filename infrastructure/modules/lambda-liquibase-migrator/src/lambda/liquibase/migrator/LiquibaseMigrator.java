@@ -1,4 +1,4 @@
-package com.example;
+package lambda.liquibase.migrator;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -21,7 +21,7 @@ public class LiquibaseMigrator implements RequestHandler<Map<String, String>, St
         String password = event.get("password");
         try (Connection conn = DriverManager.getConnection(jdbcUrl, username, password)) {
             Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(conn));
-            Liquibase liquibase = new Liquibase("db/changelog/db.changelog-master.xml", new ClassLoaderResourceAccessor(), database);
+            Liquibase liquibase = new Liquibase("changelog/db.changelog-master.xml", new ClassLoaderResourceAccessor(), database);
             liquibase.update((String) null);
             return "Migration successful";
         } catch (LiquibaseException | java.sql.SQLException e) {
