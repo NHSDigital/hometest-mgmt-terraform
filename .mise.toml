@@ -26,6 +26,12 @@ awscli = "2.33.13"
 # https://go.dev/dl/
 go = "1.21.0"
 
+# https://gradle.org/releases/
+gradle = "8.7"
+
+# https://adoptium.net/temurin/releases/
+java = "temurin-17.0.10"
+
 ## Security scanning
 
 # https://github.com/aquasecurity/trivy/releases
