@@ -34,6 +34,7 @@ on:
           - bootstrap
           - network
           - rds-postgres
+          - dev3
           - all
         default: bootstrap
       action:

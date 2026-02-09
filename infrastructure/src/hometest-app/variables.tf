@@ -41,12 +41,6 @@ variable "kms_key_arn" {
   type        = string
 }
 
-variable "waf_regional_arn" {
-  description = "ARN of regional WAF Web ACL for API Gateway (from shared_services)"
-  type        = string
-  default     = null
-}
-
 variable "waf_cloudfront_arn" {
   description = "ARN of CloudFront WAF Web ACL (from shared_services)"
   type        = string

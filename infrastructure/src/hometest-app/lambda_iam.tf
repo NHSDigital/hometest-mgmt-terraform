@@ -30,9 +30,9 @@ module "lambda_iam" {
   enable_vpc_access = var.enable_vpc_access
   vpc_id            = var.vpc_id
 
-  secrets_arns        = local.all_secrets_arns
-  ssm_parameter_arns  = var.lambda_ssm_parameter_arns
-  kms_key_arns        = concat(
+  secrets_arns       = local.all_secrets_arns
+  ssm_parameter_arns = var.lambda_ssm_parameter_arns
+  kms_key_arns = concat(
     var.kms_key_arn != null ? [var.kms_key_arn] : [],
     var.lambda_additional_kms_key_arns
   )
