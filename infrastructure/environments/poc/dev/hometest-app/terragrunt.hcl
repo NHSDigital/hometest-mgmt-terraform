@@ -181,6 +181,26 @@ inputs = {
         # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
       }
     }
+
+    "order-router-lambda-sh24" = {
+      description     = "Order Router Service - Processes orders from SQS queue for SH24 supplier"
+      sqs_trigger     = false               # Triggered by SQS, no API Gateway endpoint
+      api_path_prefix = "order-router-sh24" # Not used for routing since this is SQS-triggered, but included for consistency
+      handler         = "index.handler"
+      timeout         = 60 # Longer timeout for external API calls to supplier
+      memory_size     = 512
+      zip_path        = "${include.envcommon.locals.lambdas_base_path}/order-router-lambda/order-router-lambda.zip"
+      environment = {
+        NODE_OPTIONS                = "--enable-source-maps"
+        ENVIRONMENT                 = include.envcommon.locals.environment
+        SUPPLIER_BASE_URL           = "https://admin.qa3.sh24.org.uk/"
+        SUPPLIER_OAUTH_TOKEN_PATH   = "/oauth/token"
+        SUPPLIER_CLIENT_ID          = "zrgmf33Zdk-515BIMrds29v9Z3KzoH-tfYDgxLsYtZE"
+        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/sh24-dev-client-secret"
+        SUPPLIER_ORDER_PATH         = "/order"
+        # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
+      }
+    }
   }
 
   # API Gateway Configuration
