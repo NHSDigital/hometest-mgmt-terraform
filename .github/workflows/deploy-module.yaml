@@ -1,9 +1,14 @@
 ---
 name: "Deploy Terraform Module"
+run-name: "Deploy env: ${{ inputs.environment }}, module: ${{ inputs.module }}, tf: ${{ inputs.action }}"
 
 on:
   workflow_dispatch:
     inputs:
+      hometest_service_ref:
+        description: "Branch, tag, or SHA to checkout for hometest-service"
+        required: false
+        default: "develop"
       environment:
         description: "Target environment"
         required: true
@@ -27,6 +32,7 @@ on:
           - bootstrap
           - network
           - rds-postgres
+          - hometest-app
           - all
         default: bootstrap
       action:
@@ -39,10 +45,6 @@ on:
           - destroy-plan
           - destroy
         default: plan
-      tag:
-        description: "Tag/version to deploy (for reference)"
-        required: false
-        default: "latest"
 
 env:
   AWS_REGION: "eu-west-2"
@@ -60,11 +62,22 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
+        with:
+          path: hometest-mgmt-terraform
+
+      - name: "Checkout hometest-service"
+        uses: actions/checkout@v6
+        with:
+          repository: "NHSDigital/hometest-service"
+          ref: ${{ inputs.hometest_service_ref }}
+          path: hometest-service
+          token: ${{ secrets.NHS_HOMETEST_ORG_PAT }}
 
       - name: "Set modules to deploy"
         id: set-modules
+        working-directory: hometest-mgmt-terraform
         run: |
-          WORKING_DIR_BASE="infrastructure/environments/${{ inputs.environment }}/${{ inputs.stack }}"
+          WORKING_DIR_BASE="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment }}/${{ inputs.stack }}"
           echo "working_dir_base=${WORKING_DIR_BASE}" >> $GITHUB_OUTPUT
 
           if [ "${{ inputs.module }}" == "all" ]; then
@@ -75,8 +88,9 @@ jobs:
           fi
 
       - name: "Validate module path exists"
+        working-directory: hometest-mgmt-terraform
         run: |
-          BASE_PATH="infrastructure/environments/${{ inputs.environment }}/${{ inputs.stack }}"
+          BASE_PATH="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment }}/${{ inputs.stack }}"
           if [ "${{ inputs.module }}" != "all" ]; then
             if [ ! -d "${BASE_PATH}/${{ inputs.module }}" ]; then
               echo "::error::Module path '${BASE_PATH}/${{ inputs.module }}' does not exist"
@@ -112,6 +126,17 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
+        with:
+          path: hometest-mgmt-terraform
+
+      - name: "Checkout hometest-service"
+        uses: actions/checkout@v6
+        with:
+          repository: "NHSDigital/hometest-service"
+          ref: ${{ inputs.hometest_service_ref }}
+          path: hometest-service
+          token: ${{ secrets.NHS_HOMETEST_ORG_PAT }}
+
 
       - name: "Deploy ${{ matrix.module }}"
         uses: ./.github/actions/deploy-terragrunt
