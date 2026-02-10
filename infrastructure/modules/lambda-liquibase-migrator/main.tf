@@ -29,8 +29,8 @@ module "liquibase_migrator_lambda" {
   vpc_subnet_ids         = var.subnet_ids
   vpc_security_group_ids = var.security_group_ids
 
-  ignore_source_code_hash  = true
-  recreate_missing_package = false
+  ignore_source_code_hash  = false
+  recreate_missing_package = true
 
   architectures = ["arm64"]
 
