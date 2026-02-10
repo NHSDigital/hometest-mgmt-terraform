@@ -1,0 +1,122 @@
+################################################################################
+# Shared Services Outputs
+# These values are consumed by environment-specific deployments
+################################################################################
+
+#------------------------------------------------------------------------------
+# KMS Key
+#------------------------------------------------------------------------------
+
+output "kms_key_arn" {
+  description = "ARN of the shared KMS key"
+  value       = aws_kms_key.main.arn
+}
+
+output "kms_key_id" {
+  description = "ID of the shared KMS key"
+  value       = aws_kms_key.main.key_id
+}
+
+output "kms_key_alias_arn" {
+  description = "ARN of the KMS key alias"
+  value       = aws_kms_alias.main.arn
+}
+
+#------------------------------------------------------------------------------
+# WAF Web ACLs
+#------------------------------------------------------------------------------
+
+output "waf_regional_arn" {
+  description = "ARN of the regional WAF Web ACL (for API Gateway)"
+  value       = aws_wafv2_web_acl.regional.arn
+}
+
+output "waf_regional_id" {
+  description = "ID of the regional WAF Web ACL"
+  value       = aws_wafv2_web_acl.regional.id
+}
+
+output "waf_cloudfront_arn" {
+  description = "ARN of the CloudFront WAF Web ACL (for CloudFront distributions)"
+  value       = aws_wafv2_web_acl.cloudfront.arn
+}
+
+output "waf_cloudfront_id" {
+  description = "ID of the CloudFront WAF Web ACL"
+  value       = aws_wafv2_web_acl.cloudfront.id
+}
+
+#------------------------------------------------------------------------------
+# ACM Certificates
+#------------------------------------------------------------------------------
+
+output "acm_regional_certificate_arn" {
+  description = "ARN of the regional ACM certificate (for API Gateway)"
+  value       = var.create_acm_certificates ? aws_acm_certificate.regional[0].arn : null
+}
+
+output "acm_cloudfront_certificate_arn" {
+  description = "ARN of the CloudFront ACM certificate (us-east-1)"
+  value       = var.create_acm_certificates ? aws_acm_certificate.cloudfront[0].arn : null
+}
+
+output "acm_regional_certificate_validated" {
+  description = "Whether the regional certificate has been validated"
+  value       = var.create_acm_certificates ? aws_acm_certificate_validation.regional[0].id != null : false
+}
+
+output "acm_cloudfront_certificate_validated" {
+  description = "Whether the CloudFront certificate has been validated"
+  value       = var.create_acm_certificates ? aws_acm_certificate_validation.cloudfront[0].id != null : false
+}
+
+#------------------------------------------------------------------------------
+# Deployment Artifacts
+#------------------------------------------------------------------------------
+
+output "deployment_artifacts_bucket_id" {
+  description = "ID of the deployment artifacts S3 bucket"
+  value       = aws_s3_bucket.deployment_artifacts.id
+}
+
+output "deployment_artifacts_bucket_arn" {
+  description = "ARN of the deployment artifacts S3 bucket"
+  value       = aws_s3_bucket.deployment_artifacts.arn
+}
+
+output "deployment_artifacts_bucket_domain" {
+  description = "Domain name of the deployment artifacts bucket"
+  value       = aws_s3_bucket.deployment_artifacts.bucket_domain_name
+}
+
+#------------------------------------------------------------------------------
+# Developer IAM
+#------------------------------------------------------------------------------
+
+output "developer_role_arn" {
+  description = "ARN of the developer deployment role"
+  value       = aws_iam_role.developer.arn
+}
+
+output "developer_role_name" {
+  description = "Name of the developer deployment role"
+  value       = aws_iam_role.developer.name
+}
+
+#------------------------------------------------------------------------------
+# Convenience Output - All shared resources for app deployment
+#------------------------------------------------------------------------------
+
+output "shared_config" {
+  description = "All shared service configuration for app deployments"
+  value = {
+    kms_key_arn                    = aws_kms_key.main.arn
+    waf_regional_arn               = aws_wafv2_web_acl.regional.arn
+    waf_cloudfront_arn             = aws_wafv2_web_acl.cloudfront.arn
+    acm_regional_certificate_arn   = var.create_acm_certificates ? aws_acm_certificate.regional[0].arn : null
+    acm_cloudfront_certificate_arn = var.create_acm_certificates ? aws_acm_certificate.cloudfront[0].arn : null
+    deployment_bucket_id           = aws_s3_bucket.deployment_artifacts.id
+    deployment_bucket_arn          = aws_s3_bucket.deployment_artifacts.arn
+    developer_role_arn             = aws_iam_role.developer.arn
+  }
+}
