@@ -31,6 +31,8 @@ module "liquibase_migrator_lambda" {
 
   architectures = ["arm64"]
 
+  recreate_missing_package = true
+
   environment_variables = {
     DB_USERNAME   = var.db_username
     DB_ADDRESS    = var.db_address

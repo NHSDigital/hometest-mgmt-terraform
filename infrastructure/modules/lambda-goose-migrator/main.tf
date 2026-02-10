@@ -39,6 +39,8 @@ module "goose_migrator_lambda" {
 
   architectures = ["arm64"]
 
+  recreate_missing_package = true
+
   source_path = [
     {
       path = "${path.module}/src"
