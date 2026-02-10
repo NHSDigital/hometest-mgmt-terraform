@@ -4,7 +4,7 @@ This repository contains Terraform infrastructure code with Terragrunt for manag
 
 ## Architecture Overview
 
-```
+```bash
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                           CORE INFRASTRUCTURE                                    │
 │  (Deployed once, shared across all environments)                                │
@@ -23,24 +23,13 @@ This repository contains Terraform infrastructure code with Terragrunt for manag
 │  (hometest-app - deployed per environment: dev, dev1, dev2, etc.)              │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                              CloudFront + S3                                     │
-│  ui.{env}.hometest.service.nhs.uk  ───►  S3 Bucket (SPA)                       │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  api1.{env}.hometest.service.nhs.uk ───► API Gateway 1 ───► Lambda (Users)     │
-│  api2.{env}.hometest.service.nhs.uk ───► API Gateway 2 ───► Lambda (Orders)    │
-└─────────────────────────────────────────────────────────────────────────────────┘
+│  {env}.hometest.service.nhs.uk  ───►  S3 Bucket (SPA)                       │
+─────────────────────────────────────────────────────────────────────────────────
 ```
-
-## Environments
-
-| Environment | UI URL | API 1 URL | API 2 URL |
-|-------------|--------|-----------|-----------|
-| dev | ui.dev.hometest.service.nhs.uk | api1.dev.hometest.service.nhs.uk | api2.dev.hometest.service.nhs.uk |
-| dev1 | ui.dev1.hometest.service.nhs.uk | api1.dev1.hometest.service.nhs.uk | api2.dev1.hometest.service.nhs.uk |
-| dev2 | ui.dev2.hometest.service.nhs.uk | api1.dev2.hometest.service.nhs.uk | api2.dev2.hometest.service.nhs.uk |
 
 ## Directory Structure
 
-```
+```bash
 infrastructure/
 ├── environments/
 │   ├── _envcommon/

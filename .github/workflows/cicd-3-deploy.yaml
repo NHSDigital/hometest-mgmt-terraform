@@ -30,11 +30,9 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
-        with:
-          path: hometest-mgmt-terraform
+
       - name: "Set CI/CD variables"
         id: variables
-        working-directory: hometest-mgmt-terraform
         run: |
           datetime=$(date -u +'%Y-%m-%dT%H:%M:%S%z')
           echo "build_datetime=$datetime" >> $GITHUB_OUTPUT
@@ -47,7 +45,6 @@ jobs:
           echo "version=$(head -n 1 .version 2> /dev/null || echo unknown)" >> $GITHUB_OUTPUT
           echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
       - name: "List variables"
-        working-directory: hometest-mgmt-terraform
         run: |
           export BUILD_DATETIME="${{ steps.variables.outputs.build_datetime }}"
           export BUILD_TIMESTAMP="${{ steps.variables.outputs.build_timestamp }}"
@@ -70,14 +67,12 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
-        with:
-          path: hometest-mgmt-terraform
 
       - name: Deploy TF Core/Bootstrap
         uses: ./.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: hometest-mgmt-terraform/infrastructure/environments/poc/core/bootstrap/
+          working_directory: infrastructure/environments/poc/core/bootstrap/
 
   deploy-network:
     name: "Deploy TF Core/Network"
@@ -90,15 +85,12 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
-        with:
-          path: hometest-mgmt-terraform
 
       - name: Deploy TF Core/Network
         uses: ./.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: hometest-mgmt-terraform/infrastructure/environments/poc/core/network/
-
+          working_directory: infrastructure/environments/poc/core/network/
 
   deploy-rds:
     name: "Deploy TF Core/rds-postgres"
@@ -111,14 +103,12 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
-        with:
-          path: hometest-mgmt-terraform
 
       - name: Deploy TF Core/rds-postgres
         uses: ./.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: hometest-mgmt-terraform/infrastructure/environments/poc/core/rds-postgres/
+          working_directory: infrastructure/environments/poc/core/rds-postgres/
 
   deploy-shared-services:
     name: "Deploy TF Core/shared_services"
@@ -131,15 +121,12 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
-        with:
-          path: hometest-mgmt-terraform
 
       - name: Deploy TF Core/shared_services
         uses: ./.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: hometest-mgmt-terraform/infrastructure/environments/poc/core/shared_services/
-
+          working_directory: infrastructure/environments/poc/core/shared_services/
 
 # TODO: Dev deployment to be fixed
 
