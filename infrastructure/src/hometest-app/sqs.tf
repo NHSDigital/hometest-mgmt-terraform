@@ -31,7 +31,7 @@ resource "aws_sqs_queue" "main" {
     maxReceiveCount     = 3
   })
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name = "${var.project_name}-${var.environment}-events"
   })
 }
@@ -51,7 +51,7 @@ resource "aws_sqs_queue" "dlq" {
   kms_master_key_id                 = var.kms_key_arn
   kms_data_key_reuse_period_seconds = 300
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name = "${var.project_name}-${var.environment}-events-dlq"
   })
 }

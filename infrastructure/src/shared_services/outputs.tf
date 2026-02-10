@@ -74,20 +74,20 @@ output "acm_cloudfront_certificate_validated" {
 # Deployment Artifacts
 #------------------------------------------------------------------------------
 
-output "deployment_artifacts_bucket_id" {
-  description = "ID of the deployment artifacts S3 bucket"
-  value       = aws_s3_bucket.deployment_artifacts.id
-}
+# output "deployment_artifacts_bucket_id" {
+#   description = "ID of the deployment artifacts S3 bucket"
+#   value       = aws_s3_bucket.deployment_artifacts.id
+# }
 
-output "deployment_artifacts_bucket_arn" {
-  description = "ARN of the deployment artifacts S3 bucket"
-  value       = aws_s3_bucket.deployment_artifacts.arn
-}
+# output "deployment_artifacts_bucket_arn" {
+#   description = "ARN of the deployment artifacts S3 bucket"
+#   value       = aws_s3_bucket.deployment_artifacts.arn
+# }
 
-output "deployment_artifacts_bucket_domain" {
-  description = "Domain name of the deployment artifacts bucket"
-  value       = aws_s3_bucket.deployment_artifacts.bucket_domain_name
-}
+# output "deployment_artifacts_bucket_domain" {
+#   description = "Domain name of the deployment artifacts bucket"
+#   value       = aws_s3_bucket.deployment_artifacts.bucket_domain_name
+# }
 
 #------------------------------------------------------------------------------
 # Developer IAM
@@ -115,8 +115,93 @@ output "shared_config" {
     waf_cloudfront_arn             = aws_wafv2_web_acl.cloudfront.arn
     acm_regional_certificate_arn   = var.create_acm_certificates ? aws_acm_certificate.regional[0].arn : null
     acm_cloudfront_certificate_arn = var.create_acm_certificates ? aws_acm_certificate.cloudfront[0].arn : null
-    deployment_bucket_id           = aws_s3_bucket.deployment_artifacts.id
-    deployment_bucket_arn          = aws_s3_bucket.deployment_artifacts.arn
-    developer_role_arn             = aws_iam_role.developer.arn
+    # deployment_bucket_id           = aws_s3_bucket.deployment_artifacts.id
+    # deployment_bucket_arn          = aws_s3_bucket.deployment_artifacts.arn
+    developer_role_arn = aws_iam_role.developer.arn
   }
+}
+
+#------------------------------------------------------------------------------
+# Cognito User Pool Outputs
+#------------------------------------------------------------------------------
+
+output "cognito_user_pool_id" {
+  description = "The ID of the Cognito User Pool"
+  value       = var.enable_cognito ? aws_cognito_user_pool.main[0].id : null
+}
+
+output "cognito_user_pool_arn" {
+  description = "The ARN of the Cognito User Pool"
+  value       = var.enable_cognito ? aws_cognito_user_pool.main[0].arn : null
+}
+
+output "cognito_user_pool_endpoint" {
+  description = "The endpoint of the Cognito User Pool"
+  value       = var.enable_cognito ? aws_cognito_user_pool.main[0].endpoint : null
+}
+
+output "cognito_user_pool_domain" {
+  description = "The domain of the Cognito User Pool"
+  value       = var.enable_cognito ? aws_cognito_user_pool_domain.main[0].domain : null
+}
+
+output "cognito_user_pool_domain_cloudfront_distribution" {
+  description = "The CloudFront distribution for the Cognito User Pool domain (for custom domains)"
+  value       = var.enable_cognito && var.cognito_custom_domain != "" ? aws_cognito_user_pool_domain.main[0].cloudfront_distribution : null
+}
+
+output "cognito_user_pool_client_id" {
+  description = "The ID of the Cognito User Pool Client"
+  value       = var.enable_cognito ? aws_cognito_user_pool_client.main[0].id : null
+}
+
+output "cognito_user_pool_client_secret" {
+  description = "The client secret of the Cognito User Pool Client"
+  value       = var.enable_cognito && var.cognito_generate_client_secret ? aws_cognito_user_pool_client.main[0].client_secret : null
+  sensitive   = true
+}
+
+output "cognito_resource_server_identifier" {
+  description = "The identifier of the Cognito Resource Server"
+  value       = var.enable_cognito && length(var.cognito_resource_server_scopes) > 0 ? aws_cognito_resource_server.main[0].identifier : null
+}
+
+output "cognito_resource_server_scopes" {
+  description = "The scopes of the Cognito Resource Server"
+  value       = var.enable_cognito && length(var.cognito_resource_server_scopes) > 0 ? aws_cognito_resource_server.main[0].scope_identifiers : null
+}
+
+output "cognito_identity_pool_id" {
+  description = "The ID of the Cognito Identity Pool"
+  value       = var.enable_cognito && var.enable_cognito_identity_pool ? aws_cognito_identity_pool.main[0].id : null
+}
+
+output "cognito_identity_pool_arn" {
+  description = "The ARN of the Cognito Identity Pool"
+  value       = var.enable_cognito && var.enable_cognito_identity_pool ? aws_cognito_identity_pool.main[0].arn : null
+}
+
+output "cognito_authenticated_role_arn" {
+  description = "The ARN of the IAM role for authenticated Cognito users"
+  value       = var.enable_cognito && var.enable_cognito_identity_pool ? aws_iam_role.cognito_authenticated[0].arn : null
+}
+
+output "cognito_unauthenticated_role_arn" {
+  description = "The ARN of the IAM role for unauthenticated Cognito users"
+  value       = var.enable_cognito && var.enable_cognito_identity_pool && var.cognito_allow_unauthenticated_identities ? aws_iam_role.cognito_unauthenticated[0].arn : null
+}
+
+output "cognito_hosted_ui_url" {
+  description = "The URL for the Cognito Hosted UI"
+  value       = var.enable_cognito ? "https://${aws_cognito_user_pool_domain.main[0].domain}.auth.${var.aws_region}.amazoncognito.com" : null
+}
+
+output "cognito_oauth_token_endpoint" {
+  description = "The OAuth token endpoint URL"
+  value       = var.enable_cognito ? "https://${aws_cognito_user_pool_domain.main[0].domain}.auth.${var.aws_region}.amazoncognito.com/oauth2/token" : null
+}
+
+output "cognito_oauth_authorize_endpoint" {
+  description = "The OAuth authorize endpoint URL"
+  value       = var.enable_cognito ? "https://${aws_cognito_user_pool_domain.main[0].domain}.auth.${var.aws_region}.amazoncognito.com/oauth2/authorize" : null
 }

@@ -9,7 +9,7 @@ locals {
   vpc_id = var.vpc_id
 
   common_tags = merge(var.tags, {
-    Component = "database"
+    Component = "rds-postgres"
   })
 }
 

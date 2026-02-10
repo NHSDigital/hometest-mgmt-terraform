@@ -21,6 +21,11 @@ locals {
     "prod"
   ]
 
+  aws_allowed_regions = [
+    "eu-west-2", # Primary region (London)
+    "us-east-1", # Required for global services (CloudFront, IAM, Route53, etc.)
+  ]
+
   # Allow all branches to assume the OIDC role (disables branch/environment restrictions)
   # WARNING: Set to true only for development/testing. Keep false for production.
   github_allow_all_branches = false
@@ -38,4 +43,7 @@ locals {
   #   "arn:aws:iam::aws:policy/AmazonS3FullAccess"
   # ]
 
+  enable_cognito        = true
+  cognito_callback_urls = ["https://dev.hometest.service.nhs.uk/callback"]
+  cognito_logout_urls   = ["https://dev.hometest.service.nhs.uk/logout"]
 }

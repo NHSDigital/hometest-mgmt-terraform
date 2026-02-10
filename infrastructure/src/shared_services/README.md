@@ -70,33 +70,95 @@ No modules.
 | [aws_acm_certificate_validation.cloudfront](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate_validation) | resource |
 | [aws_acm_certificate_validation.regional](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate_validation) | resource |
 | [aws_cloudwatch_log_group.waf_regional](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cognito_identity_pool.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_identity_pool) | resource |
+| [aws_cognito_identity_pool_roles_attachment.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_identity_pool_roles_attachment) | resource |
+| [aws_cognito_resource_server.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_resource_server) | resource |
+| [aws_cognito_user_pool.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_user_pool) | resource |
+| [aws_cognito_user_pool_client.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_user_pool_client) | resource |
+| [aws_cognito_user_pool_domain.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_user_pool_domain) | resource |
+| [aws_iam_role.cognito_authenticated](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role.cognito_unauthenticated](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role.developer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy.cognito_authenticated](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.cognito_unauthenticated](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_iam_role_policy.developer_lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_kms_alias.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
 | [aws_kms_key.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_resourcegroups_group.rg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/resourcegroups_group) | resource |
 | [aws_route53_record.regional_cert_validation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
-| [aws_s3_bucket.deployment_artifacts](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
-| [aws_s3_bucket_lifecycle_configuration.deployment_artifacts](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_lifecycle_configuration) | resource |
-| [aws_s3_bucket_public_access_block.deployment_artifacts](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
-| [aws_s3_bucket_server_side_encryption_configuration.deployment_artifacts](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
-| [aws_s3_bucket_versioning.deployment_artifacts](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
 | [aws_secretsmanager_secret.api_config](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
 | [aws_secretsmanager_secret_version.api_config](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
 | [aws_wafv2_web_acl.cloudfront](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl) | resource |
 | [aws_wafv2_web_acl.regional](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl) | resource |
 | [aws_wafv2_web_acl_logging_configuration.regional](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_logging_configuration) | resource |
-| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_iam_policy_document.cognito_identity_assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.cognito_identity_unauthenticated_assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_artifact_retention_days"></a> [artifact\_retention\_days](#input\_artifact\_retention\_days) | Days to retain old artifact versions | `number` | `30` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account ID for resources | `string` | n/a | yes |
+| <a name="input_aws_account_shortname"></a> [aws\_account\_shortname](#input\_aws\_account\_shortname) | AWS account short name/alias for resource naming | `string` | n/a | yes |
+| <a name="input_aws_allowed_regions"></a> [aws\_allowed\_regions](#input\_aws\_allowed\_regions) | List of AWS regions allowed for resource deployment | `list(string)` | <pre>[<br/>  "eu-west-2",<br/>  "us-east-1"<br/>]</pre> | no |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region for resources | `string` | n/a | yes |
+| <a name="input_cognito_access_token_validity"></a> [cognito\_access\_token\_validity](#input\_cognito\_access\_token\_validity) | Access token validity in time units | `number` | `60` | no |
+| <a name="input_cognito_access_token_validity_units"></a> [cognito\_access\_token\_validity\_units](#input\_cognito\_access\_token\_validity\_units) | Time unit for access token validity (seconds, minutes, hours, days) | `string` | `"minutes"` | no |
+| <a name="input_cognito_allow_admin_create_user_only"></a> [cognito\_allow\_admin\_create\_user\_only](#input\_cognito\_allow\_admin\_create\_user\_only) | Only allow administrators to create users (disable self-registration) | `bool` | `false` | no |
+| <a name="input_cognito_allow_classic_flow"></a> [cognito\_allow\_classic\_flow](#input\_cognito\_allow\_classic\_flow) | Allow classic (basic) authentication flow | `bool` | `false` | no |
+| <a name="input_cognito_allow_unauthenticated_identities"></a> [cognito\_allow\_unauthenticated\_identities](#input\_cognito\_allow\_unauthenticated\_identities) | Allow unauthenticated identities in the identity pool | `bool` | `false` | no |
+| <a name="input_cognito_allowed_oauth_flows"></a> [cognito\_allowed\_oauth\_flows](#input\_cognito\_allowed\_oauth\_flows) | Allowed OAuth flows (code, implicit, client\_credentials) | `list(string)` | <pre>[<br/>  "code"<br/>]</pre> | no |
+| <a name="input_cognito_allowed_oauth_flows_user_pool_client"></a> [cognito\_allowed\_oauth\_flows\_user\_pool\_client](#input\_cognito\_allowed\_oauth\_flows\_user\_pool\_client) | Whether OAuth flows are allowed for the user pool client | `bool` | `true` | no |
+| <a name="input_cognito_allowed_oauth_scopes"></a> [cognito\_allowed\_oauth\_scopes](#input\_cognito\_allowed\_oauth\_scopes) | Allowed OAuth scopes | `list(string)` | <pre>[<br/>  "email",<br/>  "openid",<br/>  "profile"<br/>]</pre> | no |
+| <a name="input_cognito_attributes_require_verification"></a> [cognito\_attributes\_require\_verification](#input\_cognito\_attributes\_require\_verification) | Attributes that require verification before update | `list(string)` | <pre>[<br/>  "email"<br/>]</pre> | no |
+| <a name="input_cognito_auto_verified_attributes"></a> [cognito\_auto\_verified\_attributes](#input\_cognito\_auto\_verified\_attributes) | Attributes to be auto-verified (email, phone\_number, or both) | `list(string)` | <pre>[<br/>  "email"<br/>]</pre> | no |
+| <a name="input_cognito_callback_urls"></a> [cognito\_callback\_urls](#input\_cognito\_callback\_urls) | List of allowed callback URLs for OAuth | `list(string)` | `[]` | no |
+| <a name="input_cognito_custom_attributes"></a> [cognito\_custom\_attributes](#input\_cognito\_custom\_attributes) | List of custom user attributes | <pre>list(object({<br/>    name                     = string<br/>    attribute_data_type      = string # String, Number, DateTime, Boolean<br/>    developer_only_attribute = optional(bool, false)<br/>    mutable                  = optional(bool, true)<br/>    required                 = optional(bool, false)<br/>    min_length               = optional(number, 0)<br/>    max_length               = optional(number, 2048)<br/>    min_value                = optional(number)<br/>    max_value                = optional(number)<br/>  }))</pre> | `[]` | no |
+| <a name="input_cognito_custom_domain"></a> [cognito\_custom\_domain](#input\_cognito\_custom\_domain) | Custom domain for Cognito hosted UI (leave empty for default AWS domain) | `string` | `""` | no |
+| <a name="input_cognito_deletion_protection"></a> [cognito\_deletion\_protection](#input\_cognito\_deletion\_protection) | Enable deletion protection for the user pool | `bool` | `true` | no |
+| <a name="input_cognito_device_challenge_required"></a> [cognito\_device\_challenge\_required](#input\_cognito\_device\_challenge\_required) | Require device challenge on new devices | `bool` | `true` | no |
+| <a name="input_cognito_device_remember_on_prompt"></a> [cognito\_device\_remember\_on\_prompt](#input\_cognito\_device\_remember\_on\_prompt) | Only remember devices when user opts in | `bool` | `true` | no |
+| <a name="input_cognito_domain_certificate_arn"></a> [cognito\_domain\_certificate\_arn](#input\_cognito\_domain\_certificate\_arn) | ACM certificate ARN for custom domain (required if using custom domain) | `string` | `null` | no |
+| <a name="input_cognito_email_sending_account"></a> [cognito\_email\_sending\_account](#input\_cognito\_email\_sending\_account) | Email sending account type (COGNITO\_DEFAULT or DEVELOPER) | `string` | `"COGNITO_DEFAULT"` | no |
+| <a name="input_cognito_enable_propagate_user_context"></a> [cognito\_enable\_propagate\_user\_context](#input\_cognito\_enable\_propagate\_user\_context) | Enable propagation of additional user context data | `bool` | `false` | no |
+| <a name="input_cognito_enable_token_revocation"></a> [cognito\_enable\_token\_revocation](#input\_cognito\_enable\_token\_revocation) | Enable token revocation | `bool` | `true` | no |
+| <a name="input_cognito_explicit_auth_flows"></a> [cognito\_explicit\_auth\_flows](#input\_cognito\_explicit\_auth\_flows) | Explicit authentication flows enabled | `list(string)` | <pre>[<br/>  "ALLOW_REFRESH_TOKEN_AUTH",<br/>  "ALLOW_USER_SRP_AUTH"<br/>]</pre> | no |
+| <a name="input_cognito_from_email_address"></a> [cognito\_from\_email\_address](#input\_cognito\_from\_email\_address) | From email address for Cognito emails (requires DEVELOPER email sending account) | `string` | `null` | no |
+| <a name="input_cognito_generate_client_secret"></a> [cognito\_generate\_client\_secret](#input\_cognito\_generate\_client\_secret) | Generate a client secret for the app client | `bool` | `true` | no |
+| <a name="input_cognito_id_token_validity"></a> [cognito\_id\_token\_validity](#input\_cognito\_id\_token\_validity) | ID token validity in time units | `number` | `60` | no |
+| <a name="input_cognito_id_token_validity_units"></a> [cognito\_id\_token\_validity\_units](#input\_cognito\_id\_token\_validity\_units) | Time unit for ID token validity (seconds, minutes, hours, days) | `string` | `"minutes"` | no |
+| <a name="input_cognito_invite_email_message"></a> [cognito\_invite\_email\_message](#input\_cognito\_invite\_email\_message) | Email message for user invitation emails. Must contain {username} and {####} placeholders. | `string` | `"Your username is {username} and temporary password is {####}."` | no |
+| <a name="input_cognito_invite_email_subject"></a> [cognito\_invite\_email\_subject](#input\_cognito\_invite\_email\_subject) | Email subject for user invitation emails | `string` | `"Your temporary password"` | no |
+| <a name="input_cognito_invite_sms_message"></a> [cognito\_invite\_sms\_message](#input\_cognito\_invite\_sms\_message) | SMS message for user invitation. Must contain {username} and {####} placeholders. | `string` | `"Your username is {username} and temporary password is {####}."` | no |
+| <a name="input_cognito_logout_urls"></a> [cognito\_logout\_urls](#input\_cognito\_logout\_urls) | List of allowed logout URLs | `list(string)` | `[]` | no |
+| <a name="input_cognito_mfa_configuration"></a> [cognito\_mfa\_configuration](#input\_cognito\_mfa\_configuration) | MFA configuration (OFF, ON, OPTIONAL) | `string` | `"OPTIONAL"` | no |
+| <a name="input_cognito_password_minimum_length"></a> [cognito\_password\_minimum\_length](#input\_cognito\_password\_minimum\_length) | Minimum password length | `number` | `12` | no |
+| <a name="input_cognito_password_require_lowercase"></a> [cognito\_password\_require\_lowercase](#input\_cognito\_password\_require\_lowercase) | Require lowercase letters in password | `bool` | `true` | no |
+| <a name="input_cognito_password_require_numbers"></a> [cognito\_password\_require\_numbers](#input\_cognito\_password\_require\_numbers) | Require numbers in password | `bool` | `true` | no |
+| <a name="input_cognito_password_require_symbols"></a> [cognito\_password\_require\_symbols](#input\_cognito\_password\_require\_symbols) | Require symbols in password | `bool` | `true` | no |
+| <a name="input_cognito_password_require_uppercase"></a> [cognito\_password\_require\_uppercase](#input\_cognito\_password\_require\_uppercase) | Require uppercase letters in password | `bool` | `true` | no |
+| <a name="input_cognito_prevent_user_existence_errors"></a> [cognito\_prevent\_user\_existence\_errors](#input\_cognito\_prevent\_user\_existence\_errors) | How to handle user existence errors (LEGACY or ENABLED) | `string` | `"ENABLED"` | no |
+| <a name="input_cognito_read_attributes"></a> [cognito\_read\_attributes](#input\_cognito\_read\_attributes) | List of user pool attributes the app client can read | `list(string)` | <pre>[<br/>  "email",<br/>  "email_verified",<br/>  "name"<br/>]</pre> | no |
+| <a name="input_cognito_refresh_token_validity"></a> [cognito\_refresh\_token\_validity](#input\_cognito\_refresh\_token\_validity) | Refresh token validity in time units | `number` | `30` | no |
+| <a name="input_cognito_refresh_token_validity_units"></a> [cognito\_refresh\_token\_validity\_units](#input\_cognito\_refresh\_token\_validity\_units) | Time unit for refresh token validity (seconds, minutes, hours, days) | `string` | `"days"` | no |
+| <a name="input_cognito_resource_server_identifier"></a> [cognito\_resource\_server\_identifier](#input\_cognito\_resource\_server\_identifier) | Identifier for the resource server (defaults to route53\_zone\_name) | `string` | `""` | no |
+| <a name="input_cognito_resource_server_scopes"></a> [cognito\_resource\_server\_scopes](#input\_cognito\_resource\_server\_scopes) | List of scopes for the resource server | <pre>list(object({<br/>    name        = string<br/>    description = string<br/>  }))</pre> | `[]` | no |
+| <a name="input_cognito_server_side_token_check"></a> [cognito\_server\_side\_token\_check](#input\_cognito\_server\_side\_token\_check) | Enable server-side token validation | `bool` | `true` | no |
+| <a name="input_cognito_ses_email_identity_arn"></a> [cognito\_ses\_email\_identity\_arn](#input\_cognito\_ses\_email\_identity\_arn) | ARN of SES verified email identity (required if email\_sending\_account is DEVELOPER) | `string` | `null` | no |
+| <a name="input_cognito_supported_identity_providers"></a> [cognito\_supported\_identity\_providers](#input\_cognito\_supported\_identity\_providers) | Supported identity providers (COGNITO, Facebook, Google, etc.) | `list(string)` | <pre>[<br/>  "COGNITO"<br/>]</pre> | no |
+| <a name="input_cognito_temporary_password_validity_days"></a> [cognito\_temporary\_password\_validity\_days](#input\_cognito\_temporary\_password\_validity\_days) | Number of days temporary passwords are valid | `number` | `7` | no |
+| <a name="input_cognito_username_case_sensitive"></a> [cognito\_username\_case\_sensitive](#input\_cognito\_username\_case\_sensitive) | Whether usernames are case sensitive | `bool` | `false` | no |
+| <a name="input_cognito_verification_email_message"></a> [cognito\_verification\_email\_message](#input\_cognito\_verification\_email\_message) | Email message for verification emails. Must contain {####} placeholder. | `string` | `"Your verification code is {####}."` | no |
+| <a name="input_cognito_verification_email_message_by_link"></a> [cognito\_verification\_email\_message\_by\_link](#input\_cognito\_verification\_email\_message\_by\_link) | Email message for verification link emails. Must contain {##Verify Email##} placeholder. | `string` | `"Please click the link below to verify your email address. {##Verify Email##}"` | no |
+| <a name="input_cognito_verification_email_option"></a> [cognito\_verification\_email\_option](#input\_cognito\_verification\_email\_option) | Verification email option (CONFIRM\_WITH\_LINK or CONFIRM\_WITH\_CODE) | `string` | `"CONFIRM_WITH_CODE"` | no |
+| <a name="input_cognito_verification_email_subject"></a> [cognito\_verification\_email\_subject](#input\_cognito\_verification\_email\_subject) | Email subject for verification emails | `string` | `"Your verification code"` | no |
+| <a name="input_cognito_verification_email_subject_by_link"></a> [cognito\_verification\_email\_subject\_by\_link](#input\_cognito\_verification\_email\_subject\_by\_link) | Email subject for verification link emails | `string` | `"Verify your email"` | no |
+| <a name="input_cognito_write_attributes"></a> [cognito\_write\_attributes](#input\_cognito\_write\_attributes) | List of user pool attributes the app client can write | `list(string)` | <pre>[<br/>  "email",<br/>  "name"<br/>]</pre> | no |
 | <a name="input_create_acm_certificates"></a> [create\_acm\_certificates](#input\_create\_acm\_certificates) | Whether to create ACM certificates | `bool` | `true` | no |
 | <a name="input_developer_account_arns"></a> [developer\_account\_arns](#input\_developer\_account\_arns) | List of AWS account ARNs allowed to assume the developer role | `list(string)` | `[]` | no |
 | <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | Base domain name for certificates (e.g., hometest.service.nhs.uk) | `string` | n/a | yes |
+| <a name="input_enable_cognito"></a> [enable\_cognito](#input\_enable\_cognito) | Enable AWS Cognito User Pool for authentication | `bool` | `false` | no |
+| <a name="input_enable_cognito_identity_pool"></a> [enable\_cognito\_identity\_pool](#input\_enable\_cognito\_identity\_pool) | Enable Cognito Identity Pool for federated identities | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (core for shared services) | `string` | `"core"` | no |
 | <a name="input_kms_deletion_window_days"></a> [kms\_deletion\_window\_days](#input\_kms\_deletion\_window\_days) | Number of days before KMS key is deleted | `number` | `30` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project | `string` | n/a | yes |
@@ -116,9 +178,22 @@ No modules.
 | <a name="output_acm_regional_certificate_validated"></a> [acm\_regional\_certificate\_validated](#output\_acm\_regional\_certificate\_validated) | Whether the regional certificate has been validated |
 | <a name="output_api_config_secret_arn"></a> [api\_config\_secret\_arn](#output\_api\_config\_secret\_arn) | ARN of the API config secret |
 | <a name="output_api_config_secret_name"></a> [api\_config\_secret\_name](#output\_api\_config\_secret\_name) | Name of the API config secret |
-| <a name="output_deployment_artifacts_bucket_arn"></a> [deployment\_artifacts\_bucket\_arn](#output\_deployment\_artifacts\_bucket\_arn) | ARN of the deployment artifacts S3 bucket |
-| <a name="output_deployment_artifacts_bucket_domain"></a> [deployment\_artifacts\_bucket\_domain](#output\_deployment\_artifacts\_bucket\_domain) | Domain name of the deployment artifacts bucket |
-| <a name="output_deployment_artifacts_bucket_id"></a> [deployment\_artifacts\_bucket\_id](#output\_deployment\_artifacts\_bucket\_id) | ID of the deployment artifacts S3 bucket |
+| <a name="output_cognito_authenticated_role_arn"></a> [cognito\_authenticated\_role\_arn](#output\_cognito\_authenticated\_role\_arn) | The ARN of the IAM role for authenticated Cognito users |
+| <a name="output_cognito_hosted_ui_url"></a> [cognito\_hosted\_ui\_url](#output\_cognito\_hosted\_ui\_url) | The URL for the Cognito Hosted UI |
+| <a name="output_cognito_identity_pool_arn"></a> [cognito\_identity\_pool\_arn](#output\_cognito\_identity\_pool\_arn) | The ARN of the Cognito Identity Pool |
+| <a name="output_cognito_identity_pool_id"></a> [cognito\_identity\_pool\_id](#output\_cognito\_identity\_pool\_id) | The ID of the Cognito Identity Pool |
+| <a name="output_cognito_oauth_authorize_endpoint"></a> [cognito\_oauth\_authorize\_endpoint](#output\_cognito\_oauth\_authorize\_endpoint) | The OAuth authorize endpoint URL |
+| <a name="output_cognito_oauth_token_endpoint"></a> [cognito\_oauth\_token\_endpoint](#output\_cognito\_oauth\_token\_endpoint) | The OAuth token endpoint URL |
+| <a name="output_cognito_resource_server_identifier"></a> [cognito\_resource\_server\_identifier](#output\_cognito\_resource\_server\_identifier) | The identifier of the Cognito Resource Server |
+| <a name="output_cognito_resource_server_scopes"></a> [cognito\_resource\_server\_scopes](#output\_cognito\_resource\_server\_scopes) | The scopes of the Cognito Resource Server |
+| <a name="output_cognito_unauthenticated_role_arn"></a> [cognito\_unauthenticated\_role\_arn](#output\_cognito\_unauthenticated\_role\_arn) | The ARN of the IAM role for unauthenticated Cognito users |
+| <a name="output_cognito_user_pool_arn"></a> [cognito\_user\_pool\_arn](#output\_cognito\_user\_pool\_arn) | The ARN of the Cognito User Pool |
+| <a name="output_cognito_user_pool_client_id"></a> [cognito\_user\_pool\_client\_id](#output\_cognito\_user\_pool\_client\_id) | The ID of the Cognito User Pool Client |
+| <a name="output_cognito_user_pool_client_secret"></a> [cognito\_user\_pool\_client\_secret](#output\_cognito\_user\_pool\_client\_secret) | The client secret of the Cognito User Pool Client |
+| <a name="output_cognito_user_pool_domain"></a> [cognito\_user\_pool\_domain](#output\_cognito\_user\_pool\_domain) | The domain of the Cognito User Pool |
+| <a name="output_cognito_user_pool_domain_cloudfront_distribution"></a> [cognito\_user\_pool\_domain\_cloudfront\_distribution](#output\_cognito\_user\_pool\_domain\_cloudfront\_distribution) | The CloudFront distribution for the Cognito User Pool domain (for custom domains) |
+| <a name="output_cognito_user_pool_endpoint"></a> [cognito\_user\_pool\_endpoint](#output\_cognito\_user\_pool\_endpoint) | The endpoint of the Cognito User Pool |
+| <a name="output_cognito_user_pool_id"></a> [cognito\_user\_pool\_id](#output\_cognito\_user\_pool\_id) | The ID of the Cognito User Pool |
 | <a name="output_developer_role_arn"></a> [developer\_role\_arn](#output\_developer\_role\_arn) | ARN of the developer deployment role |
 | <a name="output_developer_role_name"></a> [developer\_role\_name](#output\_developer\_role\_name) | Name of the developer deployment role |
 | <a name="output_kms_key_alias_arn"></a> [kms\_key\_alias\_arn](#output\_kms\_key\_alias\_arn) | ARN of the KMS key alias |

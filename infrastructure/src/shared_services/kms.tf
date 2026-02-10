@@ -14,7 +14,7 @@ resource "aws_kms_key" "main" {
         Sid    = "EnableIAMUserPermissions"
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::${local.account_id}:root"
+          AWS = "arn:aws:iam::${var.aws_account_id}:root"
         }
         Action   = "kms:*"
         Resource = "*"
@@ -35,7 +35,7 @@ resource "aws_kms_key" "main" {
         Resource = "*"
         Condition = {
           ArnLike = {
-            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${var.aws_region}:${local.account_id}:*"
+            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:*"
           }
         }
       },
@@ -76,19 +76,19 @@ resource "aws_kms_key" "main" {
         Resource = "*"
         Condition = {
           StringEquals = {
-            "aws:SourceAccount" = local.account_id
+            "aws:SourceAccount" = var.aws_account_id
           }
         }
       }
     ]
   })
 
-  tags = merge(var.tags, {
-    Name = "${local.resource_prefix}-kms-key"
+  tags = merge(local.common_tags, {
+    Name = "${local.resource_prefix}-kms-shared-services-key"
   })
 }
 
 resource "aws_kms_alias" "main" {
-  name          = "alias/${local.resource_prefix}"
+  name          = "alias/${local.resource_prefix}-kms-shared-services-key"
   target_key_id = aws_kms_key.main.key_id
 }

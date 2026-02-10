@@ -10,7 +10,7 @@ module "cloudfront_spa" {
 
   project_name   = var.project_name
   environment    = var.environment
-  aws_account_id = local.account_id
+  aws_account_id = var.aws_account_id
 
   enable_spa_routing = true
   price_class        = var.cloudfront_price_class
@@ -21,7 +21,7 @@ module "cloudfront_spa" {
   # Dynamic API Gateway origins from lambdas map
   api_origins = {
     for prefix in local.api_prefixes : prefix => {
-      domain_name = "${aws_api_gateway_rest_api.apis[prefix].id}.execute-api.${local.region}.amazonaws.com"
+      domain_name = "${aws_api_gateway_rest_api.apis[prefix].id}.execute-api.${var.aws_region}.amazonaws.com"
       origin_path = "/${var.api_stage_name}"
     }
   }
@@ -44,7 +44,7 @@ module "cloudfront_spa" {
   enable_access_logging      = var.enable_cloudfront_logging
   logging_bucket_domain_name = var.cloudfront_logging_bucket_domain_name
 
-  tags = var.tags
+  tags = local.common_tags
 
   depends_on = [
     aws_api_gateway_deployment.apis
