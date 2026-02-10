@@ -97,7 +97,8 @@ inputs = {
   # Note: AWS Secrets Manager ARNs have a random suffix, use -* wildcard to match
   lambda_secrets_arns = [
     dependency.rds_postgres.outputs.db_instance_master_user_secret_arn,
-    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/preventex-dev-client-secret-*"
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/preventex-dev-client-secret-*",
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/sh24-dev-client-secret-*"
   ]
 
   # KMS keys for secrets encrypted with different keys than shared_services KMS
@@ -198,6 +199,7 @@ inputs = {
         SUPPLIER_CLIENT_ID          = "zrgmf33Zdk-515BIMrds29v9Z3KzoH-tfYDgxLsYtZE"
         SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/sh24-dev-client-secret"
         SUPPLIER_ORDER_PATH         = "/order"
+        SUPPLIER_OAUTH_SCOPE        = "order results"
         # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
       }
     }

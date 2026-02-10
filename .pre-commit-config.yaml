@@ -78,7 +78,7 @@ repos:
           - --args=--quiet
           - --args=--config-file __GIT_WORKING_DIR__/.checkov.yaml
 
-  - repo: https://github.com/zricethezav/gitleaks
+  - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
     hooks:
       - id: gitleaks
