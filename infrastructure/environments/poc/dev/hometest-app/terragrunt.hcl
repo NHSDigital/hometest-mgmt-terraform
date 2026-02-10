@@ -80,10 +80,10 @@ inputs = {
   route53_zone_id           = dependency.network.outputs.route53_zone_id
 
   # Dependencies from shared_services
-  kms_key_arn           = dependency.shared_services.outputs.kms_key_arn
-  waf_cloudfront_arn    = dependency.shared_services.outputs.waf_cloudfront_arn
-  deployment_bucket_id  = dependency.shared_services.outputs.deployment_artifacts_bucket_id
-  deployment_bucket_arn = dependency.shared_services.outputs.deployment_artifacts_bucket_arn
+  kms_key_arn        = dependency.shared_services.outputs.kms_key_arn
+  waf_cloudfront_arn = dependency.shared_services.outputs.waf_cloudfront_arn
+  # deployment_bucket_id  = dependency.shared_services.outputs.deployment_artifacts_bucket_id
+  # deployment_bucket_arn = dependency.shared_services.outputs.deployment_artifacts_bucket_arn
 
   # Lambda Configuration
   enable_vpc_access  = true

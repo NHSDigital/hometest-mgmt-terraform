@@ -84,11 +84,11 @@ resource "aws_kms_key" "main" {
   })
 
   tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-kms-key"
+    Name = "${local.resource_prefix}-kms-shared-services-key"
   })
 }
 
 resource "aws_kms_alias" "main" {
-  name          = "alias/${local.resource_prefix}"
+  name          = "alias/${local.resource_prefix}-kms-shared-services-key"
   target_key_id = aws_kms_key.main.key_id
 }

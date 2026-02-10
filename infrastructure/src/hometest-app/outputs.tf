@@ -129,10 +129,10 @@ output "environment_urls" {
 # Deployment Info
 #------------------------------------------------------------------------------
 
-output "deployment_bucket" {
-  description = "S3 bucket for deployment artifacts"
-  value       = var.deployment_bucket_id
-}
+# output "deployment_bucket" {
+#   description = "S3 bucket for deployment artifacts"
+#   value       = var.deployment_bucket_id
+# }
 
 output "deployment_info" {
   description = "Information for CI/CD deployments"
@@ -140,7 +140,7 @@ output "deployment_info" {
     environment   = var.environment
     spa_bucket    = module.cloudfront_spa.s3_bucket_id
     cloudfront_id = module.cloudfront_spa.distribution_id
-    deploy_bucket = var.deployment_bucket_id
+    # deploy_bucket = var.deployment_bucket_id
     lambda_prefix = "lambdas/${var.environment}"
     lambdas       = [for name, _ in local.all_lambdas : name]
     api_prefixes  = [for prefix in local.api_prefixes : prefix]

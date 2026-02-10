@@ -84,11 +84,11 @@ variable "route53_zone_id" {
 # Deployment Artifacts
 ################################################################################
 
-variable "artifact_retention_days" {
-  description = "Days to retain old artifact versions"
-  type        = number
-  default     = 30
-}
+# variable "artifact_retention_days" {
+#   description = "Days to retain old artifact versions"
+#   type        = number
+#   default     = 30
+# }
 
 ################################################################################
 # Developer IAM
@@ -514,4 +514,14 @@ variable "cognito_server_side_token_check" {
   description = "Enable server-side token validation"
   type        = bool
   default     = true
+}
+
+################################################################################
+# Region Configuration
+################################################################################
+
+variable "aws_allowed_regions" {
+  description = "List of AWS regions allowed for resource deployment"
+  type        = list(string)
+  default     = ["eu-west-2", "us-east-1"]
 }

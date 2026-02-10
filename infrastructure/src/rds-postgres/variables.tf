@@ -273,3 +273,13 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+################################################################################
+# Region Configuration
+################################################################################
+
+variable "aws_allowed_regions" {
+  description = "List of AWS regions allowed for resource deployment"
+  type        = list(string)
+  default     = ["eu-west-2", "us-east-1"]
+}

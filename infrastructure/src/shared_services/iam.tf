@@ -51,19 +51,19 @@ resource "aws_iam_role_policy" "developer_lambda" {
         ]
         Resource = "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.project_name}-*"
       },
-      {
-        Sid    = "S3ArtifactAccess"
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          aws_s3_bucket.deployment_artifacts.arn,
-          "${aws_s3_bucket.deployment_artifacts.arn}/*"
-        ]
-      },
+      # {
+      #   Sid    = "S3ArtifactAccess"
+      #   Effect = "Allow"
+      #   Action = [
+      #     "s3:GetObject",
+      #     "s3:PutObject",
+      #     "s3:ListBucket"
+      #   ]
+      #   Resource = [
+      #     aws_s3_bucket.deployment_artifacts.arn,
+      #     "${aws_s3_bucket.deployment_artifacts.arn}/*"
+      #   ]
+      # },
       {
         Sid    = "CloudFrontInvalidation"
         Effect = "Allow"

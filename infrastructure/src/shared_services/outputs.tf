@@ -74,20 +74,20 @@ output "acm_cloudfront_certificate_validated" {
 # Deployment Artifacts
 #------------------------------------------------------------------------------
 
-output "deployment_artifacts_bucket_id" {
-  description = "ID of the deployment artifacts S3 bucket"
-  value       = aws_s3_bucket.deployment_artifacts.id
-}
+# output "deployment_artifacts_bucket_id" {
+#   description = "ID of the deployment artifacts S3 bucket"
+#   value       = aws_s3_bucket.deployment_artifacts.id
+# }
 
-output "deployment_artifacts_bucket_arn" {
-  description = "ARN of the deployment artifacts S3 bucket"
-  value       = aws_s3_bucket.deployment_artifacts.arn
-}
+# output "deployment_artifacts_bucket_arn" {
+#   description = "ARN of the deployment artifacts S3 bucket"
+#   value       = aws_s3_bucket.deployment_artifacts.arn
+# }
 
-output "deployment_artifacts_bucket_domain" {
-  description = "Domain name of the deployment artifacts bucket"
-  value       = aws_s3_bucket.deployment_artifacts.bucket_domain_name
-}
+# output "deployment_artifacts_bucket_domain" {
+#   description = "Domain name of the deployment artifacts bucket"
+#   value       = aws_s3_bucket.deployment_artifacts.bucket_domain_name
+# }
 
 #------------------------------------------------------------------------------
 # Developer IAM
@@ -115,9 +115,9 @@ output "shared_config" {
     waf_cloudfront_arn             = aws_wafv2_web_acl.cloudfront.arn
     acm_regional_certificate_arn   = var.create_acm_certificates ? aws_acm_certificate.regional[0].arn : null
     acm_cloudfront_certificate_arn = var.create_acm_certificates ? aws_acm_certificate.cloudfront[0].arn : null
-    deployment_bucket_id           = aws_s3_bucket.deployment_artifacts.id
-    deployment_bucket_arn          = aws_s3_bucket.deployment_artifacts.arn
-    developer_role_arn             = aws_iam_role.developer.arn
+    # deployment_bucket_id           = aws_s3_bucket.deployment_artifacts.id
+    # deployment_bucket_arn          = aws_s3_bucket.deployment_artifacts.arn
+    developer_role_arn = aws_iam_role.developer.arn
   }
 }
 

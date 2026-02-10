@@ -21,6 +21,11 @@ locals {
     "prod"
   ]
 
+  aws_allowed_regions = [
+    "eu-west-2", # Primary region (London)
+    "us-east-1", # Required for global services (CloudFront, IAM, Route53, etc.)
+  ]
+
   # Allow all branches to assume the OIDC role (disables branch/environment restrictions)
   # WARNING: Set to true only for development/testing. Keep false for production.
   github_allow_all_branches = false
