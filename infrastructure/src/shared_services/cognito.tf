@@ -161,9 +161,9 @@ resource "aws_cognito_user_pool_client" "main" {
   supported_identity_providers         = var.cognito_supported_identity_providers
 
   # Security settings
-  generate_secret                      = var.cognito_generate_client_secret
-  prevent_user_existence_errors        = var.cognito_prevent_user_existence_errors
-  enable_token_revocation              = var.cognito_enable_token_revocation
+  generate_secret                               = var.cognito_generate_client_secret
+  prevent_user_existence_errors                 = var.cognito_prevent_user_existence_errors
+  enable_token_revocation                       = var.cognito_enable_token_revocation
   enable_propagate_additional_user_context_data = var.cognito_enable_propagate_user_context
 
   # Auth flows
@@ -181,7 +181,7 @@ resource "aws_cognito_user_pool_client" "main" {
 resource "aws_cognito_resource_server" "main" {
   count = var.enable_cognito && length(var.cognito_resource_server_scopes) > 0 ? 1 : 0
 
-  identifier   = var.cognito_resource_server_identifier != "" ? var.cognito_resource_server_identifier : "https://${var.route53_zone_name}"
+  identifier   = var.cognito_resource_server_identifier != "" ? var.cognito_resource_server_identifier : "https://${var.domain_name}"
   name         = "${local.resource_prefix}-resource-server"
   user_pool_id = aws_cognito_user_pool.main[0].id
 
