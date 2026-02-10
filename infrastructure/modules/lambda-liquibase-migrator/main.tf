@@ -19,10 +19,10 @@ module "liquibase_migrator_lambda" {
   version = "8.5.0"
 
   function_name          = "liquibase-migrator"
-  handler                = "com.example.LiquibaseMigrator::handleRequest"
+  handler                = "example.Handler"
   runtime                = "java25"
   create_role            = false
-  lambda_role            = aws_iam_role.lambda_goose_migrator.arn
+  lambda_role            = aws_iam_role.lambda_liquibase_migrator.arn
   timeout                = 300
   memory_size            = 128
   publish                = true
@@ -32,6 +32,8 @@ module "liquibase_migrator_lambda" {
   ignore_source_code_hash  = true
   recreate_missing_package = false
 
+  architectures = ["arm64"]
+
   environment_variables = {
     DB_USERNAME   = var.db_username
     DB_ADDRESS    = var.db_address
@@ -40,11 +42,9 @@ module "liquibase_migrator_lambda" {
     DB_SECRET_ARN = var.db_secret_arn
   }
 
-  architectures = ["amd64"]
-
   source_path = [
     {
-      path = "${path.module}/src"
+      path = "${path.module}/code"
       commands = [
         "gradle build -i",
         "cd build/output",

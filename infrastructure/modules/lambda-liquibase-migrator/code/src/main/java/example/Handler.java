@@ -1,4 +1,4 @@
-package lambda.liquibase.migrator;
+package example;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -20,7 +20,7 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class LiquibaseMigrator implements RequestHandler<Map<String, String>, String> {
+public class Handler implements RequestHandler<Map<String, String>, String> {
     private String getDBPassword(String secretArn) throws Exception {
         AWSSecretsManager client = AWSSecretsManagerClientBuilder.defaultClient();
         GetSecretValueRequest getSecretValueRequest = new GetSecretValueRequest().withSecretId(secretArn);
@@ -29,7 +29,7 @@ public class LiquibaseMigrator implements RequestHandler<Map<String, String>, St
         ObjectMapper mapper = new ObjectMapper();
         JsonNode secretJson = mapper.readTree(secretString);
         if (!secretJson.has("password")) {
-            throw new Exception("password field not found in secret");
+            throw new IllegalArgumentException("password field not found in secret");
         }
         return secretJson.get("password").asText();
     }
@@ -41,7 +41,7 @@ public class LiquibaseMigrator implements RequestHandler<Map<String, String>, St
         String dbname = System.getenv("DB_NAME");
         String secretArn = System.getenv("DB_SECRET_ARN");
         if (user == null || host == null || port == null || dbname == null || secretArn == null) {
-            throw new Exception("Missing one or more required environment variables");
+            throw new IllegalArgumentException("Missing one or more required environment variables");
         }
         String password = getDBPassword(secretArn);
         return String.format("jdbc:postgresql://%s:%s/%s?user=%s&password=%s", host, port, dbname, user, password);
@@ -57,7 +57,7 @@ public class LiquibaseMigrator implements RequestHandler<Map<String, String>, St
                 liquibase.update((String) null);
                 return "Migration successful";
             }
-        } catch (LiquibaseException | java.sql.SQLException | Exception e) {
+        } catch (Exception e) {
             return "Migration failed: " + e.getMessage();
         }
     }
