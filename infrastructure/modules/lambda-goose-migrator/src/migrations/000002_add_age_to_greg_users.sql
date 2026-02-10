@@ -1,5 +1,5 @@
 -- +goose Up
-ALTER TABLE greg-users ADD COLUMN age INT;
+ALTER TABLE greg_users ADD COLUMN age INT;
 
 -- +goose Down
-ALTER TABLE greg-users DROP COLUMN age;
+ALTER TABLE greg_users DROP COLUMN age;
