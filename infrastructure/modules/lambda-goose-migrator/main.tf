@@ -19,7 +19,7 @@ module "goose_migrator_lambda" {
   version = "8.5.0"
 
   function_name          = "goose-migrator"
-  handler                = "bootstrap"
+  handler                = "bootstrap" # Do not change - for custom runtimes, this must be 'bootstrap'
   runtime                = "provided.al2023"
   create_role            = false
   lambda_role            = aws_iam_role.lambda_goose_migrator.arn
