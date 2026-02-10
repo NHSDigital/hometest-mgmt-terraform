@@ -44,7 +44,7 @@ module "cloudfront_spa" {
   enable_access_logging      = var.enable_cloudfront_logging
   logging_bucket_domain_name = var.cloudfront_logging_bucket_domain_name
 
-  tags = var.tags
+  tags = local.common_tags
 
   depends_on = [
     aws_api_gateway_deployment.apis

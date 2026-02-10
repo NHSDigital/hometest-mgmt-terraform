@@ -103,7 +103,7 @@ module "lambdas" {
     each.value.environment
   )
 
-  tags = var.tags
+  tags = local.common_tags
 }
 
 ################################################################################

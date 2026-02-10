@@ -5,7 +5,7 @@
 resource "aws_s3_bucket" "deployment_artifacts" {
   bucket = "${local.resource_prefix}-deployment-artifacts"
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-deployment-artifacts"
   })
 }

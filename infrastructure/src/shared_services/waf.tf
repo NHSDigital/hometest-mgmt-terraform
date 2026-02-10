@@ -109,7 +109,7 @@ resource "aws_wafv2_web_acl" "regional" {
     sampled_requests_enabled   = true
   }
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-regional-waf"
   })
 }
@@ -181,7 +181,7 @@ resource "aws_wafv2_web_acl" "cloudfront" {
     sampled_requests_enabled   = true
   }
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-cloudfront-waf"
   })
 }
@@ -195,7 +195,7 @@ resource "aws_cloudwatch_log_group" "waf_regional" {
   retention_in_days = var.waf_log_retention_days
   kms_key_id        = aws_kms_key.main.arn
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name = "aws-waf-logs-${local.resource_prefix}-regional"
   })
 }

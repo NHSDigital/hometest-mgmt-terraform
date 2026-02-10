@@ -83,7 +83,7 @@ resource "aws_kms_key" "main" {
     ]
   })
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-kms-key"
   })
 }

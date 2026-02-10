@@ -25,7 +25,7 @@ resource "aws_iam_role" "developer" {
 
   max_session_duration = 3600
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-developer-role"
   })
 }

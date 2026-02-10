@@ -25,7 +25,7 @@ resource "aws_api_gateway_rest_api" "apis" {
     types = [var.api_endpoint_type]
   }
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name      = "${var.project_name}-${var.environment}-${each.key}"
     ApiPrefix = each.key
   })
@@ -171,7 +171,7 @@ resource "aws_iam_role" "api_gateway_cloudwatch" {
     ]
   })
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name = "${var.project_name}-${var.environment}-apigw-cloudwatch-role"
   })
 }
@@ -230,7 +230,7 @@ resource "aws_api_gateway_stage" "apis" {
     })
   }
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name      = "${var.project_name}-${var.environment}-${each.key}-${var.api_stage_name}"
     ApiPrefix = each.key
   })
@@ -249,7 +249,7 @@ resource "aws_cloudwatch_log_group" "api_gateway" {
   retention_in_days = var.log_retention_days
   kms_key_id        = var.kms_key_arn
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name      = "${var.project_name}-${var.environment}-${each.key}-logs"
     ApiPrefix = each.key
   })

@@ -41,7 +41,7 @@ module "lambda_iam" {
   sqs_queue_arns      = local.sqs_queue_arns
   enable_sqs_access   = length(local.sqs_lambdas) > 0 || length(var.lambda_sqs_queue_arns) > 0
 
-  tags = var.tags
+  tags = local.common_tags
 
   depends_on = [aws_sqs_queue.main]
 }
