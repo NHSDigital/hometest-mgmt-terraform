@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 
 	_ "github.com/lib/pq"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -83,7 +84,8 @@ func HandleRequest(ctx context.Context) (Response, error) {
 		return Response{"Failed to build DB URL: " + err.Error()}, err
 	}
 
-	log.Printf("Connecting to DB: %s", url)
+	// Redact password in log output
+	log.Printf("Connecting to DB: %s", redactPassword(url))
 	db, err := sql.Open("postgres", url)
 	if err != nil {
 		log.Printf("Failed to connect to DB: %v", err)
@@ -92,13 +94,20 @@ func HandleRequest(ctx context.Context) (Response, error) {
 	defer db.Close()
 
 	log.Println("Running goose.Up migrations...")
-	if err := goose.Up(db, "migrations_sql"); err != nil {
+	if err := goose.Up(db, "migrations"); err != nil {
 		log.Printf("Migration failed: %v", err)
 		return Response{"Migration failed"}, err
 	}
 
 	log.Println("Migration successful")
 	return Response{"Migration successful"}, nil
+}
+
+// redactPassword redacts the password in a Postgres connection URL for logging
+func redactPassword(url string) string {
+	// Example: postgres://user:password@host:port/db?params
+	// Replace :password@ with :[REDACTED]@
+	return regexp.MustCompile(`:(.*)@`).ReplaceAllString(url, ":[REDACTED]@")
 }
 
 func main() {
