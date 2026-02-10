@@ -49,7 +49,7 @@ resource "aws_iam_role_policy" "developer_lambda" {
           "lambda:CreateAlias",
           "lambda:UpdateAlias"
         ]
-        Resource = "arn:aws:lambda:${local.region}:${local.account_id}:function:${var.project_name}-*"
+        Resource = "arn:aws:lambda:${var.aws_region}:${local.account_id}:function:${var.project_name}-*"
       },
       {
         Sid    = "S3ArtifactAccess"

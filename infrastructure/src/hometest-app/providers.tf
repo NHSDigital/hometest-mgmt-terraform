@@ -26,8 +26,8 @@ provider "aws" {
 }
 
 # Provider for us-east-1 (required for Route 53 query logging CloudWatch logs)
-provider "aws" {
-  alias               = "us_east_1"
-  region              = "us-east-1"
-  allowed_account_ids = [var.aws_account_id]
-}
+# provider "aws" {
+#   alias               = "us_east_1"
+#   region              = "us-east-1"
+#   allowed_account_ids = [var.aws_account_id]
+# }
