@@ -1,8 +1,3 @@
-variable "lambda_role_arn" {
-  description = "IAM role ARN for Lambda"
-  type        = string
-}
-
 variable "db_username" {
   description = "Database username"
   type        = string

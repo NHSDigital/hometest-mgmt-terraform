@@ -19,7 +19,7 @@ module "goose_migrator_lambda" {
   version = "8.5.0"
 
   function_name          = "goose-migrator"
-  handler                = "main"
+  handler                = "bootstrap"
   runtime                = "provided.al2023"
   create_role            = false
   lambda_role            = aws_iam_role.lambda_goose_migrator.arn
@@ -29,8 +29,15 @@ module "goose_migrator_lambda" {
   vpc_subnet_ids         = var.subnet_ids
   vpc_security_group_ids = var.security_group_ids
 
+  ignore_source_code_hash  = true
+  recreate_missing_package = true
+
   environment_variables = {
-    DB_URL = var.db_url
+    DB_USERNAME   = var.db_username
+    DB_ADDRESS    = var.db_address
+    DB_PORT       = var.db_port
+    DB_NAME       = var.db_name
+    DB_SECRET_ARN = var.db_secret_arn
   }
 
   architectures = ["arm64"]
@@ -39,12 +46,14 @@ module "goose_migrator_lambda" {
     {
       path = "${path.module}/src"
       commands = [
-        "GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o migrations main.go",
+        "go mod tidy",
+        "GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o bootstrap main.go",
         ":zip",
       ]
       patterns = [
         "!.*",
-        "migrations",
+        "bootstrap",
+        "migrations_sql/.*",
       ]
     }
   ]

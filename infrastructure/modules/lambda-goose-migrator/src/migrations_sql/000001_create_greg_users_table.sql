@@ -1,9 +1,9 @@
 -- +goose Up
-CREATE TABLE users (
+CREATE TABLE greg-users (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE
 );
 
 -- +goose Down
-DROP TABLE users;
+DROP TABLE greg-users;

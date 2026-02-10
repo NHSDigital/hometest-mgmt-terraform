@@ -1,10 +1,25 @@
-variable "lambda_role_arn" {
-  description = "IAM role ARN for Lambda"
+variable "db_username" {
+  description = "Database username"
   type        = string
 }
 
-variable "db_url" {
-  description = "Postgres connection string"
+variable "db_address" {
+  description = "Database address"
+  type        = string
+}
+
+variable "db_port" {
+  description = "Database port"
+  type        = string
+}
+
+variable "db_name" {
+  description = "Database name"
+  type        = string
+}
+
+variable "db_secret_arn" {
+  description = "Secret ARN for DB password"
   type        = string
 }
 

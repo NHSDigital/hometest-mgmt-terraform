@@ -4,14 +4,15 @@ include "root" {
 }
 
 terraform {
-  source = "../../../../../modules/lambda-goose-migrator"
+  source = "../../../../modules/lambda-goose-migrator"
 }
 
-dependencies {
-  paths = [
-    "../network",
-    "../rds-postgres"
-  ]
+dependency "rds-postgres" {
+  config_path = "../rds-postgres"
+}
+
+dependency "network" {
+  config_path = "../network"
 }
 
 inputs = {
@@ -23,6 +24,9 @@ inputs = {
   db_secret_arn = dependency.rds-postgres.outputs.db_instance_master_user_secret_arn
 
   # Network configuration for Lambda
-  subnet_ids         = dependency.network.outputs.data_subnet_ids
-  security_group_ids = [dependency.rds-postgres.outputs.security_group_id]
+  subnet_ids         = dependency.network.outputs.private_subnet_ids
+  security_group_ids = [
+    dependency.rds-postgres.outputs.security_group_id,
+    dependency.network.outputs.lambda_security_group_id
+  ]
 }
