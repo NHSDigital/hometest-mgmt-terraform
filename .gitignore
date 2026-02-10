@@ -133,3 +133,4 @@ venv/
 
 # Ignore Go build outputs
 **/lambda-goose-migrator/src/bootstrap
+ 

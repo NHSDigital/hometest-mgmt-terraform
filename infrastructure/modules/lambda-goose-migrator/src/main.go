@@ -67,7 +67,7 @@ func buildPostgresURL() (string, error) {
 		return "", fmt.Errorf("failed to retrieve DB password: %w", err)
 	}
 
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbname), nil
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=require", user, password, host, port, dbname), nil
 }
 
 // Response struct
@@ -78,37 +78,37 @@ type Response struct {
 // HandleRequest is the handler function for the Lambda function
 func HandleRequest(ctx context.Context) (Response, error) {
 	log.Println("Starting Goose migration Lambda handler")
-	       url, err := buildPostgresURL()
-	       if err != nil {
-		       // Redact password if present in error string
-		       log.Printf("Failed to build DB URL: %s", redactPassword(err.Error()))
-		       return Response{"Failed to build DB URL: " + redactPassword(err.Error())}, err
-	       }
+		url, err := buildPostgresURL()
+		if err != nil {
+			// Redact password if present in error string
+			log.Printf("Failed to build DB URL: %s", redactPassword(err.Error()))
+			return Response{"Failed to build DB URL: " + redactPassword(err.Error())}, err
+		}
 
-	       // Redact password in log output
-	       log.Printf("Connecting to DB: %s", redactPassword(url))
-	       db, err := sql.Open("postgres", url)
-	       if err != nil {
-		       log.Printf("Failed to connect to DB: %s", redactPassword(err.Error()))
-		       return Response{"Failed to connect to DB"}, err
-	       }
-	       defer db.Close()
+		// Redact password in log output
+		log.Printf("Connecting to DB: %s", redactPassword(url))
+		db, err := sql.Open("postgres", url)
+		if err != nil {
+			log.Printf("Failed to connect to DB: %s", redactPassword(err.Error()))
+			return Response{"Failed to connect to DB"}, err
+		}
+		defer db.Close()
 
-	       log.Println("Running goose.Up migrations...")
-	       if err := goose.Up(db, "migrations"); err != nil {
-		       log.Printf("Migration failed: %s", redactPassword(err.Error()))
-		       return Response{"Migration failed"}, err
-	       }
+		log.Println("Running goose.Up migrations...")
+		if err := goose.Up(db, "migrations_sql"); err != nil {
+			log.Printf("Migration failed: %s", redactPassword(err.Error()))
+			return Response{"Migration failed"}, err
+		}
 
-	       log.Println("Migration successful")
-	       return Response{"Migration successful"}, nil
+		log.Println("Migration successful")
+		return Response{"Migration successful"}, nil
 }
 
 // redactPassword redacts the password in a Postgres connection URL for logging
 func redactPassword(url string) string {
 	// Example: postgres://user:password@host:port/db?params
-	// Replace :password@ with :[REDACTED]@
-	return regexp.MustCompile(`:(.*)@`).ReplaceAllString(url, ":[REDACTED]@")
+	// Replace :password@ with :[REDACTED]@ (non-greedy)
+	return regexp.MustCompile(`:[^:@/]+@`).ReplaceAllString(url, ":[REDACTED]@")
 }
 
 func main() {
