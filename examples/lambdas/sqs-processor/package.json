@@ -1,0 +1,17 @@
+{
+  "name": "sqs-processor",
+  "version": "1.0.0",
+  "description": "SQS Processor Lambda - Event-driven message handler",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "package": "cd dist && zip -r ../sqs-processor.zip .",
+    "clean": "rm -rf dist sqs-processor.zip"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.131",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  }
+}

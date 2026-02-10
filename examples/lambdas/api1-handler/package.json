@@ -1,0 +1,19 @@
+{
+  "name": "api1-handler",
+  "version": "1.0.0",
+  "description": "API 1 Handler Lambda - Example user service with Secrets Manager integration",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "package": "cd dist && zip -r ../api1-handler.zip .",
+    "clean": "rm -rf dist api1-handler.zip"
+  },
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.400.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.131",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  }
+}

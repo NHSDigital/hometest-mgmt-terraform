@@ -1,0 +1,249 @@
+:root {
+  --nhs-blue: #005eb8;
+  --nhs-dark-blue: #003087;
+  --nhs-bright-blue: #0072ce;
+  --nhs-light-blue: #41b6e6;
+  --nhs-aqua-blue: #00a9ce;
+  --nhs-black: #231f20;
+  --nhs-dark-grey: #425563;
+  --nhs-mid-grey: #768692;
+  --nhs-pale-grey: #e8edee;
+  --nhs-white: #ffffff;
+  --nhs-green: #007f3b;
+  --nhs-red: #da291c;
+  --nhs-yellow: #ffb81c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Frutiger', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--nhs-pale-grey);
+  color: var(--nhs-black);
+  line-height: 1.6;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-container {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  width: 100%;
+}
+
+/* Header */
+.header {
+  background-color: var(--nhs-blue);
+  padding: 16px 20px;
+  color: var(--nhs-white);
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.header p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* Cards */
+.card {
+  background: var(--nhs-white);
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.card-header {
+  background: var(--nhs-blue);
+  color: var(--nhs-white);
+  padding: 12px 16px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.card-body {
+  padding: 16px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-primary {
+  background-color: var(--nhs-green);
+  color: var(--nhs-white);
+}
+
+.btn-primary:hover {
+  background-color: #006630;
+}
+
+.btn-secondary {
+  background-color: var(--nhs-mid-grey);
+  color: var(--nhs-white);
+}
+
+.btn-secondary:hover {
+  background-color: var(--nhs-dark-grey);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Tables */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--nhs-pale-grey);
+}
+
+.table th {
+  background-color: var(--nhs-pale-grey);
+  font-weight: 600;
+  color: var(--nhs-dark-grey);
+}
+
+.table tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Status badges */
+.status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-pending {
+  background-color: var(--nhs-yellow);
+  color: var(--nhs-black);
+}
+
+.status-completed {
+  background-color: var(--nhs-green);
+  color: var(--nhs-white);
+}
+
+.status-in_transit {
+  background-color: var(--nhs-light-blue);
+  color: var(--nhs-black);
+}
+
+/* Grid layout */
+.grid {
+  display: grid;
+  gap: 20px;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Health indicators */
+.health-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.health-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.health-dot.healthy {
+  background-color: var(--nhs-green);
+}
+
+.health-dot.unhealthy {
+  background-color: var(--nhs-red);
+}
+
+.health-dot.loading {
+  background-color: var(--nhs-yellow);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--nhs-pale-grey);
+  border-top-color: var(--nhs-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error message */
+.error-message {
+  background-color: #fce4e4;
+  border: 1px solid var(--nhs-red);
+  color: var(--nhs-red);
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+/* Config info */
+.config-info {
+  background-color: #e8f4fd;
+  border-left: 4px solid var(--nhs-blue);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.config-info code {
+  background-color: var(--nhs-pale-grey);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+}

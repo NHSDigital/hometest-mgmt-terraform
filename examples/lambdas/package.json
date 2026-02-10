@@ -1,0 +1,18 @@
+{
+  "name": "hometest-example-lambdas",
+  "version": "1.0.0",
+  "description": "Example Lambda functions for HomeTest Service",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run build:api1 && npm run build:api2 && npm run build:sqs",
+    "build:api1": "cd api1-handler && npm run build",
+    "build:api2": "cd api2-handler && npm run build",
+    "build:sqs": "cd sqs-processor && npm run build",
+    "package": "npm run package:api1 && npm run package:api2 && npm run package:sqs",
+    "package:api1": "cd api1-handler && npm run package",
+    "package:api2": "cd api2-handler && npm run package",
+    "package:sqs": "cd sqs-processor && npm run package"
+  },
+  "author": "NHS Digital",
+  "license": "MIT"
+}
