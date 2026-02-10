@@ -4,6 +4,14 @@ description: "Perform pre-commit checks"
 runs:
   using: "composite"
   steps:
+    - name: Cache pre-commit hooks
+      uses: actions/cache@v5
+      with:
+        path: ~/.cache/pre-commit
+        key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+        restore-keys: |
+          pre-commit-${{ runner.os }}-
+
     - name: Install pre-commit hooks
       shell: bash
       run: |

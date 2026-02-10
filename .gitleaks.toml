@@ -1,0 +1,103 @@
+# Gitleaks configuration for Terraform/Terragrunt repository
+# https://github.com/gitleaks/gitleaks
+
+title = "Gitleaks config for hometest-mgmt-terraform"
+
+[extend]
+# Extend the default gitleaks rules
+useDefault = true
+
+# -----------------------------------------------------------------------------
+# Allowlist - Global
+# Paths and patterns that should be ignored across all rules
+# -----------------------------------------------------------------------------
+[allowlist]
+  description = "Global allowlist"
+
+  paths = [
+    # Terragrunt cache directories
+    '''\.terragrunt-cache''',
+    # Terraform plugin/provider cache
+    '''\.terraform''',
+    # External modules
+    '''\.external_modules''',
+    # Trivy cache
+    '''\.trivy-cache''',
+    # Lock files
+    '''\.terraform\.lock\.hcl''',
+    # Git directory
+    '''\.git/''',
+  ]
+
+  regexTarget = "match"
+  regexes = [
+    # Terraform/Terragrunt mock outputs (fake ARNs, IDs used in mock_outputs blocks)
+    '''mock-[\w-]+''',
+    # Terraform placeholder/example values
+    '''CHANGE_ME''',
+    '''REPLACE_ME''',
+    '''YOUR-[\w-]+-HERE''',
+    # AWS example account IDs commonly used in docs/comments
+    '''123456789012''',
+    '''000000000000''',
+  ]
+
+# -----------------------------------------------------------------------------
+# Custom Rules
+# -----------------------------------------------------------------------------
+
+# Detect hardcoded AWS Account IDs (real ones, not example 123456789012)
+[[rules]]
+  id = "aws-account-id"
+  description = "Hardcoded AWS Account ID"
+  regex = '''\b(?:AKIA|ASIA)[A-Z0-9]{16}\b'''
+  tags = ["aws", "credentials"]
+
+# -----------------------------------------------------------------------------
+# Rule Allowlists - Per-rule exceptions
+# Terraform and Terragrunt files commonly contain ARN patterns, resource
+# references, and policy documents that look like secrets but aren't.
+# -----------------------------------------------------------------------------
+
+# Allow AWS ARN patterns in Terraform/Terragrunt files (policy documents, resource refs)
+[[rules]]
+  id = "terraform-arn-patterns"
+  description = "Allow ARN patterns in Terraform files"
+  regex = '''arn:aws:[a-z0-9-]+:[a-z0-9-]*:\d{12}:'''
+  tags = ["terraform"]
+  [rules.allowlist]
+    paths = [
+      '''\.tf$''',
+      '''\.hcl$''',
+      '''\.tfvars$''',
+    ]
+
+# -----------------------------------------------------------------------------
+# Rule-specific allowlists for default gitleaks rules
+# These override specific default rules to reduce false positives
+# -----------------------------------------------------------------------------
+
+# generic-api-key - very noisy in Terraform/Terragrunt repos
+[[rules]]
+  id = "generic-api-key"
+  description = "Generic API Key"
+  regex = '''(?i)(?:api[_-]?key|apikey)\s*(?:=|:)\s*['"]([a-z0-9]{32,})['"]'''
+  tags = ["api", "key"]
+  [rules.allowlist]
+    paths = [
+      # Terraform variable definitions often have "api_key" in names
+      '''variables\.tf$''',
+      # Terragrunt input blocks
+      '''terragrunt\.hcl$''',
+    ]
+    regexTarget = "match"
+    regexes = [
+      # Terraform variable references
+      '''var\.\w+''',
+      '''local\.\w+''',
+      '''data\.\w+''',
+      '''module\.\w+''',
+      # Terragrunt references
+      '''dependency\.\w+''',
+      '''include\.\w+''',
+    ]
