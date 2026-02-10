@@ -55,7 +55,6 @@ public class Handler implements RequestHandler<Map<String, String>, String> {
             throw new IllegalArgumentException("Missing one or more required environment variables");
         }
         String password = getDBPassword(secretArn);
-        String jdbcUrl = String.format("jdbc:postgresql://%s:%s/%s?user=%s&password=[REDACTED]", host, port, dbname, user);
         logger.info("JDBC URL built: jdbc:postgresql://{}:{}...", host, port);
         return String.format("jdbc:postgresql://%s:%s/%s?user=%s&password=%s", host, port, dbname, user, password);
     }

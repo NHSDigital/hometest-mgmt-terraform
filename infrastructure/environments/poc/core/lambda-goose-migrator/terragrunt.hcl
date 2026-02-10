@@ -26,7 +26,7 @@ inputs = {
   # Network configuration for Lambda
   subnet_ids         = dependency.network.outputs.private_subnet_ids
   security_group_ids = [
-    dependency.rds-postgres.outputs.security_group_id,
+    dependency.network.outputs.lambda_rds_security_group_id,
     dependency.network.outputs.lambda_security_group_id
   ]
 }

@@ -78,29 +78,30 @@ type Response struct {
 // HandleRequest is the handler function for the Lambda function
 func HandleRequest(ctx context.Context) (Response, error) {
 	log.Println("Starting Goose migration Lambda handler")
-	url, err := buildPostgresURL()
-	if err != nil {
-		log.Printf("Failed to build DB URL: %v", err)
-		return Response{"Failed to build DB URL: " + err.Error()}, err
-	}
+	       url, err := buildPostgresURL()
+	       if err != nil {
+		       // Redact password if present in error string
+		       log.Printf("Failed to build DB URL: %s", redactPassword(err.Error()))
+		       return Response{"Failed to build DB URL: " + redactPassword(err.Error())}, err
+	       }
 
-	// Redact password in log output
-	log.Printf("Connecting to DB: %s", redactPassword(url))
-	db, err := sql.Open("postgres", url)
-	if err != nil {
-		log.Printf("Failed to connect to DB: %v", err)
-		return Response{"Failed to connect to DB"}, err
-	}
-	defer db.Close()
+	       // Redact password in log output
+	       log.Printf("Connecting to DB: %s", redactPassword(url))
+	       db, err := sql.Open("postgres", url)
+	       if err != nil {
+		       log.Printf("Failed to connect to DB: %s", redactPassword(err.Error()))
+		       return Response{"Failed to connect to DB"}, err
+	       }
+	       defer db.Close()
 
-	log.Println("Running goose.Up migrations...")
-	if err := goose.Up(db, "migrations"); err != nil {
-		log.Printf("Migration failed: %v", err)
-		return Response{"Migration failed"}, err
-	}
+	       log.Println("Running goose.Up migrations...")
+	       if err := goose.Up(db, "migrations"); err != nil {
+		       log.Printf("Migration failed: %s", redactPassword(err.Error()))
+		       return Response{"Migration failed"}, err
+	       }
 
-	log.Println("Migration successful")
-	return Response{"Migration successful"}, nil
+	       log.Println("Migration successful")
+	       return Response{"Migration successful"}, nil
 }
 
 // redactPassword redacts the password in a Postgres connection URL for logging
