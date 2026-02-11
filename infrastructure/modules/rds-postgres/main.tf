@@ -80,12 +80,18 @@ module "aurora" {
     max_capacity = var.serverlessv2_max_capacity
   }
 
+  cluster_instance_class = "db.serverless"
+
   storage_encrypted = var.storage_encrypted
   kms_key_id        = var.kms_key_id
 
   backup_retention_period      = var.backup_retention_period
   preferred_backup_window      = var.backup_window
   preferred_maintenance_window = var.maintenance_window
+
+  instances = {
+    one = {}
+  }
 
   tags = local.db_instance_tags
 }
