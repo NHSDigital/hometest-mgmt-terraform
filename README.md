@@ -21,11 +21,11 @@ Infrastructure as Code (IaC) for the NHS HomeTest Service using Terraform and Te
 
 This repository manages the AWS infrastructure for the NHS HomeTest Service, including:
 
+- **Bootstrap** — Terraform state backend (S3 + KMS) and GitHub OIDC for CI/CD
 - **Networking** — VPC, subnets, NAT gateways, Network Firewall, VPC endpoints, Route53
 - **Shared Services** — WAF, ACM certificates, KMS, Cognito, IAM roles
 - **RDS PostgreSQL** — Managed database for the HomeTest application
 - **HomeTest Application** — Lambda functions, API Gateway, CloudFront + S3 SPA, SQS queues
-- **Bootstrap** — Terraform state backend (S3 + KMS) and GitHub OIDC for CI/CD
 
 ## Architecture
 
@@ -202,6 +202,7 @@ make test
 ## Documentation
 
 - [Infrastructure Guide](./infrastructure/README.md) — full infrastructure documentation
+- [Creating a New Environment](./docs/developer-guides/Creating_New_Environment.md) — step-by-step guide
 - [Developer Guides](./docs/developer-guides/) — Bash/Make, Docker, Terraform scripting
 - [User Guides](./docs/user-guides/) — static analysis, Git hooks, secrets scanning
 - [ADRs](./docs/adr/) — architecture decision records
