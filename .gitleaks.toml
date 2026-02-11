@@ -1,0 +1,5 @@
+[allowlist]
+description = "Ignore ID providers that are not secrets"
+regexes = [
+    '''SUPPLIER_CLIENT_ID'''
+]
