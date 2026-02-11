@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"net/url"
 
 	_ "github.com/lib/pq"
 	"github.com/aws/aws-lambda-go/lambda"
