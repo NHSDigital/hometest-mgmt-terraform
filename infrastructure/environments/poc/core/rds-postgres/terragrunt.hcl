@@ -35,7 +35,6 @@ dependency "network" {
 inputs = {
   # Network configuration from dependency
   vpc_id               = dependency.network.outputs.vpc_id
-  subnet_ids           = dependency.network.outputs.data_subnet_ids
   db_subnet_group_name = dependency.network.outputs.db_subnet_group_name
 
 

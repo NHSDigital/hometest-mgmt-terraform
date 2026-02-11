@@ -86,18 +86,6 @@ variable "username" {
 ################################################################################
 # Network Configuration
 ################################################################################
-
-variable "subnet_ids" {
-  description = "A list of VPC subnet IDs for the DB subnet group. Required unless db_subnet_group_name is provided."
-  type        = list(string)
-  default     = []
-
-  validation {
-    condition     = length(var.subnet_ids) == 0 || length(var.subnet_ids) >= 2
-    error_message = "If providing subnet_ids, you must provide at least 2 subnets for RDS subnet group."
-  }
-}
-
 variable "publicly_accessible" {
   description = "Bool to control if instance is publicly accessible"
   type        = bool
