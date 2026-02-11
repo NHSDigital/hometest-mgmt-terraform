@@ -4,7 +4,7 @@
 ################################################################################
 
 locals {
-  queue_name = var.queue_name_suffix != null ? "${var.project_name}-${var.environment}-${var.queue_name_suffix}" : "${var.project_name}-${var.environment}-queue"
+  queue_name = "${var.project_name}-${var.environment}-${var.queue_name_suffix}"
   dlq_name   = var.create_dlq ? "${local.queue_name}-dlq" : null
 
   common_tags = merge(

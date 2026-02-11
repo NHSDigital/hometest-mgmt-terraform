@@ -68,17 +68,3 @@ output "alarm_dlq_depth_arn" {
   description = "ARN of the DLQ depth CloudWatch alarm"
   value       = var.create_dlq && var.create_cloudwatch_alarms ? aws_cloudwatch_metric_alarm.dlq_depth[0].arn : null
 }
-
-#------------------------------------------------------------------------------
-# Resource Group Outputs
-#------------------------------------------------------------------------------
-
-output "resource_group_name" {
-  description = "Name of the AWS Resource Group"
-  value       = var.create_resource_group ? aws_resourcegroups_group.this[0].name : null
-}
-
-output "resource_group_arn" {
-  description = "ARN of the AWS Resource Group"
-  value       = var.create_resource_group ? aws_resourcegroups_group.this[0].arn : null
-}
