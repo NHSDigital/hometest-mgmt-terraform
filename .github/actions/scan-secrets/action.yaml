@@ -1,12 +1,22 @@
 ---
-name: "Scan secrets"
-description: "Scan secrets"
-runs:
-  using: "composite"
-  steps:
-    - name: "Scan secrets"
-      shell: bash
-      run: |
-        ## TODO: Consider reverting to `whole-history` after addressing any existing secrets in history.
-        # Please do not change this `check=whole-history` setting, as new patterns may be added or history may be rewritten.
-        check=whole-history ./scripts/githooks/scan-secrets.sh
+name: "Scan-secrets"
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  scan-secrets:
+    name: "Gitleaks Scan"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "Run Gitleaks"
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          config-path: .gitleaks.toml
