@@ -18,4 +18,15 @@ regexes = [
 ]
 
 [allowlist]
-paths = ['''.terraform.lock.hcl''', '''poetry.lock''', '''yarn.lock''', '''.*\.tfvars\.example''', '''.*README\.md''']
+paths = [
+  '''.terraform.lock.hcl''',
+  '''poetry.lock''',
+  '''yarn.lock''',
+  '''.*\.tfvars\.example''',
+  '''.*README\.md'''
+]
+regexes = [
+  '''^SUPPLIER_CLIENT_ID\s*[=:]?\s*"[^"]*"''',
+  '''^SUPPLIER_CLIENT_SECRET_NAME\s*[=:]?\s*"[^"]*"''',
+  '''^SUPPLIER_OAUTH_TOKEN_PATH\s*[=:]?\s*"[^"]*"'''
+]
