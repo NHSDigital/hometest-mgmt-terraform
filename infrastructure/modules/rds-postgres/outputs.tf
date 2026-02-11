@@ -1,3 +1,10 @@
+
+# Expose the ARN of the master user secret in Secrets Manager (if managed)
+output "db_instance_master_user_secret_arn" {
+  description = "ARN of master password secret in Secrets Manager"
+  value       = module.aurora.cluster_master_user_secret_arn
+  sensitive   = true
+}
 ################################################################################
 # RDS Instance Outputs
 ################################################################################

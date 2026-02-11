@@ -109,5 +109,6 @@ module "rds_postgres" {
 | <a name="output_cluster_master_username"></a> [cluster\_master\_username](#output\_cluster\_master\_username) | The master username for the Aurora cluster |
 | <a name="output_cluster_port"></a> [cluster\_port](#output\_cluster\_port) | The port the Aurora cluster listens on |
 | <a name="output_connection_string"></a> [connection\_string](#output\_connection\_string) | Aurora PostgreSQL connection string (without password) |
+| <a name="output_db_instance_master_user_secret_arn"></a> [db\_instance\_master\_user\_secret\_arn](#output\_db\_instance\_master\_user\_secret\_arn) | ARN of master password secret in Secrets Manager |
 | <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | The ID of the VPC |
 <!-- END_TF_DOCS -->

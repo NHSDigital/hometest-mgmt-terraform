@@ -17,10 +17,10 @@ dependency "network" {
 
 inputs = {
   # Pass DB connection info as separate variables for Lambda to construct the URL
-  db_username   = dependency.rds-postgres.outputs.db_instance_username
-  db_address    = dependency.rds-postgres.outputs.db_instance_address
-  db_port       = dependency.rds-postgres.outputs.db_instance_port
-  db_name       = dependency.rds-postgres.outputs.db_instance_name
+  db_username   = dependency.rds-postgres.outputs.cluster_master_username
+  db_address    = dependency.rds-postgres.outputs.cluster_endpoint
+  db_port       = dependency.rds-postgres.outputs.cluster_port
+  db_name       = dependency.rds-postgres.outputs.cluster_database_name
   db_secret_arn = dependency.rds-postgres.outputs.db_instance_master_user_secret_arn
 
   # Network configuration for Lambda
