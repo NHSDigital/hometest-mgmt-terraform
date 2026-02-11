@@ -52,22 +52,26 @@ func getDBPassword(secretArn string) (string, error) {
 
 // buildPostgresURL constructs the PostgreSQL connection URL from environment variables and Secrets Manager
 func buildPostgresURL() (string, error) {
-	user := os.Getenv("DB_USERNAME")
-	host := os.Getenv("DB_ADDRESS")
-	port := os.Getenv("DB_PORT")
-	dbname := os.Getenv("DB_NAME")
-	secretArn := os.Getenv("DB_SECRET_ARN")
+	       user := os.Getenv("DB_USERNAME")
+	       host := os.Getenv("DB_ADDRESS")
+	       port := os.Getenv("DB_PORT")
+	       dbname := os.Getenv("DB_NAME")
+	       secretArn := os.Getenv("DB_SECRET_ARN")
 
-	if user == "" || host == "" || port == "" || dbname == "" || secretArn == "" {
-		return "", fmt.Errorf("missing one or more required environment variables")
-	}
+	       if user == "" || host == "" || port == "" || dbname == "" || secretArn == "" {
+		       return "", fmt.Errorf("missing one or more required environment variables")
+	       }
 
-	password, err := getDBPassword(secretArn)
-	if err != nil {
-		return "", fmt.Errorf("failed to retrieve DB password: %w", err)
-	}
+	       password, err := getDBPassword(secretArn)
+	       if err != nil {
+		       return "", fmt.Errorf("failed to retrieve DB password: %w", err)
+	       }
 
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=require", user, password, host, port, dbname), nil
+	       // URL-encode username and password
+	       encodedUser := url.QueryEscape(user)
+	       encodedPassword := url.QueryEscape(password)
+
+	       return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=require", encodedUser, encodedPassword, host, port, dbname), nil
 }
 
 // Response struct
