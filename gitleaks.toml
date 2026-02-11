@@ -1,6 +1,0 @@
-[allowlist]  
-regexes = [
-  "SUPPLIER_CLIENT_ID",
-  "SUPPLIER_CLIENT_SECRET_NAME",
-  "SUPPLIER_OAUTH_TOKEN_PATH"
-]
