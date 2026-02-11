@@ -1,5 +1,1 @@
 # SEE: https://github.com/gitleaks/gitleaks/blob/master/README.md#gitleaksignore
-
-cd9c0efec38c5d63053dd865e5d4e207c0760d91:docs/guides/Perform_static_analysis.md:generic-api-key:37
-764d69504ca4172a772dd6d15351d687e952d69f:infrastructure/environments/poc/dev/hometest-app/terragrunt.hcl:generic-api-key:198
-aa1c1788eeec84c1a4a1da92c57c43dfc5ef8267:infrastructure/environments/poc/dev/hometest-app/terragrunt.hcl:generic-api-key:178
