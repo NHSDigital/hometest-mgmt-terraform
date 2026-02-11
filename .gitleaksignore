@@ -1,1 +1,4 @@
 # SEE: https://github.com/gitleaks/gitleaks/blob/master/README.md#gitleaksignore
+
+792494ba13e24dcab3e9d305516ec0694b969ab7:infrastructure/environments/poc/dev/hometest-app/terragrunt.hcl:generic-api-key:199
+daf500e76a99478a82a1e835a81c4a37e44434f6:infrastructure/environments/poc/dev/hometest-app/terragrunt.hcl:generic-api-key:178
