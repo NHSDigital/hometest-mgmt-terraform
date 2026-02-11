@@ -13,7 +13,7 @@ module "sqs_orders" {
 
   project_name      = var.project_name
   environment       = var.environment
-  queue_name_suffix = "orders"
+  queue_name_suffix = "orders-results"
 
   # Message configuration
   visibility_timeout_seconds = var.orders_queue_visibility_timeout
