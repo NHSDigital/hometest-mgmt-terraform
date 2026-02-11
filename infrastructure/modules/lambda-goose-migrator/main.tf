@@ -34,7 +34,7 @@ module "goose_migrator_lambda" {
     DB_ADDRESS    = var.db_address
     DB_PORT       = var.db_port
     DB_NAME       = var.db_name
-    DB_SECRET_ARN = data.aws_rds_cluster.db.master_user_secret_arn
+    DB_SECRET_ARN = data.aws_rds_cluster.db.master_user_secret[0].secret_arn
   }
 
   architectures = ["arm64"]
