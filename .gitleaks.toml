@@ -1,5 +1,8 @@
 [allowlist]
-description = "Ignore ID providers that are not secrets"
+description = ""
 regexes = [
-    '''SUPPLIER_CLIENT_ID'''
+    # Ignore ID providers that are not secrets
+    '''SUPPLIER_CLIENT_ID''',
+    # Ignore IP address in CIDR format
+    '''\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:3[0-2]|[12]?[0-9])\b'''
 ]
