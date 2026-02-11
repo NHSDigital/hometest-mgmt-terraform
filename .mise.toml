@@ -38,7 +38,7 @@ java = "temurin-25.0.0"
 trivy = "latest"
 
 # https://github.com/bridgecrewio/checkov/releases
-checkov = "latest"
+"pipx:checkov" = "latest"
 
 # https://github.com/gitleaks/gitleaks/releases
 gitleaks = "8.18.4"
