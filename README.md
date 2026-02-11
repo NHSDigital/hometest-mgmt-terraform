@@ -31,28 +31,98 @@ This repository manages the AWS infrastructure for the NHS HomeTest Service, inc
 
 ```mermaid
 graph TB
-    subgraph "Core Infrastructure (deployed once)"
-        NET[Network<br/>VPC, Subnets, NAT, Firewall, Route53]
-        SS[Shared Services<br/>WAF, ACM, KMS, Cognito, IAM]
-        RDS[RDS PostgreSQL<br/>hometest_poc database]
-        BOOT[Bootstrap<br/>S3 State, KMS, GitHub OIDC]
+    classDef aws fill:#FF9900,stroke:#232F3E,color:#232F3E,font-weight:bold
+    classDef network fill:#8C4FFF,stroke:#232F3E,color:#fff
+    classDef security fill:#DD344C,stroke:#232F3E,color:#fff
+    classDef compute fill:#ED7100,stroke:#232F3E,color:#fff
+    classDef storage fill:#3B48CC,stroke:#232F3E,color:#fff
+    classDef database fill:#3B48CC,stroke:#232F3E,color:#fff
+    classDef cdn fill:#8C4FFF,stroke:#232F3E,color:#fff
+    classDef messaging fill:#E7157B,stroke:#232F3E,color:#fff
+    classDef identity fill:#DD344C,stroke:#232F3E,color:#fff
+    classDef mgmt fill:#E7157B,stroke:#232F3E,color:#fff
+
+    USER["👤 User<br/>dev.hometest.service.nhs.uk"]
+
+    subgraph AWS["☁️ AWS Account 781863586270 — eu-west-2"]
+        subgraph BOOTSTRAP["🔧 Bootstrap (deployed once)"]
+            S3STATE["📦 S3<br/>Terraform State"]:::storage
+            KMSSTATE["🔐 KMS<br/>State Encryption"]:::security
+            OIDC["🔑 GitHub OIDC<br/>IAM Role"]:::identity
+        end
+
+        subgraph EDGE["🌐 Edge Services"]
+            R53["🌍 Route53<br/>hometest.service.nhs.uk<br/>DNSSEC + DNS Query Logging"]:::network
+            WAFCF["🛡️ WAF<br/>CloudFront"]:::security
+            WAFAPIGW["🛡️ WAF<br/>API Gateway"]:::security
+            ACM["📜 ACM<br/>*.hometest.service.nhs.uk"]:::security
+        end
+
+        subgraph VPC["🔒 VPC 10.0.0.0/16"]
+            subgraph PUBSUB["Public Subnets"]
+                NAT["🔀 NAT Gateway"]:::network
+                NFW["🧱 Network Firewall<br/>Domain + IP Filtering"]:::security
+            end
+
+            subgraph PRIVSUB["Private Subnets"]
+                subgraph ENV_DEV["📦 Per-Environment: dev"]
+                    CF["☁️ CloudFront<br/>+ S3 SPA (Next.js)"]:::cdn
+                    APIGW["🔌 API Gateway<br/>REST API v1"]:::compute
+                    L1["λ hello-world"]:::compute
+                    L2["λ eligibility-test-info"]:::compute
+                    L3["λ order-router<br/>(Preventex)"]:::compute
+                    L4["λ order-router-sh24<br/>(SH24)"]:::compute
+                    SQS1["📨 SQS<br/>Order Queue"]:::messaging
+                    SQS2["📨 SQS<br/>Order Queue SH24"]:::messaging
+                end
+
+                VPCE["🔗 VPC Endpoints<br/>S3, Lambda, SecretsManager,<br/>SQS, KMS, CloudWatch, ECR"]:::network
+            end
+
+            subgraph DATASUB["Data Subnets (isolated)"]
+                RDS["🐘 RDS PostgreSQL 18.1<br/>db.t4g.micro<br/>hometest_poc"]:::database
+            end
+        end
+
+        subgraph SHARED["🔐 Shared Services"]
+            KMS["🔑 KMS<br/>Shared Encryption Key"]:::security
+            COGNITO["👥 Cognito<br/>User Pool + Identity Pool"]:::identity
+            IAM["👤 Developer IAM<br/>Deploy Role"]:::identity
+            SM["🗝️ Secrets Manager<br/>Supplier Credentials"]:::security
+        end
+
+        subgraph EXTERNAL["🌐 External Suppliers"]
+            PREVENTEX["Preventex API<br/>func-nhshometest-dev.azurewebsites.net"]
+            SH24["SH24 API<br/>admin.qa3.sh24.org.uk"]
+        end
     end
 
-    subgraph "Per-Environment (dev, etc.)"
-        CF[CloudFront + S3 SPA]
-        APIGW[API Gateway]
-        LAMBDA[Lambda Functions<br/>hello-world, eligibility-test-info,<br/>order-router, order-router-sh24]
-        SQS[SQS Queues]
-    end
+    USER -->|HTTPS| R53
+    R53 -->|DNS| CF
+    CF -->|"/* → S3 SPA"| APIGW
+    CF -.->|WAF| WAFCF
+    CF -.->|TLS| ACM
 
-    CF --> APIGW
-    APIGW --> LAMBDA
-    LAMBDA --> RDS
-    LAMBDA --> SQS
-    LAMBDA --> NET
-    CF --> SS
-    APIGW --> SS
-    LAMBDA --> SS
+    APIGW -->|"/hello-world/*"| L1
+    APIGW -->|"/test-order/*"| L2
+    APIGW -.->|WAF| WAFAPIGW
+
+    SQS1 -->|trigger| L3
+    SQS2 -->|trigger| L4
+
+    L2 -->|query| RDS
+    L2 -.->|secrets| SM
+    L3 -->|HTTP| PREVENTEX
+    L3 -.->|secrets| SM
+    L4 -->|HTTP| SH24
+    L4 -.->|secrets| SM
+
+    L1 & L2 & L3 & L4 -->|egress| NAT
+    NAT -->|filtered| NFW
+    L1 & L2 & L3 & L4 -.->|encrypt| KMS
+    L1 & L2 & L3 & L4 -.->|private access| VPCE
+
+    OIDC -.->|"CI/CD"| S3STATE
 ```
 
 ## Prerequisites
