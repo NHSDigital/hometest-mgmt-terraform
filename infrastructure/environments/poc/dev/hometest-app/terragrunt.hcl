@@ -80,10 +80,10 @@ inputs = {
   route53_zone_id           = dependency.network.outputs.route53_zone_id
 
   # Dependencies from shared_services
-  kms_key_arn           = dependency.shared_services.outputs.kms_key_arn
-  waf_cloudfront_arn    = dependency.shared_services.outputs.waf_cloudfront_arn
-  deployment_bucket_id  = dependency.shared_services.outputs.deployment_artifacts_bucket_id
-  deployment_bucket_arn = dependency.shared_services.outputs.deployment_artifacts_bucket_arn
+  kms_key_arn        = dependency.shared_services.outputs.kms_key_arn
+  waf_cloudfront_arn = dependency.shared_services.outputs.waf_cloudfront_arn
+  # deployment_bucket_id  = dependency.shared_services.outputs.deployment_artifacts_bucket_id
+  # deployment_bucket_arn = dependency.shared_services.outputs.deployment_artifacts_bucket_arn
 
   # Lambda Configuration
   enable_vpc_access  = true
@@ -97,7 +97,8 @@ inputs = {
   # Note: AWS Secrets Manager ARNs have a random suffix, use -* wildcard to match
   lambda_secrets_arns = [
     dependency.rds_postgres.outputs.db_instance_master_user_secret_arn,
-    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/preventex-dev-client-secret-*"
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/preventex-dev-client-secret-*",
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/sh24-dev-client-secret-*"
   ]
 
   # KMS keys for secrets encrypted with different keys than shared_services KMS
@@ -178,6 +179,27 @@ inputs = {
         SUPPLIER_CLIENT_ID          = "7e9b8f16-4686-46f4-903e-2d364774fc82"
         SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/preventex-dev-client-secret"
         SUPPLIER_ORDER_PATH         = "/api/order"
+        # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
+      }
+    }
+
+    "order-router-lambda-sh24" = {
+      description     = "Order Router Service - Processes orders from SQS queue for SH24 supplier"
+      sqs_trigger     = false               # Triggered by SQS, no API Gateway endpoint
+      api_path_prefix = "order-router-sh24" # Not used for routing since this is SQS-triggered, but included for consistency
+      handler         = "index.handler"
+      timeout         = 60 # Longer timeout for external API calls to supplier
+      memory_size     = 512
+      zip_path        = "${include.envcommon.locals.lambdas_base_path}/order-router-lambda/order-router-lambda.zip"
+      environment = {
+        NODE_OPTIONS                = "--enable-source-maps"
+        ENVIRONMENT                 = include.envcommon.locals.environment
+        SUPPLIER_BASE_URL           = "https://admin.qa3.sh24.org.uk/"
+        SUPPLIER_OAUTH_TOKEN_PATH   = "/oauth/token"
+        SUPPLIER_CLIENT_ID          = "zrgmf33Zdk-515BIMrds29v9Z3KzoH-tfYDgxLsYtZE"
+        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/sh24-dev-client-secret"
+        SUPPLIER_ORDER_PATH         = "/order"
+        SUPPLIER_OAUTH_SCOPE        = "order results"
         # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
       }
     }

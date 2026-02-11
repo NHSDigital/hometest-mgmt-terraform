@@ -15,7 +15,7 @@ resource "aws_acm_certificate" "regional" {
     create_before_destroy = true
   }
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-regional-cert"
   })
 }
@@ -61,7 +61,7 @@ resource "aws_acm_certificate" "cloudfront" {
     create_before_destroy = true
   }
 
-  tags = merge(var.tags, {
+  tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-cloudfront-cert"
   })
 }

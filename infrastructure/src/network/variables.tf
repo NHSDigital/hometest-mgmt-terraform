@@ -353,3 +353,13 @@ variable "dns_query_logs_buffer_interval" {
     error_message = "Buffer interval must be between 60 and 900 seconds."
   }
 }
+
+################################################################################
+# Region Configuration
+################################################################################
+
+variable "aws_allowed_regions" {
+  description = "List of AWS regions allowed for resource deployment"
+  type        = list(string)
+  default     = ["eu-west-2", "us-east-1"]
+}

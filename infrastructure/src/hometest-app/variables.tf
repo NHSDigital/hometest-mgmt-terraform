@@ -16,6 +16,11 @@ variable "aws_account_id" {
   type        = string
 }
 
+variable "aws_account_shortname" {
+  description = "AWS account short name/alias for resource naming"
+  type        = string
+}
+
 variable "project_name" {
   description = "Name of the project"
   type        = string
@@ -47,15 +52,15 @@ variable "waf_cloudfront_arn" {
   default     = null
 }
 
-variable "deployment_bucket_id" {
-  description = "ID of shared deployment artifacts bucket (from shared_services)"
-  type        = string
-}
+# variable "deployment_bucket_id" {
+#   description = "ID of shared deployment artifacts bucket (from shared_services)"
+#   type        = string
+# }
 
-variable "deployment_bucket_arn" {
-  description = "ARN of shared deployment artifacts bucket (from shared_services)"
-  type        = string
-}
+# variable "deployment_bucket_arn" {
+#   description = "ARN of shared deployment artifacts bucket (from shared_services)"
+#   type        = string
+# }
 
 #------------------------------------------------------------------------------
 # Dependencies from network
@@ -324,4 +329,14 @@ variable "geo_restriction_locations" {
   description = "List of country codes for geo restriction"
   type        = list(string)
   default     = []
+}
+
+################################################################################
+# Region Configuration
+################################################################################
+
+variable "aws_allowed_regions" {
+  description = "List of AWS regions allowed for resource deployment"
+  type        = list(string)
+  default     = ["eu-west-2", "us-east-1"]
 }

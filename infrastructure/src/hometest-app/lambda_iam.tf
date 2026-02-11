@@ -23,8 +23,8 @@ module "lambda_iam" {
 
   project_name   = var.project_name
   environment    = var.environment
-  aws_account_id = local.account_id
-  aws_region     = local.region
+  aws_account_id = var.aws_account_id
+  aws_region     = var.aws_region
 
   enable_xray       = true
   enable_vpc_access = var.enable_vpc_access
@@ -36,12 +36,13 @@ module "lambda_iam" {
     var.kms_key_arn != null ? [var.kms_key_arn] : [],
     var.lambda_additional_kms_key_arns
   )
-  s3_bucket_arns      = concat([var.deployment_bucket_arn], var.lambda_s3_bucket_arns)
+  # s3_bucket_arns      = concat([var.deployment_bucket_arn], var.lambda_s3_bucket_arns)
+  s3_bucket_arns      = concat(var.lambda_s3_bucket_arns)
   dynamodb_table_arns = var.lambda_dynamodb_table_arns
   sqs_queue_arns      = local.sqs_queue_arns
   enable_sqs_access   = length(local.sqs_lambdas) > 0 || length(var.lambda_sqs_queue_arns) > 0
 
-  tags = var.tags
+  tags = local.common_tags
 
   depends_on = [aws_sqs_queue.main]
 }

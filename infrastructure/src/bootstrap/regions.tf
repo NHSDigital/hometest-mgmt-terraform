@@ -5,12 +5,6 @@
 ################################################################################
 
 locals {
-  # Regions to keep enabled/allowed (primary region + global services region)
-  allowed_regions = [
-    "eu-west-2", # Primary region (London)
-    "us-east-1", # Required for global services (CloudFront, IAM, Route53, etc.)
-  ]
-
   # All AWS opt-in regions that can be enabled/disabled via aws_account_region
   opt_in_regions = [
     "af-south-1",     # Africa (Cape Town)
@@ -65,13 +59,13 @@ locals {
 
   regions_to_deny = [
     for region in local.all_regions : region
-    if !contains(local.allowed_regions, region)
+    if !contains(var.aws_allowed_regions, region)
   ]
 
   # Opt-in regions to disable (all of them since none are in allowed_regions)
   opt_in_regions_to_disable = [
     for region in local.opt_in_regions : region
-    if !contains(local.allowed_regions, region)
+    if !contains(var.aws_allowed_regions, region)
   ]
 
   regions_block_iam_role_name = "${local.resource_prefix}-iam-role-deny-non-allowed-regions"
@@ -95,7 +89,7 @@ resource "aws_account_region" "disabled" {
 
 resource "aws_iam_policy" "deny_regions" {
   name        = local.regions_block_iam_role_name
-  description = "Denies access to all AWS regions except ${join(", ", local.allowed_regions)}"
+  description = "Denies access to all AWS regions except ${join(", ", var.aws_allowed_regions)}"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -107,7 +101,7 @@ resource "aws_iam_policy" "deny_regions" {
         Resource = "*"
         Condition = {
           StringNotEquals = {
-            "aws:RequestedRegion" = local.allowed_regions
+            "aws:RequestedRegion" = var.aws_allowed_regions
           }
           # Exclude global services that don't have a region
           "ForAnyValue:StringNotLike" = {
@@ -181,7 +175,7 @@ output "denied_regions" {
 
 output "allowed_regions" {
   description = "List of AWS regions that are allowed"
-  value       = local.allowed_regions
+  value       = var.aws_allowed_regions
 }
 
 output "deny_regions_policy_arn" {
