@@ -98,6 +98,73 @@ output "developer_role_arn" {
   value       = aws_iam_role.developer.arn
 }
 
+#------------------------------------------------------------------------------
+# SQS Queues
+#------------------------------------------------------------------------------
+
+# Orders Queue
+output "sqs_orders_queue_url" {
+  description = "URL of the orders SQS queue"
+  value       = module.sqs_orders.queue_url
+}
+
+output "sqs_orders_queue_arn" {
+  description = "ARN of the orders SQS queue"
+  value       = module.sqs_orders.queue_arn
+}
+
+output "sqs_orders_dlq_url" {
+  description = "URL of the orders DLQ"
+  value       = module.sqs_orders.dlq_url
+}
+
+output "sqs_orders_dlq_arn" {
+  description = "ARN of the orders DLQ"
+  value       = module.sqs_orders.dlq_arn
+}
+
+# Notifications Queue (FIFO)
+output "sqs_notifications_queue_url" {
+  description = "URL of the notifications SQS queue"
+  value       = module.sqs_notifications.queue_url
+}
+
+output "sqs_notifications_queue_arn" {
+  description = "ARN of the notifications SQS queue"
+  value       = module.sqs_notifications.queue_arn
+}
+
+output "sqs_notifications_dlq_url" {
+  description = "URL of the notifications DLQ"
+  value       = module.sqs_notifications.dlq_url
+}
+
+output "sqs_notifications_dlq_arn" {
+  description = "ARN of the notifications DLQ"
+  value       = module.sqs_notifications.dlq_arn
+}
+
+# Events Queue
+output "sqs_events_queue_url" {
+  description = "URL of the events SQS queue"
+  value       = module.sqs_events.queue_url
+}
+
+output "sqs_events_queue_arn" {
+  description = "ARN of the events SQS queue"
+  value       = module.sqs_events.queue_arn
+}
+
+output "sqs_events_dlq_url" {
+  description = "URL of the events DLQ"
+  value       = module.sqs_events.dlq_url
+}
+
+output "sqs_events_dlq_arn" {
+  description = "ARN of the events DLQ"
+  value       = module.sqs_events.dlq_arn
+}
+
 output "developer_role_name" {
   description = "Name of the developer deployment role"
   value       = aws_iam_role.developer.name
