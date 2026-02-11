@@ -29,7 +29,7 @@ awscli = "2.33.13"
 trivy = "latest"
 
 # https://github.com/bridgecrewio/checkov/releases
-checkov = "latest"
+"pipx:checkov" = "latest"
 
 # https://github.com/gitleaks/gitleaks/releases
 gitleaks = "8.18.4"

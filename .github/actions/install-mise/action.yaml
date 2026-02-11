@@ -4,24 +4,15 @@ description: "Install mise and repo dependencies"
 runs:
   using: "composite"
   steps:
-    - name: Install mise via apt
-      working-directory: /tmp
-      shell: bash
-      run: |
-        echo "::group::Install mise"
-        sudo curl -fsSL https://mise.jdx.dev/gpg-key.pub | sudo gpg --dearmor -o /etc/apt/keyrings/mise-archive-keyring.gpg
-        sudo echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg arch=amd64] https://mise.jdx.dev/deb stable main" | sudo tee /etc/apt/sources.list.d/mise.list
-        sudo apt-get update
-        sudo apt-get install -y mise
-        echo "::endgroup::"
-
-    - name: Install repo dependencies
+    - name: Configure git
       shell: bash
       run: |
         echo "::group::Configure git"
         git config --global --add safe.directory '*'
         echo "::endgroup::"
 
-        echo "::group::Install mise tools"
-        mise install
-        echo "::endgroup::"
+    - name: Install mise
+      uses: jdx/mise-action@v3
+      with:
+        cache: true
+        install: true
