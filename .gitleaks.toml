@@ -1,5 +1,5 @@
 [allowlist]
-description = ""
+description = "Global exclusions"
 regexes = [
     # Ignore ID providers that are not secrets
     '''SUPPLIER_CLIENT_ID''',
