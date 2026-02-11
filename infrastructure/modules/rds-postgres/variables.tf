@@ -1,3 +1,21 @@
+# Aurora module requires manage_master_user_password for password management
+variable "manage_master_user_password" {
+  description = "Set to true to allow RDS to manage the master user password in Secrets Manager. Cannot be set if master_password is provided."
+  type        = bool
+  default     = false
+}
+# Aurora module requires storage_encrypted for encryption control
+variable "storage_encrypted" {
+  description = "Specifies whether the DB cluster is encrypted. The default is true."
+  type        = bool
+  default     = true
+}
+# Aurora module requires db_subnet_group_name if not creating a new subnet group
+variable "db_subnet_group_name" {
+  description = "Name of the DB subnet group to use for the Aurora cluster. If not provided, the module will attempt to create one."
+  type        = string
+  default     = null
+}
 ################################################################################
 # Required Variables
 ################################################################################
@@ -27,62 +45,21 @@ variable "engine_version" {
   default     = "18.1"
 }
 
-variable "parameter_group_family" {
-  description = "The family of the DB parameter group"
-  type        = string
-  default     = "postgres18"
+variable "serverlessv2_min_capacity" {
+  description = "Minimum Aurora capacity units (ACUs) for Aurora Serverless v2"
+  type        = number
+  default     = 0.5
 }
 
-variable "major_engine_version" {
-  description = "Major version of the DB engine"
-  type        = string
-  default     = "18"
-}
-
-variable "instance_class" {
-  description = "The instance type of the RDS instance"
-  type        = string
-  default     = "db.t3.micro"
+variable "serverlessv2_max_capacity" {
+  description = "Maximum Aurora capacity units (ACUs) for Aurora Serverless v2"
+  type        = number
+  default     = 4
 }
 
 ################################################################################
 # Storage Configuration
 ################################################################################
-
-variable "allocated_storage" {
-  description = "The allocated storage in gigabytes"
-  type        = number
-  default     = 20
-}
-
-variable "max_allocated_storage" {
-  description = "The upper limit to which Amazon RDS can automatically scale the storage"
-  type        = number
-  default     = 100
-}
-
-variable "storage_encrypted" {
-  description = "Specifies whether the DB instance is encrypted"
-  type        = bool
-  default     = true
-}
-
-variable "storage_type" {
-  description = "One of 'standard' (magnetic), 'gp2' (general purpose SSD), 'gp3', or 'io1' (provisioned IOPS SSD)"
-  type        = string
-  default     = "gp3"
-
-  validation {
-    condition     = contains(["standard", "gp2", "gp3", "io1", "io2"], var.storage_type)
-    error_message = "Storage type must be one of: standard, gp2, gp3, io1, io2."
-  }
-}
-
-variable "iops" {
-  description = "The amount of provisioned IOPS. Setting this implies a storage_type of 'io1'"
-  type        = number
-  default     = null
-}
 
 variable "kms_key_id" {
   description = "The ARN for the KMS encryption key. If creating an encrypted replica, set this to the destination KMS ARN"
@@ -106,19 +83,6 @@ variable "username" {
   default     = "postgres"
 }
 
-variable "password" {
-  description = "Password for the master DB user. Required if manage_master_user_password is false"
-  type        = string
-  default     = null
-  sensitive   = true
-}
-
-variable "manage_master_user_password" {
-  description = "Set to true to allow RDS to manage the master user password in Secrets Manager"
-  type        = bool
-  default     = true
-}
-
 ################################################################################
 # Network Configuration
 ################################################################################
@@ -132,12 +96,6 @@ variable "subnet_ids" {
     condition     = length(var.subnet_ids) == 0 || length(var.subnet_ids) >= 2
     error_message = "If providing subnet_ids, you must provide at least 2 subnets for RDS subnet group."
   }
-}
-
-variable "db_subnet_group_name" {
-  description = "Name of existing DB subnet group. If not provided, a new subnet group will be created using subnet_ids."
-  type        = string
-  default     = null
 }
 
 variable "publicly_accessible" {
@@ -171,22 +129,6 @@ variable "allowed_security_group_ids" {
     condition     = alltrue([for sg in var.allowed_security_group_ids : can(regex("^sg-[a-z0-9]+$", sg))])
     error_message = "All security group IDs must be valid format (sg-xxxxxxxx)."
   }
-}
-
-################################################################################
-# High Availability Configuration
-################################################################################
-
-variable "multi_az" {
-  description = "Specifies if the RDS instance is multi-AZ"
-  type        = bool
-  default     = false
-}
-
-variable "availability_zone" {
-  description = "The AZ for the RDS instance (only used if multi_az is false)"
-  type        = string
-  default     = null
 }
 
 ################################################################################
@@ -228,113 +170,10 @@ variable "deletion_protection" {
   default     = true
 }
 
-################################################################################
-# Monitoring Configuration
-################################################################################
-
-variable "enabled_cloudwatch_logs_exports" {
-  description = "List of log types to enable for exporting to CloudWatch logs"
-  type        = list(string)
-  default     = ["postgresql", "upgrade"]
-}
-
-variable "performance_insights_enabled" {
-  description = "Specifies whether Performance Insights are enabled"
-  type        = bool
-  default     = true
-}
-
-variable "performance_insights_retention_period" {
-  description = "Amount of time in days to retain Performance Insights data"
-  type        = number
-  default     = 7
-}
-
-variable "monitoring_interval" {
-  description = "The interval, in seconds, between points when Enhanced Monitoring metrics are collected. Valid values: 0, 1, 5, 10, 15, 30, 60. Set to 0 to disable enhanced monitoring."
-  type        = number
-  default     = 60
-
-  validation {
-    condition     = contains([0, 1, 5, 10, 15, 30, 60], var.monitoring_interval)
-    error_message = "Monitoring interval must be one of: 0, 1, 5, 10, 15, 30, 60."
-  }
-}
-
-variable "monitoring_role_arn" {
-  description = "The ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. Leave null to auto-create."
-  type        = string
-  default     = null
-}
-
-################################################################################
-# Parameter and Option Groups
-################################################################################
-
-variable "create_parameter_group" {
-  description = "Whether to create a parameter group"
-  type        = bool
-  default     = true
-}
-
-variable "parameter_group_name" {
-  description = "Name of the DB parameter group to associate"
-  type        = string
-  default     = null
-}
-
-variable "parameters" {
-  description = "A list of DB parameters to apply"
-  type = list(object({
-    name         = string
-    value        = string
-    apply_method = optional(string, "immediate")
-  }))
-  default = []
-}
-
-variable "create_option_group" {
-  description = "Whether to create an option group"
-  type        = bool
-  default     = false
-}
-
-variable "option_group_name" {
-  description = "Name of the option group"
-  type        = string
-  default     = null
-}
-
-variable "options" {
-  description = "A list of options to apply"
-  type        = any
-  default     = []
-}
-
-################################################################################
-# Update Configuration
-################################################################################
-
-variable "auto_minor_version_upgrade" {
-  description = "Indicates that minor engine upgrades will be applied automatically"
-  type        = bool
-  default     = true
-}
-
 variable "apply_immediately" {
   description = "Specifies whether any database modifications are applied immediately"
   type        = bool
   default     = false
-}
-
-variable "blue_green_update" {
-  description = "Enables blue/green deployments for database updates"
-  type = object({
-    enabled = bool
-  })
-  default = {
-    enabled = false
-  }
 }
 
 ################################################################################
