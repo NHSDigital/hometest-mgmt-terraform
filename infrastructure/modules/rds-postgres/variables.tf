@@ -1,3 +1,10 @@
+# Number of Aurora instances to create
+variable "number_of_instances" {
+  description = "Number of Aurora instances to create in the cluster"
+  type        = number
+  default     = 1
+}
+
 # Aurora module requires manage_master_user_password for password management
 variable "manage_master_user_password" {
   description = "Set to true to allow RDS to manage the master user password in Secrets Manager. Cannot be set if master_password is provided."

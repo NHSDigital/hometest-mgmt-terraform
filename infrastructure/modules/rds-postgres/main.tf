@@ -56,6 +56,7 @@ locals {
 ################################################################################
 
 module "aurora" {
+  #checkov:skip=CKV_TF_1:Using a commit hash for module from the Terraform registry is not applicable
   source  = "terraform-aws-modules/rds-aurora/aws"
   version = "~> v10.2.0" # https://github.com/terraform-aws-modules/terraform-aws-rds-aurora/releases
 
@@ -90,7 +91,7 @@ module "aurora" {
   preferred_maintenance_window = var.maintenance_window
 
   instances = {
-    one = {}
+    for i in range(1, var.number_of_instances + 1) : i => {}
   }
 
   tags = local.db_instance_tags

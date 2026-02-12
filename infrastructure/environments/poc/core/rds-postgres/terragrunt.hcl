@@ -44,6 +44,8 @@ inputs = {
   serverlessv2_min_capacity = 0.5
   serverlessv2_max_capacity = 4
 
+  number_of_instances = 1
+
   # Network - Allow access from VPC CIDR for POC
   allowed_cidr_blocks = ["10.0.0.0/16"]
 

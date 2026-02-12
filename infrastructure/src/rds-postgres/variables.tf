@@ -1,7 +1,6 @@
 ################################################################################
 # AWS Configuration
 ################################################################################
-
 variable "aws_region" {
   description = "AWS region for resources"
   type        = string
@@ -20,7 +19,6 @@ variable "aws_account_shortname" {
 ################################################################################
 # Project Configuration
 ################################################################################
-
 variable "project_name" {
   description = "Project name used for resource naming"
   type        = string
@@ -40,7 +38,6 @@ variable "environment" {
 # Network Configuration - References from Network Module
 # VPC and DB subnet group are passed from Terragrunt dependency on network module
 ################################################################################
-
 variable "vpc_id" {
   description = "VPC ID from network module (passed via Terragrunt dependency)"
   type        = string
@@ -67,14 +64,6 @@ variable "publicly_accessible" {
 ################################################################################
 # PostgreSQL Configuration
 ################################################################################
-
-
-
-
-
-
-
-
 variable "kms_key_id" {
   description = "The ARN for the KMS encryption key"
   type        = string
@@ -116,7 +105,6 @@ variable "storage_encrypted" {
 ################################################################################
 # Database Configuration
 ################################################################################
-
 variable "db_name" {
   description = "The name of the database to create when the DB instance is created"
   type        = string
@@ -132,12 +120,15 @@ variable "username" {
 ################################################################################
 # High Availability Configuration
 ################################################################################
-
+variable "number_of_instances" {
+  description = "Number of Aurora instances to create in the cluster"
+  type        = number
+  default     = 1
+}
 
 ################################################################################
 # Backup Configuration
 ################################################################################
-
 variable "backup_retention_period" {
   description = "The days to retain backups for"
   type        = number
@@ -168,25 +159,10 @@ variable "deletion_protection" {
   default     = false
 }
 
-################################################################################
-# Monitoring Configuration
-################################################################################
-
-
-
-
-
-################################################################################
-# Parameter Group Configuration
-################################################################################
-
-
 
 ################################################################################
 # Update Configuration
 ################################################################################
-
-
 variable "apply_immediately" {
   description = "Specifies whether any database modifications are applied immediately"
   type        = bool
@@ -196,7 +172,6 @@ variable "apply_immediately" {
 ################################################################################
 # Tags
 ################################################################################
-
 variable "tags" {
   description = "Additional tags for all resources"
   type        = map(string)
@@ -206,7 +181,6 @@ variable "tags" {
 ################################################################################
 # Region Configuration
 ################################################################################
-
 variable "aws_allowed_regions" {
   description = "List of AWS regions allowed for resource deployment"
   type        = list(string)

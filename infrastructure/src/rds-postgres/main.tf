@@ -32,6 +32,8 @@ module "rds_postgres" {
   username                    = var.username
   manage_master_user_password = true
 
+  number_of_instances = var.number_of_instances
+
   serverlessv2_min_capacity = var.serverlessv2_min_capacity
   serverlessv2_max_capacity = var.serverlessv2_max_capacity
 
