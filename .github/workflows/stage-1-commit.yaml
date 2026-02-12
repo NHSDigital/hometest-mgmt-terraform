@@ -149,6 +149,9 @@ jobs:
 
   check-tf:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write    # REQUIRED for OIDC token
+      contents: read     # For checkout
     strategy:
       matrix:
         module: [core/bootstrap, core/network, core/rds-postgres, core/shared_services, dev/hometest-app]
