@@ -10,7 +10,7 @@ include "root" {
 
 # Configure the version of the module to use in this environment
 terraform {
-  source = "../../../..//src/rds-postgres"
+  source = "../../../..//src/aurora-postgres"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -38,11 +38,14 @@ inputs = {
   vpc_id               = dependency.network.outputs.vpc_id
   db_subnet_group_name = dependency.network.outputs.db_subnet_group_name
 
-  # Storage autoscaling - reduced for POC (default is 100 GB)
-  max_allocated_storage = 50
 
-  # Database name - POC specific
-  db_name = "hometest_poc"
+  # Aurora Serverless v2 configuration
+  db_name                   = "hometest_poc"
+  username                  = "postgres"
+  serverlessv2_min_capacity = 0.5
+  serverlessv2_max_capacity = 4
+
+  number_of_instances = 1
 
   # Network - Allow access from VPC CIDR for POC
   allowed_cidr_blocks = ["10.0.0.0/16"]

@@ -18,8 +18,8 @@ variable "db_name" {
   type        = string
 }
 
-variable "db_secret_arn" {
-  description = "Secret ARN for DB password"
+variable "db_cluster_id" {
+  description = "DB CLuster ID"
   type        = string
 }
 

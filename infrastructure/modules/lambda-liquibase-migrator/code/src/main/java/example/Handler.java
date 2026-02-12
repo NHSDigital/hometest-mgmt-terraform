@@ -16,6 +16,7 @@ import liquibase.database.jvm.JdbcConnection;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Map;
+import java.net.URLEncoder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,8 +56,11 @@ public class Handler implements RequestHandler<Map<String, String>, String> {
             throw new IllegalArgumentException("Missing one or more required environment variables");
         }
         String password = getDBPassword(secretArn);
+        // Encode username and password for JDBC URL
+        String encodedUser = URLEncoder.encode(user, "UTF-8");
+        String encodedPassword = URLEncoder.encode(password, "UTF-8");
         logger.info("JDBC URL built: jdbc:postgresql://{}:{}...", host, port);
-        return String.format("jdbc:postgresql://%s:%s/%s?user=%s&password=%s", host, port, dbname, user, password);
+        return String.format("jdbc:postgresql://%s:%s/%s?user=%s&password=%s", host, port, dbname, encodedUser, encodedPassword);
     }
 
     @Override
