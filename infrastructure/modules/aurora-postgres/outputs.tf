@@ -64,7 +64,7 @@ output "security_group_name" {
 
 output "db_parameter_group_id" {
   description = "The db parameter group id"
-  value       = module.auroaurora_postgresra.db_parameter_group_id
+  value       = module.aurora_postgres.db_parameter_group_id
 }
 
 output "db_parameter_group_arn" {
