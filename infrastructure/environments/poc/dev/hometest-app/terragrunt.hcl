@@ -124,6 +124,7 @@ inputs = {
   # - /hello-world/*     → API Gateway → hello-world-lambda
   # - /test-order/*      → API Gateway → eligibility-test-info-lambda
   # - /login/*           → API Gateway → login-lambda
+  # - /result/*          → API Gateway → order-result-lambda
   #
   # SQS-triggered (no CloudFront/API Gateway):
   # - order-router-lambda → Processes orders from SQS queue asynchronously
@@ -229,6 +230,24 @@ inputs = {
         AUTH_ACCESS_TOKEN_EXPIRY_DURATION_MINUTES  = "60"
         AUTH_REFRESH_TOKEN_EXPIRY_DURATION_MINUTES = "60"
         AUTH_COOKIE_SAME_SITE                      = "Lax"
+      }
+    }
+
+    # Order Result Lambda - Receives test results from suppliers
+    # CloudFront: /result/* → API Gateway → Lambda
+    # Handles: POST /result (receives test results webhook from supplier)
+    # Matches local: api_path = "result", http_method = "POST"
+    "order-result-lambda" = {
+      description     = "Order Result Service - Receives test results from suppliers"
+      api_path_prefix = "result"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS     = "--enable-source-maps"
+        ENVIRONMENT      = include.envcommon.locals.environment
+        AWS_REGION       = include.envcommon.locals.global_vars.locals.aws_region
+        RESULT_QUEUE_URL = "https://sqs.${include.envcommon.locals.global_vars.locals.aws_region}.amazonaws.com/${include.envcommon.locals.account_id}/${include.envcommon.locals.project_name}-${include.envcommon.locals.environment}-order-results"
       }
     }
   }

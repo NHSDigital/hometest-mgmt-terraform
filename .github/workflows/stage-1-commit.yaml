@@ -146,3 +146,18 @@ jobs:
 
       - name: Run pre-commit checks
         uses: ./.github/actions/perform-pre-commit
+
+  check-tf:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: [core/bootstrap, core/network, core/rds-postgres, core/shared_services, dev/hometest-app]
+      max-parallel: 1  # Forces sequential
+      fail-fast: true
+    steps:
+      - uses: ./.github/actions/deploy-terragrunt
+        with:
+          working_directory: infrastructure/environments/poc/core/${{ matrix.module }}
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          action: "plan"
+          lock_enabled: "false"  # Disable locking for plan to avoid conflicts in PRs, since these are not actually applied

@@ -8,7 +8,30 @@ locals {
 }
 
 ################################################################################
-# SQS Queue for Event Processing
+# SQS Queue for Order Results (written to by order-result-lambda)
+################################################################################
+
+resource "aws_sqs_queue" "order_results" {
+  count = var.enable_sqs_access ? 1 : 0
+
+  name                       = "${var.project_name}-${var.environment}-order-results"
+  visibility_timeout_seconds = 300
+  message_retention_seconds  = 1209600 # 14 days
+  delay_seconds              = 0
+  max_message_size           = 262144 # 256 KB
+  receive_wait_time_seconds  = 20     # Long polling
+
+  # Enable server-side encryption with KMS
+  kms_master_key_id                 = var.kms_key_arn
+  kms_data_key_reuse_period_seconds = 300
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-${var.environment}-order-results"
+  })
+}
+
+################################################################################
+# SQS Queue for Event Processing (triggers lambdas)
 ################################################################################
 
 resource "aws_sqs_queue" "main" {
@@ -135,4 +158,14 @@ output "sqs_dlq_url" {
 output "sqs_dlq_arn" {
   description = "ARN of the SQS dead letter queue"
   value       = length(local.sqs_lambdas) > 0 ? aws_sqs_queue.dlq[0].arn : null
+}
+
+output "order_results_queue_url" {
+  description = "URL of the order results SQS queue"
+  value       = var.enable_sqs_access ? aws_sqs_queue.order_results[0].url : null
+}
+
+output "order_results_queue_arn" {
+  description = "ARN of the order results SQS queue"
+  value       = var.enable_sqs_access ? aws_sqs_queue.order_results[0].arn : null
 }
