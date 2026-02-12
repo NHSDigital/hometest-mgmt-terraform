@@ -155,6 +155,9 @@ jobs:
       max-parallel: 1  # Forces sequential
       fail-fast: true
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - uses: ./.github/actions/deploy-terragrunt
         with:
           working_directory: infrastructure/environments/poc/core/${{ matrix.module }}
