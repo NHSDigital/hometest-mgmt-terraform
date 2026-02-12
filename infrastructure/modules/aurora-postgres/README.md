@@ -21,7 +21,7 @@ Terraform module to create an AWS RDS PostgreSQL instance with security group.
 
 ```hcl
 module "rds_postgres" {
-  source = "../../modules/rds-postgres"
+  source = "../../modules/aurora-postgres"
 
   identifier = "myapp-db"
   vpc_id     = "vpc-xxxxx"
@@ -46,7 +46,7 @@ module "rds_postgres" {
 
 ```hcl
 module "rds_postgres" {
-  source = "../../modules/rds-postgres"
+  source = "../../modules/aurora-postgres"
 
   identifier = "myapp-prod-db"
   vpc_id     = "vpc-xxxxx"
@@ -113,7 +113,7 @@ module "rds_postgres" {
 
 ```hcl
 module "rds_postgres" {
-  source = "../../modules/rds-postgres"
+  source = "../../modules/aurora-postgres"
 
   identifier           = "myapp-db"
   vpc_id              = "vpc-xxxxx"

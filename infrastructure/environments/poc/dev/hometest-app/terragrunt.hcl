@@ -50,7 +50,7 @@ dependency "shared_services" {
 }
 
 # dependency "rds_postgres" {
-#   config_path = "../../core/rds-postgres"
+#   config_path = "../../core/aurora-postgres"
 
 #   mock_outputs = {
 #     db_instance_endpoint               = "mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com:5432"
@@ -207,7 +207,7 @@ inputs = {
       }
     }
 
-    # TODO: revert rds-postgres after Grzegorz finsihes his aurora work
+    # TODO: revert aurora-postgres after Grzegorz finsihes his aurora work
 
     # Login Lambda - NHS Login authentication
     # CloudFront: /login/* → API Gateway → Lambda

@@ -1,4 +1,4 @@
-# rds-postgres
+# aurora-postgres
 
 ## Overview
 
@@ -19,7 +19,7 @@ This module deploys an RDS PostgreSQL instance in the VPC and data subnets creat
 
 ```hcl
 module "rds_postgres" {
-  source = "./src/rds-postgres"
+  source = "./src/aurora-postgres"
 
   # Required variables
   aws_region            = "eu-west-2"

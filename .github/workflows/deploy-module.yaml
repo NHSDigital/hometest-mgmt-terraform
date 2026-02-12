@@ -31,7 +31,7 @@ on:
         options:
           - bootstrap
           - network
-          - rds-postgres
+          - aurora-postgres
           - hometest-app
           - all
         default: bootstrap
@@ -82,7 +82,7 @@ jobs:
 
           if [ "${{ inputs.module }}" == "all" ]; then
             # Deploy in dependency order
-            echo 'modules=["bootstrap", "network", "rds-postgres"]' >> $GITHUB_OUTPUT
+            echo 'modules=["bootstrap", "network", "aurora-postgres"]' >> $GITHUB_OUTPUT
           else
             echo 'modules=["${{ inputs.module }}"]' >> $GITHUB_OUTPUT
           fi

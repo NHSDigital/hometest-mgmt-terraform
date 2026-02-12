@@ -17,7 +17,7 @@ locals {
 
       # Management metadata
       ManagedBy = "terraform"
-      Module    = "rds-postgres"
+      Module    = "aurora-postgres"
 
       # Cost allocation
       CostCenter = try(var.tags["CostCenter"], "")
