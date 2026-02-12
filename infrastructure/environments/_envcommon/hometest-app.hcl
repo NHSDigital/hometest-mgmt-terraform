@@ -77,12 +77,17 @@ terraform {
   # ---------------------------------------------------------------------------
 
   # Build and package Lambda code locally (Terraform uploads and deploys)
+
+  # TODO: double-check added npm install --silent && npm --prefix ./lambdas install --silent, as it refresh package-lock.json
   before_hook "build_lambdas" {
     commands = ["apply", "plan"]
     execute = [
       "bash", "-c",
       <<-EOF
         LAMBDAS_DIR="${local.lambdas_source_dir}"
+        cd $LAMBDAS_DIR/..
+        npm install --silent && npm --prefix ./lambdas install --silent
+
         if [[ -d "$LAMBDAS_DIR" ]]; then
           echo "Building lambdas from $LAMBDAS_DIR..."
           cd "$LAMBDAS_DIR"
