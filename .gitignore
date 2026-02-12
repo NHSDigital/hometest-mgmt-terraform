@@ -136,6 +136,7 @@ dist
 # Ignore gradle outputs
 **/.gradle
 **/build
+**/code/bin
 
 # Ignore Go build outputs
 **/lambda-goose-migrator/src/bootstrap

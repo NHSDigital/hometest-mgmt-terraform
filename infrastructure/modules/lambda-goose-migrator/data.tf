@@ -1,3 +1,7 @@
+data "aws_rds_cluster" "db" {
+  cluster_identifier = var.db_cluster_id
+}
+
 data "aws_iam_policy_document" "lambda_assume_role" {
   statement {
     actions = ["sts:AssumeRole"]

@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"net/url"
 
 	_ "github.com/lib/pq"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -67,7 +68,11 @@ func buildPostgresURL() (string, error) {
 		return "", fmt.Errorf("failed to retrieve DB password: %w", err)
 	}
 
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=require", user, password, host, port, dbname), nil
+	// URL-encode username and password
+	encodedUser := url.QueryEscape(user)
+	encodedPassword := url.QueryEscape(password)
+
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=require", encodedUser, encodedPassword, host, port, dbname), nil
 }
 
 // Response struct
