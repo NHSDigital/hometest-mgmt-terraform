@@ -206,6 +206,8 @@ inputs = {
       }
     }
 
+    # TODO: revert rds-postgres after Grzegorz finsihes his aurora work
+
     # Login Lambda - NHS Login authentication
     # CloudFront: /login/* → API Gateway → Lambda
     # Handles: POST /login (initiates NHS Login OAuth flow)
