@@ -49,21 +49,21 @@ dependency "shared_services" {
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
-dependency "rds_postgres" {
-  config_path = "../../core/rds-postgres"
+# dependency "rds_postgres" {
+#   config_path = "../../core/rds-postgres"
 
-  mock_outputs = {
-    db_instance_endpoint               = "mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com:5432"
-    db_instance_address                = "mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com"
-    db_instance_port                   = 5432
-    db_instance_name                   = "hometest_poc"
-    db_instance_username               = "postgres"
-    db_instance_master_user_secret_arn = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:rds-mock-secret"
-    connection_string                  = "postgresql://postgres@mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest_poc"
-    security_group_id                  = "sg-mock-rds"
-  }
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
-}
+#   mock_outputs = {
+#     db_instance_endpoint               = "mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com:5432"
+#     db_instance_address                = "mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com"
+#     db_instance_port                   = 5432
+#     db_instance_name                   = "hometest_poc"
+#     db_instance_username               = "postgres"
+#     db_instance_master_user_secret_arn = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:rds-mock-secret"
+#     connection_string                  = "postgresql://postgres@mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest_poc"
+#     security_group_id                  = "sg-mock-rds"
+#   }
+#   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+# }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # INPUTS - Configured for hometest-service lambdas
@@ -96,9 +96,10 @@ inputs = {
   # IAM Permissions - Grant Lambda access to secrets
   # Note: AWS Secrets Manager ARNs have a random suffix, use -* wildcard to match
   lambda_secrets_arns = [
-    dependency.rds_postgres.outputs.db_instance_master_user_secret_arn,
+    # dependency.rds_postgres.outputs.db_instance_master_user_secret_arn,
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/preventex-dev-client-secret-*",
-    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/sh24-dev-client-secret-*"
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/sh24-dev-client-secret-*",
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/nhs-login-private-key-*"
   ]
 
   # KMS keys for secrets encrypted with different keys than shared_services KMS
@@ -122,6 +123,7 @@ inputs = {
   # - / and /*           → S3 SPA (Next.js)
   # - /hello-world/*     → API Gateway → hello-world-lambda
   # - /test-order/*      → API Gateway → eligibility-test-info-lambda
+  # - /login/*           → API Gateway → login-lambda
   #
   # SQS-triggered (no CloudFront/API Gateway):
   # - order-router-lambda → Processes orders from SQS queue asynchronously
@@ -155,8 +157,8 @@ inputs = {
       environment = {
         NODE_OPTIONS  = "--enable-source-maps"
         ENVIRONMENT   = include.envcommon.locals.environment
-        DATABASE_URL  = "${dependency.rds_postgres.outputs.connection_string}?currentSchema=hometest"
-        DB_SECRET_ARN = dependency.rds_postgres.outputs.db_instance_master_user_secret_arn
+        # DATABASE_URL  = "${dependency.rds_postgres.outputs.connection_string}?currentSchema=hometest"
+        # DB_SECRET_ARN = dependency.rds_postgres.outputs.db_instance_master_user_secret_arn
       }
     }
 
@@ -201,6 +203,30 @@ inputs = {
         SUPPLIER_ORDER_PATH         = "/order"
         SUPPLIER_OAUTH_SCOPE        = "order results"
         # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
+      }
+    }
+
+    # Login Lambda - NHS Login authentication
+    # CloudFront: /login/* → API Gateway → Lambda
+    # Handles: POST /login (initiates NHS Login OAuth flow)
+    # Matches local: api_path = "login", http_method = "POST"
+    "login-lambda" = {
+      description     = "Login Service - NHS Login authentication"
+      api_path_prefix = "login"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS                               = "--enable-source-maps"
+        ENVIRONMENT                                = include.envcommon.locals.environment
+        NHS_LOGIN_BASE_ENDPOINT_URL                = "https://auth.sandpit.signin.nhs.uk"
+        NHS_LOGIN_CLIENT_ID                        = "hometest"
+        NHS_LOGIN_REDIRECT_URL                     = "https://${include.envcommon.locals.env_domain}/callback"
+        NHS_LOGIN_PRIVATE_KEY_SECRET_NAME          = "nhs-hometest/dev/nhs-login-private-key"
+        AUTH_SESSION_MAX_DURATION_MINUTES          = "60"
+        AUTH_ACCESS_TOKEN_EXPIRY_DURATION_MINUTES  = "60"
+        AUTH_REFRESH_TOKEN_EXPIRY_DURATION_MINUTES = "60"
+        AUTH_COOKIE_SAME_SITE                      = "Lax"
       }
     }
   }
