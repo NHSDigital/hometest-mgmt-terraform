@@ -100,6 +100,124 @@ variable "developer_account_arns" {
   default     = []
 }
 
+################################################################################
+# SQS Configuration
+################################################################################
+
+variable "create_sqs_alarms" {
+  description = "Create CloudWatch alarms for SQS queues"
+  type        = bool
+  default     = true
+}
+
+variable "sqs_alarm_sns_topics" {
+  description = "List of SNS topic ARNs for SQS alarm notifications"
+  type        = list(string)
+  default     = []
+}
+
+#------------------------------------------------------------------------------
+# Orders Queue Configuration
+#------------------------------------------------------------------------------
+
+variable "orders_queue_visibility_timeout" {
+  description = "Visibility timeout for orders queue (seconds)"
+  type        = number
+  default     = 300 # 5 minutes
+}
+
+variable "orders_queue_retention_seconds" {
+  description = "Message retention for orders queue (seconds)"
+  type        = number
+  default     = 345600 # 4 days
+}
+
+variable "orders_queue_max_receive_count" {
+  description = "Max receives before moving to DLQ"
+  type        = number
+  default     = 3
+}
+
+variable "orders_queue_age_threshold" {
+  description = "Alarm threshold for oldest message age (seconds)"
+  type        = number
+  default     = 600 # 10 minutes
+}
+
+variable "orders_queue_depth_threshold" {
+  description = "Alarm threshold for queue depth"
+  type        = number
+  default     = 1000
+}
+
+#------------------------------------------------------------------------------
+# Notifications Queue Configuration
+#------------------------------------------------------------------------------
+
+variable "notifications_queue_visibility_timeout" {
+  description = "Visibility timeout for notifications queue (seconds)"
+  type        = number
+  default     = 180 # 3 minutes
+}
+
+variable "notifications_queue_retention_seconds" {
+  description = "Message retention for notifications queue (seconds)"
+  type        = number
+  default     = 345600 # 4 days
+}
+
+variable "notifications_queue_max_receive_count" {
+  description = "Max receives before moving to DLQ"
+  type        = number
+  default     = 3
+}
+
+variable "notifications_queue_age_threshold" {
+  description = "Alarm threshold for oldest message age (seconds)"
+  type        = number
+  default     = 300 # 5 minutes
+}
+
+variable "notifications_queue_depth_threshold" {
+  description = "Alarm threshold for queue depth"
+  type        = number
+  default     = 500
+}
+
+#------------------------------------------------------------------------------
+# Events Queue Configuration
+#------------------------------------------------------------------------------
+
+variable "events_queue_visibility_timeout" {
+  description = "Visibility timeout for events queue (seconds)"
+  type        = number
+  default     = 120 # 2 minutes
+}
+
+variable "events_queue_retention_seconds" {
+  description = "Message retention for events queue (seconds)"
+  type        = number
+  default     = 604800 # 7 days
+}
+
+variable "events_queue_max_receive_count" {
+  description = "Max receives before moving to DLQ"
+  type        = number
+  default     = 5
+}
+
+variable "events_queue_age_threshold" {
+  description = "Alarm threshold for oldest message age (seconds)"
+  type        = number
+  default     = 600 # 10 minutes
+}
+
+variable "events_queue_depth_threshold" {
+  description = "Alarm threshold for queue depth"
+  type        = number
+  default     = 2000
+}
+
 variable "require_mfa" {
   description = "Require MFA for developer role assumption"
   type        = bool
