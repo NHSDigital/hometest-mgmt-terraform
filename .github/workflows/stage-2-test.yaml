@@ -42,7 +42,7 @@ jobs:
       contents: read     # For checkout
     strategy:
       matrix:
-        module: [core/bootstrap, core/network, core/rds-postgres, core/shared_services, dev/hometest-app]
+        module: [core/bootstrap, core/network, core/aurora-postgres, core/shared_services, dev/hometest-app]
       max-parallel: 1  # Forces sequential
       fail-fast: true
     steps:

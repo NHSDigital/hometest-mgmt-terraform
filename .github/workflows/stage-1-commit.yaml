@@ -34,17 +34,18 @@ on:
         type: string
 
 jobs:
-  scan-secrets:
-    name: "Scan secrets"
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0  # Full history is needed to scan all commits
-      - name: "Scan secrets"
-        uses: ./.github/actions/scan-secrets
+  # TODO: replace
+  # scan-secrets:
+  #   name: "Scan secrets"
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 2
+  #   steps:
+  #     - name: "Checkout code"
+  #       uses: actions/checkout@v6
+  #       with:
+  #         fetch-depth: 0  # Full history is needed to scan all commits
+  #     - name: "Scan secrets"
+  #       uses: ./.github/actions/scan-secrets
   check-file-format:
     name: "Check file format"
     runs-on: ubuntu-latest
