@@ -163,7 +163,7 @@ jobs:
 
       - uses: ./.github/actions/deploy-terragrunt
         with:
-          working_directory: infrastructure/environments/poc/core/${{ matrix.module }}
+          working_directory: infrastructure/environments/poc/${{ matrix.module }}
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           action: "plan"
           lock_enabled: "false"  # Disable locking for plan to avoid conflicts in PRs, since these are not actually applied
