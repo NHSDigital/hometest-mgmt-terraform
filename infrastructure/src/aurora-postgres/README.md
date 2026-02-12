@@ -59,7 +59,7 @@ module "rds_postgres" {
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_aurora_db"></a> [aurora\_db](#module\_aurora\_db) | ../../modules/aurora-postgres | n/a |
+| <a name="module_aurora_postgres"></a> [aurora\_postgres](#module\_aurora\_postgres) | ../../modules/aurora-postgres | n/a |
 
 ## Resources
 

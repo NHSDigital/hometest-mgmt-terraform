@@ -17,7 +17,7 @@ locals {
 # RDS PostgreSQL Module
 ################################################################################
 
-module "aurora_db" {
+module "aurora_postgres" {
   source = "../../modules/aurora-postgres"
 
   identifier = "${local.resource_prefix}-postgres"
