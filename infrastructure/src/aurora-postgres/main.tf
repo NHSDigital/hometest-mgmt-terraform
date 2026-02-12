@@ -17,8 +17,8 @@ locals {
 # RDS PostgreSQL Module
 ################################################################################
 
-module "rds_postgres" {
-  source = "../../modules/rds-postgres"
+module "aurora_db" {
+  source = "../../modules/aurora-postgres"
 
   identifier = "${local.resource_prefix}-postgres"
   vpc_id     = local.vpc_id

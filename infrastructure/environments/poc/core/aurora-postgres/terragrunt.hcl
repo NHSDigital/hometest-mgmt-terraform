@@ -10,7 +10,7 @@ include "root" {
 
 # Configure the version of the module to use in this environment
 terraform {
-  source = "../../../..//src/rds-postgres"
+  source = "../../../..//src/aurora-postgres"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
