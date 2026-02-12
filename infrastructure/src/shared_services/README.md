@@ -59,7 +59,11 @@ inputs = {
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_sqs_events"></a> [sqs\_events](#module\_sqs\_events) | ../../modules/sqs | n/a |
+| <a name="module_sqs_notifications"></a> [sqs\_notifications](#module\_sqs\_notifications) | ../../modules/sqs | n/a |
+| <a name="module_sqs_orders"></a> [sqs\_orders](#module\_sqs\_orders) | ../../modules/sqs | n/a |
 
 ## Resources
 
@@ -155,15 +159,32 @@ No modules.
 | <a name="input_cognito_verification_email_subject_by_link"></a> [cognito\_verification\_email\_subject\_by\_link](#input\_cognito\_verification\_email\_subject\_by\_link) | Email subject for verification link emails | `string` | `"Verify your email"` | no |
 | <a name="input_cognito_write_attributes"></a> [cognito\_write\_attributes](#input\_cognito\_write\_attributes) | List of user pool attributes the app client can write | `list(string)` | <pre>[<br/>  "email",<br/>  "name"<br/>]</pre> | no |
 | <a name="input_create_acm_certificates"></a> [create\_acm\_certificates](#input\_create\_acm\_certificates) | Whether to create ACM certificates | `bool` | `true` | no |
+| <a name="input_create_sqs_alarms"></a> [create\_sqs\_alarms](#input\_create\_sqs\_alarms) | Create CloudWatch alarms for SQS queues | `bool` | `true` | no |
 | <a name="input_developer_account_arns"></a> [developer\_account\_arns](#input\_developer\_account\_arns) | List of AWS account ARNs allowed to assume the developer role | `list(string)` | `[]` | no |
 | <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | Base domain name for certificates (e.g., hometest.service.nhs.uk) | `string` | n/a | yes |
 | <a name="input_enable_cognito"></a> [enable\_cognito](#input\_enable\_cognito) | Enable AWS Cognito User Pool for authentication | `bool` | `false` | no |
 | <a name="input_enable_cognito_identity_pool"></a> [enable\_cognito\_identity\_pool](#input\_enable\_cognito\_identity\_pool) | Enable Cognito Identity Pool for federated identities | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (core for shared services) | `string` | `"core"` | no |
+| <a name="input_events_queue_age_threshold"></a> [events\_queue\_age\_threshold](#input\_events\_queue\_age\_threshold) | Alarm threshold for oldest message age (seconds) | `number` | `600` | no |
+| <a name="input_events_queue_depth_threshold"></a> [events\_queue\_depth\_threshold](#input\_events\_queue\_depth\_threshold) | Alarm threshold for queue depth | `number` | `2000` | no |
+| <a name="input_events_queue_max_receive_count"></a> [events\_queue\_max\_receive\_count](#input\_events\_queue\_max\_receive\_count) | Max receives before moving to DLQ | `number` | `5` | no |
+| <a name="input_events_queue_retention_seconds"></a> [events\_queue\_retention\_seconds](#input\_events\_queue\_retention\_seconds) | Message retention for events queue (seconds) | `number` | `604800` | no |
+| <a name="input_events_queue_visibility_timeout"></a> [events\_queue\_visibility\_timeout](#input\_events\_queue\_visibility\_timeout) | Visibility timeout for events queue (seconds) | `number` | `120` | no |
 | <a name="input_kms_deletion_window_days"></a> [kms\_deletion\_window\_days](#input\_kms\_deletion\_window\_days) | Number of days before KMS key is deleted | `number` | `30` | no |
+| <a name="input_notifications_queue_age_threshold"></a> [notifications\_queue\_age\_threshold](#input\_notifications\_queue\_age\_threshold) | Alarm threshold for oldest message age (seconds) | `number` | `300` | no |
+| <a name="input_notifications_queue_depth_threshold"></a> [notifications\_queue\_depth\_threshold](#input\_notifications\_queue\_depth\_threshold) | Alarm threshold for queue depth | `number` | `500` | no |
+| <a name="input_notifications_queue_max_receive_count"></a> [notifications\_queue\_max\_receive\_count](#input\_notifications\_queue\_max\_receive\_count) | Max receives before moving to DLQ | `number` | `3` | no |
+| <a name="input_notifications_queue_retention_seconds"></a> [notifications\_queue\_retention\_seconds](#input\_notifications\_queue\_retention\_seconds) | Message retention for notifications queue (seconds) | `number` | `345600` | no |
+| <a name="input_notifications_queue_visibility_timeout"></a> [notifications\_queue\_visibility\_timeout](#input\_notifications\_queue\_visibility\_timeout) | Visibility timeout for notifications queue (seconds) | `number` | `180` | no |
+| <a name="input_orders_queue_age_threshold"></a> [orders\_queue\_age\_threshold](#input\_orders\_queue\_age\_threshold) | Alarm threshold for oldest message age (seconds) | `number` | `600` | no |
+| <a name="input_orders_queue_depth_threshold"></a> [orders\_queue\_depth\_threshold](#input\_orders\_queue\_depth\_threshold) | Alarm threshold for queue depth | `number` | `1000` | no |
+| <a name="input_orders_queue_max_receive_count"></a> [orders\_queue\_max\_receive\_count](#input\_orders\_queue\_max\_receive\_count) | Max receives before moving to DLQ | `number` | `3` | no |
+| <a name="input_orders_queue_retention_seconds"></a> [orders\_queue\_retention\_seconds](#input\_orders\_queue\_retention\_seconds) | Message retention for orders queue (seconds) | `number` | `345600` | no |
+| <a name="input_orders_queue_visibility_timeout"></a> [orders\_queue\_visibility\_timeout](#input\_orders\_queue\_visibility\_timeout) | Visibility timeout for orders queue (seconds) | `number` | `300` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project | `string` | n/a | yes |
 | <a name="input_require_mfa"></a> [require\_mfa](#input\_require\_mfa) | Require MFA for developer role assumption | `bool` | `true` | no |
 | <a name="input_route53_zone_id"></a> [route53\_zone\_id](#input\_route53\_zone\_id) | Route53 zone ID for DNS validation | `string` | n/a | yes |
+| <a name="input_sqs_alarm_sns_topics"></a> [sqs\_alarm\_sns\_topics](#input\_sqs\_alarm\_sns\_topics) | List of SNS topic ARNs for SQS alarm notifications | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | `{}` | no |
 | <a name="input_waf_log_retention_days"></a> [waf\_log\_retention\_days](#input\_waf\_log\_retention\_days) | Days to retain WAF logs | `number` | `30` | no |
 | <a name="input_waf_rate_limit"></a> [waf\_rate\_limit](#input\_waf\_rate\_limit) | Rate limit for WAF (requests per 5 minutes per IP) | `number` | `2000` | no |
@@ -200,6 +221,18 @@ No modules.
 | <a name="output_kms_key_arn"></a> [kms\_key\_arn](#output\_kms\_key\_arn) | ARN of the shared KMS key |
 | <a name="output_kms_key_id"></a> [kms\_key\_id](#output\_kms\_key\_id) | ID of the shared KMS key |
 | <a name="output_shared_config"></a> [shared\_config](#output\_shared\_config) | All shared service configuration for app deployments |
+| <a name="output_sqs_events_dlq_arn"></a> [sqs\_events\_dlq\_arn](#output\_sqs\_events\_dlq\_arn) | ARN of the events DLQ |
+| <a name="output_sqs_events_dlq_url"></a> [sqs\_events\_dlq\_url](#output\_sqs\_events\_dlq\_url) | URL of the events DLQ |
+| <a name="output_sqs_events_queue_arn"></a> [sqs\_events\_queue\_arn](#output\_sqs\_events\_queue\_arn) | ARN of the events SQS queue |
+| <a name="output_sqs_events_queue_url"></a> [sqs\_events\_queue\_url](#output\_sqs\_events\_queue\_url) | URL of the events SQS queue |
+| <a name="output_sqs_notifications_dlq_arn"></a> [sqs\_notifications\_dlq\_arn](#output\_sqs\_notifications\_dlq\_arn) | ARN of the notifications DLQ |
+| <a name="output_sqs_notifications_dlq_url"></a> [sqs\_notifications\_dlq\_url](#output\_sqs\_notifications\_dlq\_url) | URL of the notifications DLQ |
+| <a name="output_sqs_notifications_queue_arn"></a> [sqs\_notifications\_queue\_arn](#output\_sqs\_notifications\_queue\_arn) | ARN of the notifications SQS queue |
+| <a name="output_sqs_notifications_queue_url"></a> [sqs\_notifications\_queue\_url](#output\_sqs\_notifications\_queue\_url) | URL of the notifications SQS queue |
+| <a name="output_sqs_orders_dlq_arn"></a> [sqs\_orders\_dlq\_arn](#output\_sqs\_orders\_dlq\_arn) | ARN of the orders DLQ |
+| <a name="output_sqs_orders_dlq_url"></a> [sqs\_orders\_dlq\_url](#output\_sqs\_orders\_dlq\_url) | URL of the orders DLQ |
+| <a name="output_sqs_orders_queue_arn"></a> [sqs\_orders\_queue\_arn](#output\_sqs\_orders\_queue\_arn) | ARN of the orders SQS queue |
+| <a name="output_sqs_orders_queue_url"></a> [sqs\_orders\_queue\_url](#output\_sqs\_orders\_queue\_url) | URL of the orders SQS queue |
 | <a name="output_waf_cloudfront_arn"></a> [waf\_cloudfront\_arn](#output\_waf\_cloudfront\_arn) | ARN of the CloudFront WAF Web ACL (for CloudFront distributions) |
 | <a name="output_waf_cloudfront_id"></a> [waf\_cloudfront\_id](#output\_waf\_cloudfront\_id) | ID of the CloudFront WAF Web ACL |
 | <a name="output_waf_regional_arn"></a> [waf\_regional\_arn](#output\_waf\_regional\_arn) | ARN of the regional WAF Web ACL (for API Gateway) |
