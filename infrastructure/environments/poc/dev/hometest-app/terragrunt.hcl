@@ -155,8 +155,8 @@ inputs = {
       timeout         = 30
       memory_size     = 256
       environment = {
-        NODE_OPTIONS  = "--enable-source-maps"
-        ENVIRONMENT   = include.envcommon.locals.environment
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = include.envcommon.locals.environment
         # DATABASE_URL  = "${dependency.rds_postgres.outputs.connection_string}?currentSchema=hometest"
         # DB_SECRET_ARN = dependency.rds_postgres.outputs.db_instance_master_user_secret_arn
       }

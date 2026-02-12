@@ -9,6 +9,7 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
+        args: ["--maxkb=500"] # 500KB max file size
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: detect-private-key
@@ -90,3 +91,17 @@ repos:
       - id: markdownlint
         exclude: ^infrastructure/src
         args: [--fix]
+
+  - repo: local
+    hooks:
+      - id: trivy-fs
+        name: Trivy Filesystem (vulns/config/secrets)
+        entry: sh -c 'trivy fs --exit-code 1 --no-progress --severity HIGH,CRITICAL .'
+        language: system
+        types: [file]
+        pass_filenames: true
+      - id: trivy-repo
+        name: Trivy Repo (Git scan)
+        entry: sh -c 'trivy repo --exit-code 1 --no-progress --severity HIGH,CRITICAL .'
+        language: system
+        types: [file]
