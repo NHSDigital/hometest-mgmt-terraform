@@ -71,7 +71,7 @@ jobs:
           repository: "NHSDigital/hometest-service"
           ref: ${{ inputs.hometest_service_ref }}
           path: hometest-service
-          ssh_key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
+          ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
 
       - name: "Set modules to deploy"
         id: set-modules
@@ -135,7 +135,7 @@ jobs:
           repository: "NHSDigital/hometest-service"
           ref: ${{ inputs.hometest_service_ref }}
           path: hometest-service
-          ssh_key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
+          ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
 
 
       - name: "Deploy ${{ matrix.module }}"
