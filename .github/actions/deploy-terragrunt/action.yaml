@@ -31,29 +31,6 @@ runs:
         role-to-assume: ${{ inputs.aws_role_arn }}
         aws-region: ${{ inputs.aws_region }}
 
-    - name: test
-      shell: bash
-      run: |
-        echo "Working dir: $(pwd)"
-        echo
-        echo "Listing current directory:"
-        ls
-        echo
-        echo "Contents of hometest-mgmt-terraform:"
-        ls hometest-mgmt-terraform/
-        echo
-        echo "Contents of hometest-service:"
-        ls hometest-service/
-        echo
-        echo "Listing ../"
-        ls ../
-        echo
-        echo "Listing ../../"
-        ls ../../
-
-        echo
-        ls -l "/home/runner/work/hometest-mgmt-terraform/hometest-mgmt-terraform/.github/actions"
-
     - name: Install mise tools
       uses: NHSDigital/hometest-mgmt-terraform/.github/actions/install-mise@main
 
