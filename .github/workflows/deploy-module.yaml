@@ -122,7 +122,8 @@ jobs:
       fail-fast: true
       max-parallel: 1  # Sequential deployment to respect dependencies
       matrix:
-        module: ${{ fromJson(needs.validate-inputs.outputs.modules) }}
+        # module: ${{ fromJson(needs.validate-inputs.outputs.modules) }}
+        module: [hometest-app]
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
