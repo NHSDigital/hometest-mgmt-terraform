@@ -71,7 +71,7 @@ jobs:
           repository: "NHSDigital/hometest-service"
           ref: ${{ inputs.hometest_service_ref }}
           path: hometest-service
-          token: ${{ secrets.NHS_HOMETEST_ORG_PAT }}
+          ssh_key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
 
       - name: "Set modules to deploy"
         id: set-modules
