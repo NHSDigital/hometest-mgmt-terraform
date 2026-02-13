@@ -112,14 +112,17 @@ inputs = {
   # Based on hometest-service/local-environment/infra/main.tf configuration
   #
   # CloudFront Routing (path-based) - spa_routing.js is templated with these prefixes:
-  # - / and /*           → S3 SPA (Next.js)
-  # - /hello-world/*     → API Gateway → hello-world-lambda
-  # - /test-order/*      → API Gateway → eligibility-test-info-lambda
-  # - /login/*           → API Gateway → login-lambda
-  # - /result/*          → API Gateway → order-result-lambda
+  # - / and /*              → S3 SPA (Next.js)
+  # - /hello-world/*        → API Gateway → hello-world-lambda
+  # - /test-order/*         → API Gateway → eligibility-test-info-lambda
+  # - /order-router/*       → API Gateway → order-router-lambda (but actually SQS-triggered, no API Gateway endpoint, included for consistency)
+  # - /order-router-sh24/*  → API Gateway → order-router-lambda-sh24 (but actually SQS-triggered, no API Gateway endpoint, included for consistency)
+  # - /login/*              → API Gateway → login-lambda
+  # - /result/*             → API Gateway → order-result-lambda
   #
   # SQS-triggered (no CloudFront/API Gateway):
   # - order-router-lambda → Processes orders from SQS queue asynchronously
+  # - order-router-lambda-sh24 → Processes orders from SQS queue asynchronously (SH24 test environment)
   # =============================================================================
   lambdas = {
     # Hello World Lambda - simple health check
@@ -151,7 +154,6 @@ inputs = {
         NODE_OPTIONS = "--enable-source-maps"
         ENVIRONMENT  = include.envcommon.locals.environment
         DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
-        # DB_SECRET_ARN = dependency.aurora_postgres.outputs.db_instance_master_user_secret_arn
       }
     }
 
@@ -174,10 +176,13 @@ inputs = {
         SUPPLIER_CLIENT_ID          = "7e9b8f16-4686-46f4-903e-2d364774fc82"
         SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/preventex-dev-client-secret"
         SUPPLIER_ORDER_PATH         = "/api/order"
-        # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
       }
     }
 
+    # Order Router Lambda for SH24 supplier - SQS triggered for async order processing
+    # Separate lambda to connect to SH24 test environment without affecting other suppliers
+    # NOT exposed via API Gateway - processes orders from SQS queue
+    # Matches local: api_path = "test-order/order" (but async via SQS here, separate lambda for SH24)
     "order-router-lambda-sh24" = {
       description     = "Order Router Service - Processes orders from SQS queue for SH24 supplier"
       sqs_trigger     = false               # Triggered by SQS, no API Gateway endpoint
@@ -195,7 +200,6 @@ inputs = {
         SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/sh24-dev-client-secret"
         SUPPLIER_ORDER_PATH         = "/order"
         SUPPLIER_OAUTH_SCOPE        = "order results"
-        # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
       }
     }
 
