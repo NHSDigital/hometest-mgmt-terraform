@@ -18,11 +18,7 @@ This module deploys an Aurora PostgreSQL instance in the VPC and data subnets cr
 ## Usage
 
 ```hcl
-<<<<<<< HEAD
-module "rds_postgres" {
-=======
 module "aurora_postgres" {
->>>>>>> 168f980fdc6a6c21630c528726ef02dad14ef142
   source = "./src/aurora-postgres"
 
   # Required variables
