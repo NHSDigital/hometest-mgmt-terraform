@@ -52,18 +52,11 @@ dependency "shared_services" {
 dependency "aurora_postgres" {
   config_path = "../../core/aurora-postgres"
 
-#   mock_outputs = {
-#     db_instance_endpoint               = "mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com:5432"
-#     db_instance_address                = "mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com"
-#     db_instance_port                   = 5432
-#     db_instance_name                   = "hometest_poc"
-#     db_instance_username               = "postgres"
-#     db_instance_master_user_secret_arn = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:rds-mock-secret"
-#     connection_string                  = "postgresql://postgres@mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest_poc"
-#     security_group_id                  = "sg-mock-rds"
-#   }
-#   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
-# }
+  mock_outputs = {
+    connection_string                  = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # INPUTS - Configured for hometest-service lambdas
@@ -96,7 +89,6 @@ inputs = {
   # IAM Permissions - Grant Lambda access to secrets
   # Note: AWS Secrets Manager ARNs have a random suffix, use -* wildcard to match
   lambda_secrets_arns = [
-    dependency.aurora_postgres.outputs.db_instance_master_user_secret_arn,
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/preventex-dev-client-secret-*",
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/sh24-dev-client-secret-*",
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/nhs-login-private-key-*"
@@ -158,8 +150,8 @@ inputs = {
       environment = {
         NODE_OPTIONS  = "--enable-source-maps"
         ENVIRONMENT   = include.envcommon.locals.environment
-        DATABASE_URL  = "${dependencaurora_postgres.outputs.connection_string}?currentSchema=hometest"
-        DB_SECRET_ARN = dependency.aurora_postgres.outputs.db_instance_master_user_secret_arn
+        DATABASE_URL  = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
+        # DB_SECRET_ARN = dependency.aurora_postgres.outputs.db_instance_master_user_secret_arn
       }
     }
 
@@ -206,8 +198,6 @@ inputs = {
         # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
       }
     }
-
-    # TODO: revert aurora-postgres after Grzegorz finsihes his aurora work
 
     # Login Lambda - NHS Login authentication
     # CloudFront: /login/* → API Gateway → Lambda
