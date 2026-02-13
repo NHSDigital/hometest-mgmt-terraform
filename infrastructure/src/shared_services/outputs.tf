@@ -288,9 +288,14 @@ output "cognito_preventex_m2m_client_secret" {
   sensitive   = true
 }
 
-output "cognito_preventex_resource_server_identifier" {
-  description = "The resource server identifier for Preventex API"
-  value       = var.enable_cognito ? aws_cognito_resource_server.preventex[0].identifier : null
+output "cognito_results_resource_server_identifier" {
+  description = "The resource server identifier for Results API"
+  value       = var.enable_cognito ? aws_cognito_resource_server.results[0].identifier : null
+}
+
+output "cognito_orders_resource_server_identifier" {
+  description = "The resource server identifier for Orders API"
+  value       = var.enable_cognito ? aws_cognito_resource_server.orders[0].identifier : null
 }
 
 output "cognito_sh24_m2m_client_id" {
@@ -302,9 +307,4 @@ output "cognito_sh24_m2m_client_secret" {
   description = "The client secret for SH:24 M2M application"
   value       = var.enable_cognito ? aws_cognito_user_pool_client.sh24_m2m[0].client_secret : null
   sensitive   = true
-}
-
-output "cognito_sh24_resource_server_identifier" {
-  description = "The resource server identifier for SH:24 API"
-  value       = var.enable_cognito ? aws_cognito_resource_server.sh24[0].identifier : null
 }

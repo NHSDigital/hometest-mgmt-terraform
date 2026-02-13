@@ -360,39 +360,29 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
 # M2M Resource Servers
 ################################################################################
 
-resource "aws_cognito_resource_server" "preventex" {
+resource "aws_cognito_resource_server" "results" {
   count = var.enable_cognito ? 1 : 0
 
-  identifier   = "preventex-api"
-  name         = "${local.resource_prefix}-preventex-api"
+  identifier   = "results-api"
+  name         = "${local.resource_prefix}-results-api"
   user_pool_id = aws_cognito_user_pool.main[0].id
 
   scope {
-    scope_name        = "read"
-    scope_description = "Read access to Preventex API"
-  }
-
-  scope {
     scope_name        = "write"
-    scope_description = "Write access to Preventex API"
+    scope_description = "Write access to Test Results"
   }
 }
 
-resource "aws_cognito_resource_server" "sh24" {
+resource "aws_cognito_resource_server" "orders" {
   count = var.enable_cognito ? 1 : 0
 
-  identifier   = "sh24-api"
-  name         = "${local.resource_prefix}-sh24-api"
+  identifier   = "orders-api"
+  name         = "${local.resource_prefix}-orders-api"
   user_pool_id = aws_cognito_user_pool.main[0].id
 
   scope {
-    scope_name        = "read"
-    scope_description = "Read access to SH:24 API"
-  }
-
-  scope {
     scope_name        = "write"
-    scope_description = "Write access to SH:24 API"
+    scope_description = "Write access to Test Orders"
   }
 }
 
@@ -420,8 +410,8 @@ resource "aws_cognito_user_pool_client" "preventex_m2m" {
   allowed_oauth_flows                  = ["client_credentials"]
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_scopes = [
-    "${aws_cognito_resource_server.preventex[0].identifier}/read",
-    "${aws_cognito_resource_server.preventex[0].identifier}/write"
+    "${aws_cognito_resource_server.results[0].identifier}/write",
+    "${aws_cognito_resource_server.orders[0].identifier}/write",
   ]
 
   # Disable user-based auth flows
@@ -431,7 +421,10 @@ resource "aws_cognito_user_pool_client" "preventex_m2m" {
   prevent_user_existence_errors = "ENABLED"
   enable_token_revocation       = true
 
-  depends_on = [aws_cognito_resource_server.preventex]
+  depends_on = [
+    aws_cognito_resource_server.results,
+    aws_cognito_resource_server.orders
+  ]
 }
 
 resource "aws_cognito_user_pool_client" "sh24_m2m" {
@@ -454,8 +447,8 @@ resource "aws_cognito_user_pool_client" "sh24_m2m" {
   allowed_oauth_flows                  = ["client_credentials"]
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_scopes = [
-    "${aws_cognito_resource_server.sh24[0].identifier}/read",
-    "${aws_cognito_resource_server.sh24[0].identifier}/write"
+    "${aws_cognito_resource_server.results[0].identifier}/write",
+    "${aws_cognito_resource_server.orders[0].identifier}/write",
   ]
 
   # Disable user-based auth flows
@@ -465,5 +458,8 @@ resource "aws_cognito_user_pool_client" "sh24_m2m" {
   prevent_user_existence_errors = "ENABLED"
   enable_token_revocation       = true
 
-  depends_on = [aws_cognito_resource_server.sh24]
+  depends_on = [
+    aws_cognito_resource_server.results,
+    aws_cognito_resource_server.orders
+  ]
 }

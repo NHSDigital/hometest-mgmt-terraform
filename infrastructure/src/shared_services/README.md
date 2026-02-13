@@ -77,8 +77,8 @@ inputs = {
 | [aws_cognito_identity_pool.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_identity_pool) | resource |
 | [aws_cognito_identity_pool_roles_attachment.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_identity_pool_roles_attachment) | resource |
 | [aws_cognito_resource_server.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_resource_server) | resource |
-| [aws_cognito_resource_server.preventex](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_resource_server) | resource |
-| [aws_cognito_resource_server.sh24](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_resource_server) | resource |
+| [aws_cognito_resource_server.orders](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_resource_server) | resource |
+| [aws_cognito_resource_server.results](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_resource_server) | resource |
 | [aws_cognito_user_pool.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_user_pool) | resource |
 | [aws_cognito_user_pool_client.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_user_pool_client) | resource |
 | [aws_cognito_user_pool_client.preventex_m2m](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_user_pool_client) | resource |
@@ -209,14 +209,14 @@ inputs = {
 | <a name="output_cognito_identity_pool_id"></a> [cognito\_identity\_pool\_id](#output\_cognito\_identity\_pool\_id) | The ID of the Cognito Identity Pool |
 | <a name="output_cognito_oauth_authorize_endpoint"></a> [cognito\_oauth\_authorize\_endpoint](#output\_cognito\_oauth\_authorize\_endpoint) | The OAuth authorize endpoint URL |
 | <a name="output_cognito_oauth_token_endpoint"></a> [cognito\_oauth\_token\_endpoint](#output\_cognito\_oauth\_token\_endpoint) | The OAuth token endpoint URL |
+| <a name="output_cognito_orders_resource_server_identifier"></a> [cognito\_orders\_resource\_server\_identifier](#output\_cognito\_orders\_resource\_server\_identifier) | The resource server identifier for Orders API |
 | <a name="output_cognito_preventex_m2m_client_id"></a> [cognito\_preventex\_m2m\_client\_id](#output\_cognito\_preventex\_m2m\_client\_id) | The client ID for Preventex M2M application |
 | <a name="output_cognito_preventex_m2m_client_secret"></a> [cognito\_preventex\_m2m\_client\_secret](#output\_cognito\_preventex\_m2m\_client\_secret) | The client secret for Preventex M2M application |
-| <a name="output_cognito_preventex_resource_server_identifier"></a> [cognito\_preventex\_resource\_server\_identifier](#output\_cognito\_preventex\_resource\_server\_identifier) | The resource server identifier for Preventex API |
 | <a name="output_cognito_resource_server_identifier"></a> [cognito\_resource\_server\_identifier](#output\_cognito\_resource\_server\_identifier) | The identifier of the Cognito Resource Server |
 | <a name="output_cognito_resource_server_scopes"></a> [cognito\_resource\_server\_scopes](#output\_cognito\_resource\_server\_scopes) | The scopes of the Cognito Resource Server |
+| <a name="output_cognito_results_resource_server_identifier"></a> [cognito\_results\_resource\_server\_identifier](#output\_cognito\_results\_resource\_server\_identifier) | The resource server identifier for Results API |
 | <a name="output_cognito_sh24_m2m_client_id"></a> [cognito\_sh24\_m2m\_client\_id](#output\_cognito\_sh24\_m2m\_client\_id) | The client ID for SH:24 M2M application |
 | <a name="output_cognito_sh24_m2m_client_secret"></a> [cognito\_sh24\_m2m\_client\_secret](#output\_cognito\_sh24\_m2m\_client\_secret) | The client secret for SH:24 M2M application |
-| <a name="output_cognito_sh24_resource_server_identifier"></a> [cognito\_sh24\_resource\_server\_identifier](#output\_cognito\_sh24\_resource\_server\_identifier) | The resource server identifier for SH:24 API |
 | <a name="output_cognito_unauthenticated_role_arn"></a> [cognito\_unauthenticated\_role\_arn](#output\_cognito\_unauthenticated\_role\_arn) | The ARN of the IAM role for unauthenticated Cognito users |
 | <a name="output_cognito_user_pool_arn"></a> [cognito\_user\_pool\_arn](#output\_cognito\_user\_pool\_arn) | The ARN of the Cognito User Pool |
 | <a name="output_cognito_user_pool_client_id"></a> [cognito\_user\_pool\_client\_id](#output\_cognito\_user\_pool\_client\_id) | The ID of the Cognito User Pool Client |
