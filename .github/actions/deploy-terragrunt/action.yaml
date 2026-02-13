@@ -21,10 +21,6 @@ inputs:
     description: "Whether to enable state locking (default: true)"
     required: false
     default: "true"
-  repo_path:
-    description: "Path to the repository for checkout (if needed)"
-    required: false
-    default: "."
 
 runs:
   using: "composite"
@@ -36,7 +32,7 @@ runs:
         aws-region: ${{ inputs.aws_region }}
 
     - name: Install mise tools
-      uses: ${{ inputs.repo_path }}/.github/actions/install-mise
+      uses: ./.github/actions/install-mise
 
     - name: Terragrunt Init
       working-directory: ${{ inputs.working_directory }}
