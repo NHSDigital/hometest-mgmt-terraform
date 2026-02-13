@@ -46,10 +46,22 @@ jobs:
       max-parallel: 1  # Forces sequential
       fail-fast: true
     steps:
-      - name: Checkout
+      - name: "Checkout hometest-mgmt-terraform"
         uses: actions/checkout@v6
+        with:
+          path: hometest-mgmt-terraform
 
-      - uses: ./.github/actions/deploy-terragrunt
+      - name: "Checkout hometest-service"
+        uses: actions/checkout@v6
+        with:
+          repository: "NHSDigital/hometest-service"
+          ref: ${{ inputs.hometest_service_ref }}
+          path: hometest-service
+          ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
+
+      - name: "Run Terragrunt Plan for ${{ matrix.module }}"
+        uses: ./.github/actions/deploy-terragrunt
+        working-directory: hometest-mgmt-terraform
         with:
           working_directory: infrastructure/environments/poc/${{ matrix.module }}
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
