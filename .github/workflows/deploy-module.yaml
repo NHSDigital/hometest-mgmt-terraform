@@ -8,7 +8,7 @@ on:
       hometest_service_ref:
         description: "Branch, tag, or SHA to checkout for hometest-service"
         required: false
-        default: "develop"
+        default: "main"
       environment:
         description: "Target environment"
         required: true
@@ -21,20 +21,20 @@ on:
         required: true
         type: choice
         options:
-          - core
           - dev
-        default: core
+          - core
+        default: dev
       module:
         description: "Terraform module to deploy"
         required: true
         type: choice
         options:
+          - hometest-app
           - bootstrap
           - network
           - aurora-postgres
-          - hometest-app
           - all
-        default: bootstrap
+        default: hometest-app
       action:
         description: "Terraform action to perform"
         required: true
@@ -135,7 +135,7 @@ jobs:
           repository: "NHSDigital/hometest-service"
           ref: ${{ inputs.hometest_service_ref }}
           path: hometest-service
-          token: ${{ secrets.NHS_HOMETEST_ORG_PAT }}
+          ssh_key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
 
 
       - name: "Deploy ${{ matrix.module }}"
