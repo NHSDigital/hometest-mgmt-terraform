@@ -133,18 +133,29 @@ jobs:
       - name: "Checkout hometest-service"
         uses: actions/checkout@v6
         with:
+          path: hometest-service
           repository: "NHSDigital/hometest-service"
           ref: ${{ inputs.hometest_service_ref }}
-          path: hometest-service
           ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
 
       - name: test
         run: |
-          ls
           echo "Working dir: $(pwd)"
-          ls hometest-mgmt-terraform
-          ls hometest-service
-
+          echo
+          echo "Listing current directory:"
+          ls
+          echo
+          echo "Contents of hometest-mgmt-terraform:"
+          ls hometest-mgmt-terraform/
+          echo
+          echo "Contents of hometest-service:"
+          ls hometest-service/
+          echo
+          echo "Listing ../"
+          ls ../
+          echo
+          echo "Listing ../../"
+          ls ../../
 
       - name: "Deploy ${{ matrix.module }}"
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
