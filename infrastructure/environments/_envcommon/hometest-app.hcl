@@ -80,7 +80,7 @@ terraform {
 
   # TODO: double-check added npm install --silent && npm --prefix ./lambdas install --silent, as it refresh package-lock.json
   before_hook "build_lambdas" {
-    commands = ["apply", "plan"]
+    commands = ["apply"]
     execute = [
       "bash", "-c",
       <<-EOF
