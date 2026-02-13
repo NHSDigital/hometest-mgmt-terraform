@@ -139,7 +139,7 @@ jobs:
 
 
       - name: "Deploy ${{ matrix.module }}"
-        uses: ./.github/actions/deploy-terragrunt
+        uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region: ${{ env.AWS_REGION }}
