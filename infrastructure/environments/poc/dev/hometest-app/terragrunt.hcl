@@ -53,7 +53,7 @@ dependency "aurora_postgres" {
   config_path = "../../core/aurora-postgres"
 
   mock_outputs = {
-    connection_string                  = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
+    connection_string = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -148,9 +148,9 @@ inputs = {
       timeout         = 30
       memory_size     = 256
       environment = {
-        NODE_OPTIONS  = "--enable-source-maps"
-        ENVIRONMENT   = include.envcommon.locals.environment
-        DATABASE_URL  = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = include.envcommon.locals.environment
+        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
         # DB_SECRET_ARN = dependency.aurora_postgres.outputs.db_instance_master_user_secret_arn
       }
     }
@@ -236,8 +236,8 @@ inputs = {
       environment = {
         NODE_OPTIONS     = "--enable-source-maps"
         ENVIRONMENT      = include.envcommon.locals.environment
-        AWS_REGION       = include.envcommon.locals.global_vars.locals.aws_region
         RESULT_QUEUE_URL = "https://sqs.${include.envcommon.locals.global_vars.locals.aws_region}.amazonaws.com/${include.envcommon.locals.account_id}/${include.envcommon.locals.project_name}-${include.envcommon.locals.environment}-order-results"
+        # AWS_REGION       = include.envcommon.locals.global_vars.locals.aws_region
       }
     }
   }
