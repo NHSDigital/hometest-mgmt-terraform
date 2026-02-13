@@ -144,7 +144,7 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.module }}
           action: ${{ inputs.action }}
-          repo_path: hometest-mgmt-terraform
+          # repo_path: hometest-mgmt-terraform
 
       - name: "Post deployment summary"
         if: always()
