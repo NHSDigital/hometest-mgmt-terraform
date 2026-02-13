@@ -138,13 +138,13 @@ jobs:
           ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
 
       - name: "Deploy ${{ matrix.module }}"
-        working-directory: hometest-mgmt-terraform
-        uses: ./.github/actions/deploy-terragrunt
+        uses: hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region: ${{ env.AWS_REGION }}
           working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.module }}
           action: ${{ inputs.action }}
+          repo_path: hometest-mgmt-terraform
 
       - name: "Post deployment summary"
         if: always()

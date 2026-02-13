@@ -164,11 +164,11 @@ jobs:
           ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
 
       - name: Deploy TF Dev
-        uses: ./.github/actions/deploy-terragrunt
-        working-directory: hometest-mgmt-terraform
+        uses: hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
-          working_directory: infrastructure/environments/poc/dev/hometest-app
+          working_directory: hometest-mgmt-terraform/infrastructure/environments/poc/dev/hometest-app
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          repo_path: hometest-mgmt-terraform
 
 
   # TODO: More jobs or/and steps here
