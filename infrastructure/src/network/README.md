@@ -31,7 +31,7 @@ flowchart TB
         end
 
         subgraph DataSubnets["Data Subnets (Isolated)"]
-            RDS[("🗄️ RDS Database")]
+            Aurora[("🗄️ Aurora Database")]
             Redis[("💾 ElastiCache")]
         end
     end
@@ -44,12 +44,12 @@ flowchart TB
     APIGW -->|"VPC Link"| VPCL
     VPCL --> SG
     SG --> Lambda
-    Lambda -->|"Private Connection"| RDS
+    Lambda -->|"Private Connection"| Aurora
     Lambda -->|"Private Connection"| Redis
 
     style WAF fill:#ff6b6b,color:#fff
     style Lambda fill:#ff9900,color:#fff
-    style RDS fill:#3b48cc,color:#fff
+    style Aurora fill:#3b48cc,color:#fff
     style R53 fill:#8c4fff,color:#fff
     style APIGW fill:#ff4f8b,color:#fff
 ```
@@ -187,7 +187,7 @@ sequenceDiagram
     participant WAF as 🛡️ WAF
     participant APIGW as 🚪 API Gateway
     participant Lambda as ⚡ Lambda
-    participant RDS as 🗄️ RDS
+    participant Aurora as 🗄️ Aurora
     participant NFW as 🔥 Network Firewall
     participant External as 🌍 External API
 
@@ -200,8 +200,8 @@ sequenceDiagram
     else Request Allowed
         WAF->>APIGW: 4b. Forward Request
         APIGW->>Lambda: 5. Invoke via VPC Link
-        Lambda->>RDS: 6. Query Database (Private)
-        RDS-->>Lambda: 7. Return Data
+        Lambda->>Aurora: 6. Query Database (Private)
+        Aurora-->>Lambda: 7. Return Data
 
         opt External API Call
             Lambda->>NFW: 8. Outbound Request
@@ -249,14 +249,14 @@ sequenceDiagram
 │  └─────────────────────────────────────────────────────────────────────────┘ │
 │                              ↓                                               │
 │  ┌─────────────────────────────────────────────────────────────────────────┐ │
-│  │                       DATA SUBNETS (Isolated)                            │ │
+│  │                       DATA SUBNETS (Isolated)                           │ │
 │  │   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                  │ │
 │  │   │   AZ-1       │  │   AZ-2       │  │   AZ-3       │                  │ │
 │  │   │ 10.0.192.0/21│  │ 10.0.200.0/21│  │ 10.0.208.0/21│                  │ │
-│  │   │   [RDS]      │  │   [RDS]      │  │ [ElastiCache]│                  │ │
+│  │   │   [Aurora]   │  │   [Aurora]   │  │ [ElastiCache]│                  │ │
 │  │   └──────────────┘  └──────────────┘  └──────────────┘                  │ │
 │  └─────────────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────-────────────────────────┘
 ```
 
 ### Architecture with Network Firewall (Egress Filtering Enabled)
@@ -297,7 +297,7 @@ sequenceDiagram
 │  ┌─────────────────────────────────────────────────────────────────────────┐ │
 │  │                       DATA SUBNETS (Isolated)                            │ │
 │  │   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                  │ │
-│  │   │   [RDS]      │  │   [RDS]      │  │ [ElastiCache]│                  │ │
+│  │   │   [Aurora]   │  │   [Aurora]   │  │ [ElastiCache]│                  │ │
 │  │   └──────────────┘  └──────────────┘  └──────────────┘                  │ │
 │  └─────────────────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────────────────┘

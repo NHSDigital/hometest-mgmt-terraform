@@ -17,7 +17,7 @@ resource "aws_vpc_endpoint" "s3" {
   })
 }
 
-# DynamoDB not used in this deployment - only RDS PostgreSQL, Lambda, API Gateway, WAF, SQS, S3
+# DynamoDB not used in this deployment - only Aurora PostgreSQL, Lambda, API Gateway, WAF, SQS, S3
 
 # Security Group for Interface Endpoints
 resource "aws_security_group" "vpc_endpoints" {

@@ -11,7 +11,7 @@ resource "aws_resourcegroups_group" "rg" {
   for_each = toset(var.aws_allowed_regions)
 
   name        = "${local.rg_name}-${each.key}"
-  description = "Resource group containing rds-postgres Terraform infrastructure"
+  description = "Resource group containing aurora-postgres Terraform infrastructure"
 
   region = each.key
 
