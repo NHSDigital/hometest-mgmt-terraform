@@ -9,6 +9,7 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
+        args: ["--maxkb=500"] # 500KB max file size
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: detect-private-key
@@ -49,8 +50,36 @@ repos:
           - --args=--skip-dirs=.external_modules
 
       - id: terragrunt_validate_inputs
-        name: Terragrunt validate inputs
+        name: Terragrunt validate inputs Bootstrap
         files: ^infrastructure/environments/poc/core/bootstrap/[^/]+$
+        args:
+          # Optionally check for unused inputs
+          - --args=--terragrunt-strict-validate
+
+      - id: terragrunt_validate_inputs
+        name: Terragrunt validate inputs Network
+        files: ^infrastructure/environments/poc/core/network/[^/]+$
+        args:
+          # Optionally check for unused inputs
+          - --args=--terragrunt-strict-validate
+
+      - id: terragrunt_validate_inputs
+        name: Terragrunt validate inputs RDS
+        files: ^infrastructure/environments/poc/core/aurora-postgres/[^/]+$
+        args:
+          # Optionally check for unused inputs
+          - --args=--terragrunt-strict-validate
+
+      - id: terragrunt_validate_inputs
+        name: Terragrunt validate inputs Shared Services
+        files: ^infrastructure/environments/poc/core/shared_services/[^/]+$
+        args:
+          # Optionally check for unused inputs
+          - --args=--terragrunt-strict-validate
+
+      - id: terragrunt_validate_inputs
+        name: Terragrunt validate inputs Dev
+        files: ^infrastructure/environments/poc/dev/hometest-app/[^/]+$
         args:
           # Optionally check for unused inputs
           - --args=--terragrunt-strict-validate
@@ -90,3 +119,17 @@ repos:
       - id: markdownlint
         exclude: ^infrastructure/src
         args: [--fix]
+
+  # - repo: local
+  #   hooks:
+  #     - id: trivy-fs
+  #       name: Trivy Filesystem (vulns/config/secrets)
+  #       entry: sh -c 'trivy fs --exit-code 1 --no-progress --severity HIGH,CRITICAL .'
+  #       language: system
+  #       types: [file]
+  #       pass_filenames: true
+  #     - id: trivy-repo
+  #       name: Trivy Repo (Git scan)
+  #       entry: sh -c 'trivy repo --exit-code 1 --no-progress --severity HIGH,CRITICAL .'
+  #       language: system
+  #       types: [file]

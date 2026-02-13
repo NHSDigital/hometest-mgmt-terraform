@@ -53,14 +53,7 @@ dependency "aurora_postgres" {
   config_path = "../../core/aurora-postgres"
 
   mock_outputs = {
-    db_instance_endpoint               = "mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com:5432"
-    db_instance_address                = "mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com"
-    db_instance_port                   = 5432
-    db_instance_name                   = "hometest_poc"
-    db_instance_username               = "postgres"
-    db_instance_master_user_secret_arn = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:rds-mock-secret"
-    connection_string                  = "postgresql://postgres@mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest_poc"
-    security_group_id                  = "sg-mock-rds"
+    connection_string = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -96,9 +89,9 @@ inputs = {
   # IAM Permissions - Grant Lambda access to secrets
   # Note: AWS Secrets Manager ARNs have a random suffix, use -* wildcard to match
   lambda_secrets_arns = [
-    dependency.aurora_postgres.outputs.db_instance_master_user_secret_arn,
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/preventex-dev-client-secret-*",
-    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/sh24-dev-client-secret-*"
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/sh24-dev-client-secret-*",
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/nhs-login-private-key-*"
   ]
 
   # KMS keys for secrets encrypted with different keys than shared_services KMS
@@ -122,6 +115,8 @@ inputs = {
   # - / and /*           → S3 SPA (Next.js)
   # - /hello-world/*     → API Gateway → hello-world-lambda
   # - /test-order/*      → API Gateway → eligibility-test-info-lambda
+  # - /login/*           → API Gateway → login-lambda
+  # - /result/*          → API Gateway → order-result-lambda
   #
   # SQS-triggered (no CloudFront/API Gateway):
   # - order-router-lambda → Processes orders from SQS queue asynchronously
@@ -153,54 +148,87 @@ inputs = {
       timeout         = 30
       memory_size     = 256
       environment = {
-        NODE_OPTIONS  = "--enable-source-maps"
-        ENVIRONMENT   = include.envcommon.locals.environment
-        DATABASE_URL  = "${dependencaurora_postgres.outputs.connection_string}?currentSchema=hometest"
-        DB_SECRET_ARN = dependency.aurora_postgres.outputs.db_instance_master_user_secret_arn
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = include.envcommon.locals.environment
+        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
+        # DB_SECRET_ARN = dependency.aurora_postgres.outputs.db_instance_master_user_secret_arn
       }
     }
 
     # Order Router Lambda - SQS triggered for async order processing
-    # NOT exposed via API Gateway - processes orders from SQS queue
-    # Orders are submitted to SQS via eligibility-test-info-lambda or directly
-    # Matches local: api_path = "test-order/order" (but async via SQS here)
+    # Triggered by order-placement SQS queue (NOT API Gateway)
+    # Orders are submitted to SQS via eligibility-test-info-lambda or front-end
+    # Routes orders to appropriate supplier based on supplier_code in database
     "order-router-lambda" = {
       description     = "Order Router Service - Processes orders from SQS queue"
-      sqs_trigger     = false          # Triggered by SQS, no API Gateway endpoint
-      api_path_prefix = "order-router" # Not used for routing since this is SQS-triggered, but included for consistency
+      sqs_trigger     = false          # Event source mapping created separately in sqs.tf
+      api_path_prefix = null           # SQS-triggered, no API Gateway endpoint
       handler         = "index.handler"
       timeout         = 60 # Longer timeout for external API calls to supplier
       memory_size     = 512
       environment = {
-        NODE_OPTIONS                = "--enable-source-maps"
-        ENVIRONMENT                 = include.envcommon.locals.environment
-        SUPPLIER_BASE_URL           = "https://func-nhshometest-dev.azurewebsites.net/"
-        SUPPLIER_OAUTH_TOKEN_PATH   = "/api/oauth"
-        SUPPLIER_CLIENT_ID          = "7e9b8f16-4686-46f4-903e-2d364774fc82"
-        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/preventex-dev-client-secret"
-        SUPPLIER_ORDER_PATH         = "/api/order"
-        # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = include.envcommon.locals.environment
+        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
       }
     }
 
+    # NOTE: This lambda may be redundant - order-router-lambda handles all suppliers
+    # dynamically based on supplier_code from the database. Consider removing this.
     "order-router-lambda-sh24" = {
       description     = "Order Router Service - Processes orders from SQS queue for SH24 supplier"
-      sqs_trigger     = false               # Triggered by SQS, no API Gateway endpoint
-      api_path_prefix = "order-router-sh24" # Not used for routing since this is SQS-triggered, but included for consistency
+      sqs_trigger     = false          # Not currently triggered by SQS
+      api_path_prefix = null           # SQS-triggered, no API Gateway endpoint
       handler         = "index.handler"
       timeout         = 60 # Longer timeout for external API calls to supplier
       memory_size     = 512
       zip_path        = "${include.envcommon.locals.lambdas_base_path}/order-router-lambda/order-router-lambda.zip"
       environment = {
-        NODE_OPTIONS                = "--enable-source-maps"
-        ENVIRONMENT                 = include.envcommon.locals.environment
-        SUPPLIER_BASE_URL           = "https://admin.qa3.sh24.org.uk/"
-        SUPPLIER_OAUTH_TOKEN_PATH   = "/oauth/token"
-        SUPPLIER_CLIENT_ID          = "zrgmf33Zdk-515BIMrds29v9Z3KzoH-tfYDgxLsYtZE"
-        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/sh24-dev-client-secret"
-        SUPPLIER_ORDER_PATH         = "/order"
-        SUPPLIER_OAUTH_SCOPE        = "order results"
-        # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = include.envcommon.locals.environment
+        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
+      }
+    }
+
+    # Login Lambda - NHS Login authentication
+    # CloudFront: /login/* → API Gateway → Lambda
+    # Handles: POST /login (initiates NHS Login OAuth flow)
+    # Matches local: api_path = "login", http_method = "POST"
+    "login-lambda" = {
+      description     = "Login Service - NHS Login authentication"
+      api_path_prefix = "login"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS                               = "--enable-source-maps"
+        ENVIRONMENT                                = include.envcommon.locals.environment
+        NHS_LOGIN_BASE_ENDPOINT_URL                = "https://auth.sandpit.signin.nhs.uk"
+        NHS_LOGIN_CLIENT_ID                        = "hometest"
+        NHS_LOGIN_REDIRECT_URL                     = "https://${include.envcommon.locals.env_domain}/callback"
+        NHS_LOGIN_PRIVATE_KEY_SECRET_NAME          = "nhs-hometest/dev/nhs-login-private-key"
+        AUTH_SESSION_MAX_DURATION_MINUTES          = "60"
+        AUTH_ACCESS_TOKEN_EXPIRY_DURATION_MINUTES  = "60"
+        AUTH_REFRESH_TOKEN_EXPIRY_DURATION_MINUTES = "60"
+        AUTH_COOKIE_SAME_SITE                      = "Lax"
+      }
+    }
+
+    # Order Result Lambda - Receives test results from suppliers
+    # CloudFront: /result/* → API Gateway → Lambda
+    # Handles: POST /result (receives test results webhook from supplier)
+    # Matches local: api_path = "result", http_method = "POST"
+    "order-result-lambda" = {
+      description     = "Order Result Service - Receives test results from suppliers"
+      api_path_prefix = "result"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS     = "--enable-source-maps"
+        ENVIRONMENT      = include.envcommon.locals.environment
+        RESULT_QUEUE_URL = "https://sqs.${include.envcommon.locals.global_vars.locals.aws_region}.amazonaws.com/${include.envcommon.locals.account_id}/${include.envcommon.locals.project_name}-${include.envcommon.locals.environment}-order-results"
+        # AWS_REGION       = include.envcommon.locals.global_vars.locals.aws_region
       }
     }
   }

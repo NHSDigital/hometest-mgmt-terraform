@@ -34,6 +34,28 @@ on:
         type: string
 
 jobs:
+  check-tf:
+    name: "Check Terraform code"
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write    # REQUIRED for OIDC token
+      contents: read     # For checkout
+    strategy:
+      matrix:
+        module: [core/bootstrap, core/network, core/aurora-postgres, core/shared_services, dev/hometest-app]
+      max-parallel: 1  # Forces sequential
+      fail-fast: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - uses: ./.github/actions/deploy-terragrunt
+        with:
+          working_directory: infrastructure/environments/poc/${{ matrix.module }}
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          action: "plan"
+          lock_enabled: "false"  # Disable locking for plan to avoid conflicts in PRs, since these are not actually applied
+
   test-unit:
     name: "Unit tests"
     runs-on: ubuntu-latest
@@ -87,9 +109,10 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Full history is needed to improving relevancy of reporting
-      - name: "Perform static analysis"
-        uses: ./.github/actions/perform-static-analysis
-        with:
-          sonar_organisation_key: "${{ vars.SONAR_ORGANISATION_KEY }}"
-          sonar_project_key: "${{ vars.SONAR_PROJECT_KEY }}"
-          sonar_token: "${{ secrets.SONAR_TOKEN }}"
+      # TODO: revert when SonarCloud credentials will be provided
+      # - name: "Perform static analysis"
+      #   uses: ./.github/actions/perform-static-analysis
+      #   with:
+      #     sonar_organisation_key: "${{ vars.SONAR_ORGANISATION_KEY }}"
+      #     sonar_project_key: "${{ vars.SONAR_PROJECT_KEY }}"
+      #     sonar_token: "${{ secrets.SONAR_TOKEN }}"
