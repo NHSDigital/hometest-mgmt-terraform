@@ -51,14 +51,14 @@ calculate_source_hash() {
   # - package.json and package-lock.json (dependencies)
   # - tsconfig.json (build configuration)
   # - Build scripts
-  
+
   local hash_cmd="sha256sum"
   if ! command -v sha256sum &> /dev/null; then
     hash_cmd="md5sum"
   fi
-  
+
   local all_hashes=""
-  
+
   # Hash all source code files
   # Find .ts, .js, .mjs, .cjs, .json files in src directory
   if [[ -d "$LAMBDAS_DIR/src" ]]; then
@@ -72,7 +72,7 @@ calculate_source_hash() {
     \) 2>/dev/null | sort | xargs cat 2>/dev/null | $hash_cmd | cut -d' ' -f1)
     all_hashes+="src:${src_hash}|"
   fi
-  
+
   # Hash build scripts
   if [[ -d "$LAMBDAS_DIR/scripts" ]]; then
     local scripts_hash
@@ -83,7 +83,7 @@ calculate_source_hash() {
     \) 2>/dev/null | sort | xargs cat 2>/dev/null | $hash_cmd | cut -d' ' -f1)
     all_hashes+="scripts:${scripts_hash}|"
   fi
-  
+
   # Hash config files at root level
   for file in \
     "$LAMBDAS_DIR/package.json" \
@@ -97,11 +97,11 @@ calculate_source_hash() {
       all_hashes+="$(basename "$file"):${file_hash}|"
     fi
   done
-  
+
   # Combine all hashes into final hash
   local final_hash
   final_hash=$(echo "$all_hashes" | $hash_cmd | cut -d' ' -f1)
-  
+
   echo "$final_hash"
 }
 
@@ -110,11 +110,11 @@ show_hash_inputs() {
   echo "Files included in hash calculation:"
   echo "  Source files:"
   find "$LAMBDAS_DIR/src" -type f \( -name "*.ts" -o -name "*.js" -o -name "*.json" \) 2>/dev/null | wc -l | xargs printf "    %s files in src/\n"
-  
+
   if [[ -d "$LAMBDAS_DIR/scripts" ]]; then
     find "$LAMBDAS_DIR/scripts" -type f \( -name "*.ts" -o -name "*.js" \) 2>/dev/null | wc -l | xargs printf "    %s files in scripts/\n"
   fi
-  
+
   echo "  Config files:"
   for file in package.json package-lock.json tsconfig.json babel.config.cjs; do
     if [[ -f "$LAMBDAS_DIR/$file" ]]; then
@@ -141,30 +141,30 @@ needs_rebuild() {
     echo "Force rebuild requested via FORCE_LAMBDA_REBUILD=true"
     return 0
   fi
-  
+
   local current_hash
   current_hash=$(calculate_source_hash)
   local cached_hash
   cached_hash=$(get_cached_hash)
-  
+
   if [[ -z "$cached_hash" ]]; then
     echo "No cached hash found - initial build required"
     return 0
   fi
-  
+
   if [[ "$current_hash" != "$cached_hash" ]]; then
     echo "Source changes detected (hash changed)"
     echo "  Previous: ${cached_hash:0:16}..."
     echo "  Current:  ${current_hash:0:16}..."
     return 0
   fi
-  
+
   # Also check if dist directory exists and has content
   if [[ ! -d "$LAMBDAS_DIR/dist" ]] || [[ -z "$(ls -A "$LAMBDAS_DIR/dist" 2>/dev/null)" ]]; then
     echo "Dist directory missing or empty - rebuild required"
     return 0
   fi
-  
+
   # Check if all lambda zips exist
   for lambda_dist in "$LAMBDAS_DIR/dist"/*/; do
     if [[ -d "$lambda_dist" ]]; then
@@ -177,19 +177,19 @@ needs_rebuild() {
       fi
     fi
   done
-  
+
   return 1
 }
 
 install_dependencies() {
   echo "Installing dependencies..."
-  
+
   # Install root dependencies (if needed for shared libs)
   cd "$SERVICE_ROOT"
   if [[ -f "package.json" ]]; then
     npm install --silent 2>/dev/null || npm install
   fi
-  
+
   # Install lambda dependencies
   cd "$LAMBDAS_DIR"
   npm ci --silent 2>/dev/null || npm install --silent 2>/dev/null || npm install
@@ -198,7 +198,7 @@ install_dependencies() {
 build_lambdas() {
   echo "Building lambdas..."
   cd "$LAMBDAS_DIR"
-  
+
   # Run the build script
   npm run build --silent 2>/dev/null || npm run build
 }
@@ -206,12 +206,12 @@ build_lambdas() {
 package_lambdas() {
   echo "Packaging lambdas..."
   cd "$LAMBDAS_DIR"
-  
+
   if [[ ! -d "dist" ]]; then
     echo "Error: dist directory not found after build"
     exit 1
   fi
-  
+
   # Check if zip is available
   if ! command -v zip &> /dev/null; then
     echo "Warning: 'zip' command not found, attempting to install..."
@@ -226,29 +226,29 @@ package_lambdas() {
       exit 1
     fi
   fi
-  
+
   local packaged=0
   for lambda_dist in dist/*/; do
     if [[ -d "$lambda_dist" ]]; then
       local lambda_name
       lambda_name=$(basename "$lambda_dist")
-      
+
       if [[ -d "src/$lambda_name" ]]; then
         echo "  Packaging $lambda_name..."
         local zip_target="src/$lambda_name/$lambda_name.zip"
-        
+
         # Remove existing zip if present
         rm -f "$zip_target"
-        
+
         # Debug: show what we're zipping
         echo "    Source: dist/$lambda_name"
         echo "    Target: $zip_target"
         echo "    Files: $(find "dist/$lambda_name" -type f | wc -l)"
-        
+
         # Create zip from dist directory (|| true to handle set -e)
         local zip_result=0
         (cd "dist/$lambda_name" && zip -r "../../$zip_target" . 2>&1) || zip_result=$?
-        
+
         if [[ $zip_result -eq 0 ]] && [[ -f "$zip_target" ]]; then
           echo "    Created: $zip_target ($(du -h "$zip_target" | cut -f1))"
           packaged=$((packaged + 1))
@@ -261,7 +261,7 @@ package_lambdas() {
       fi
     fi
   done
-  
+
   echo "Packaged $packaged lambda(s)"
 }
 
@@ -291,29 +291,29 @@ if needs_rebuild; then
   echo ""
   echo "Starting build process..."
   echo ""
-  
+
   # Capture start time
   start_time=$(date +%s)
-  
+
   # Run build steps
   install_dependencies
   build_lambdas
   package_lambdas
-  
+
   # Calculate and save new hash
   new_hash=$(calculate_source_hash)
   save_hash "$new_hash"
-  
+
   # Calculate duration
   end_time=$(date +%s)
   duration=$((end_time - start_time))
-  
+
   echo ""
   echo "=========================================="
   echo "Lambda build complete! (${duration}s)"
   echo "Hash: ${new_hash:0:16}..."
   echo "=========================================="
-  
+
   # Log build info
   {
     echo "Build completed: $(date -Iseconds)"
@@ -325,7 +325,7 @@ else
   echo "=========================================="
   echo "No changes detected - skipping build"
   echo "=========================================="
-  
+
   if [[ -f "$BUILD_LOG" ]]; then
     echo ""
     echo "Last build info:"

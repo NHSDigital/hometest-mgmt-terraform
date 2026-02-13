@@ -79,7 +79,7 @@ terraform {
   # Build and package Lambda code locally (Terraform uploads and deploys)
   # Uses scripts/build-lambdas.sh which only rebuilds when source changes are detected
   before_hook "build_lambdas" {
-    commands = ["plan", 
+    commands = ["plan",
     "apply"]
     execute = [
       "bash", "-c",
