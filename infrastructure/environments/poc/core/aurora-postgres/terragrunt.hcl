@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # TERRAGRUNT CONFIGURATION
-# This deploys a PostgreSQL RDS instance for POC environment
+# This deploys a PostgreSQL Aurora instance for POC environment
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Include the root `terragrunt.hcl` configuration
@@ -14,7 +14,7 @@ terraform {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Dependencies - RDS requires network module to be deployed first
+# Dependencies - Aurora requires network module to be deployed first
 # ---------------------------------------------------------------------------------------------------------------------
 dependency "network" {
   config_path = "../network"

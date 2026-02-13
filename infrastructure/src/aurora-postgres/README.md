@@ -2,7 +2,7 @@
 
 ## Overview
 
-This module deploys an RDS PostgreSQL instance in the VPC and data subnets created by the `network` module.
+This module deploys an Aurora PostgreSQL instance in the VPC and data subnets created by the `network` module.
 
 **Important:** This module depends on the network module being deployed first. It uses Terraform remote state to reference:
 - VPC ID from `data.terraform_remote_state.network.outputs.vpc_id`
@@ -18,7 +18,11 @@ This module deploys an RDS PostgreSQL instance in the VPC and data subnets creat
 ## Usage
 
 ```hcl
+<<<<<<< HEAD
 module "rds_postgres" {
+=======
+module "aurora_postgres" {
+>>>>>>> 168f980fdc6a6c21630c528726ef02dad14ef142
   source = "./src/aurora-postgres"
 
   # Required variables
