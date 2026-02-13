@@ -1,4 +1,4 @@
-data "aws_rds_cluster" "db" {
+data "aws_aurora_cluster" "db" {
   cluster_identifier = var.db_cluster_id
 }
 

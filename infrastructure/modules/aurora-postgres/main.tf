@@ -1,5 +1,5 @@
 ################################################################################
-# RDS PostgreSQL Module
+# Aurora PostgreSQL Module
 ################################################################################
 
 locals {
@@ -11,13 +11,13 @@ locals {
       Name = var.identifier
 
       # Technical metadata
-      Service       = "rds"
+      Service       = "aurora"
       Engine        = "postgresql"
       EngineVersion = var.engine_version
 
       # Management metadata
       ManagedBy = "terraform"
-      Module    = "rds-postgres"
+      Module    = "aurora-postgres"
 
       # Cost allocation
       CostCenter = try(var.tags["CostCenter"], "")
@@ -52,7 +52,7 @@ locals {
 }
 
 ################################################################################
-# RDS PostgreSQL Instance
+# Aurora PostgreSQL Instance
 ################################################################################
 
 module "aurora_postgres" {

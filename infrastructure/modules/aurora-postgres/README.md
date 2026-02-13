@@ -1,10 +1,10 @@
-# RDS PostgreSQL Module
+# Aurora PostgreSQL Module
 
-Terraform module to create an AWS RDS PostgreSQL instance with security group.
+Terraform module to create an AWS Aurora PostgreSQL instance with security group.
 
 ## Features
 
-- PostgreSQL RDS instance with configurable version and instance class
+- PostgreSQL Aurora Serverless ckuster with configurable version and performance parameters
 - Security group with customizable ingress rules
 - Automatic subnet group creation or use existing
 - Encryption at rest with KMS support
@@ -20,8 +20,8 @@ Terraform module to create an AWS RDS PostgreSQL instance with security group.
 ### Basic Example
 
 ```hcl
-module "rds_postgres" {
-  source = "../../modules/rds-postgres"
+module "aurora_postgres" {
+  source = "../../modules/aurora-postgres"
 
   identifier = "myapp-db"
   vpc_id     = "vpc-xxxxx"
@@ -45,8 +45,8 @@ module "rds_postgres" {
 ### Production Example
 
 ```hcl
-module "rds_postgres" {
-  source = "../../modules/rds-postgres"
+module "aurora_postgres" {
+  source = "../../modules/aurora-postgres"
 
   identifier = "myapp-prod-db"
   vpc_id     = "vpc-xxxxx"
@@ -112,8 +112,8 @@ module "rds_postgres" {
 ### With Existing Subnet Group
 
 ```hcl
-module "rds_postgres" {
-  source = "../../modules/rds-postgres"
+module "aurora_postgres" {
+  source = "../../modules/aurora-postgres"
 
   identifier           = "myapp-db"
   vpc_id              = "vpc-xxxxx"
@@ -163,5 +163,5 @@ Alternatively, set `manage_master_user_password = false` and provide your own pa
 
 | Name | Source | Version |
 |------|--------|---------|
-| db | terraform-aws-modules/rds/aws | ~> 6.0 |
+| db | terraform-aws-modules/rds-aurora/aws | ~> 10.0 |
 | security_group | terraform-aws-modules/security-group/aws | ~> 5.0 |

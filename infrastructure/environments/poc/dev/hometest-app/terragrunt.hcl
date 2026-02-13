@@ -49,8 +49,8 @@ dependency "shared_services" {
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
-dependency "rds_postgres" {
-  config_path = "../../core/rds-postgres"
+dependency "aurora_postgres" {
+  config_path = "../../core/aurora-postgres"
 
   mock_outputs = {
     db_instance_endpoint               = "mock-db.cluster-abc123.eu-west-2.rds.amazonaws.com:5432"
@@ -96,7 +96,7 @@ inputs = {
   # IAM Permissions - Grant Lambda access to secrets
   # Note: AWS Secrets Manager ARNs have a random suffix, use -* wildcard to match
   lambda_secrets_arns = [
-    dependency.rds_postgres.outputs.db_instance_master_user_secret_arn,
+    dependency.aurora_postgres.outputs.db_instance_master_user_secret_arn,
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/preventex-dev-client-secret-*",
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/sh24-dev-client-secret-*"
   ]
@@ -155,8 +155,8 @@ inputs = {
       environment = {
         NODE_OPTIONS  = "--enable-source-maps"
         ENVIRONMENT   = include.envcommon.locals.environment
-        DATABASE_URL  = "${dependency.rds_postgres.outputs.connection_string}?currentSchema=hometest"
-        DB_SECRET_ARN = dependency.rds_postgres.outputs.db_instance_master_user_secret_arn
+        DATABASE_URL  = "${dependencaurora_postgres.outputs.connection_string}?currentSchema=hometest"
+        DB_SECRET_ARN = dependency.aurora_postgres.outputs.db_instance_master_user_secret_arn
       }
     }
 
