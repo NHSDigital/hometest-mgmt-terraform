@@ -274,18 +274,8 @@ output "cognito_oauth_authorize_endpoint" {
 }
 
 #------------------------------------------------------------------------------
-# Preventex M2M Cognito User Pool Outputs
+# M2M App Client Outputs
 #------------------------------------------------------------------------------
-
-output "cognito_preventex_m2m_user_pool_id" {
-  description = "The ID of the Preventex M2M User Pool"
-  value       = var.enable_cognito ? aws_cognito_user_pool.preventex_m2m[0].id : null
-}
-
-output "cognito_preventex_m2m_user_pool_arn" {
-  description = "The ARN of the Preventex M2M User Pool"
-  value       = var.enable_cognito ? aws_cognito_user_pool.preventex_m2m[0].arn : null
-}
 
 output "cognito_preventex_m2m_client_id" {
   description = "The client ID for Preventex M2M application"
@@ -298,33 +288,9 @@ output "cognito_preventex_m2m_client_secret" {
   sensitive   = true
 }
 
-output "cognito_preventex_m2m_domain" {
-  description = "The domain for Preventex M2M User Pool"
-  value       = var.enable_cognito ? aws_cognito_user_pool_domain.preventex_m2m[0].domain : null
-}
-
-output "cognito_preventex_m2m_token_endpoint" {
-  description = "The OAuth token endpoint URL for Preventex M2M"
-  value       = var.enable_cognito ? "https://${aws_cognito_user_pool_domain.preventex_m2m[0].domain}.auth.${var.aws_region}.amazoncognito.com/oauth2/token" : null
-}
-
-output "cognito_preventex_m2m_resource_server_identifier" {
-  description = "The resource server identifier for Preventex M2M"
-  value       = var.enable_cognito ? aws_cognito_resource_server.preventex_m2m[0].identifier : null
-}
-
-#------------------------------------------------------------------------------
-# SH:24 M2M Cognito User Pool Outputs
-#------------------------------------------------------------------------------
-
-output "cognito_sh24_m2m_user_pool_id" {
-  description = "The ID of the SH:24 M2M User Pool"
-  value       = var.enable_cognito ? aws_cognito_user_pool.sh24_m2m[0].id : null
-}
-
-output "cognito_sh24_m2m_user_pool_arn" {
-  description = "The ARN of the SH:24 M2M User Pool"
-  value       = var.enable_cognito ? aws_cognito_user_pool.sh24_m2m[0].arn : null
+output "cognito_preventex_resource_server_identifier" {
+  description = "The resource server identifier for Preventex API"
+  value       = var.enable_cognito ? aws_cognito_resource_server.preventex[0].identifier : null
 }
 
 output "cognito_sh24_m2m_client_id" {
@@ -338,17 +304,7 @@ output "cognito_sh24_m2m_client_secret" {
   sensitive   = true
 }
 
-output "cognito_sh24_m2m_domain" {
-  description = "The domain for SH:24 M2M User Pool"
-  value       = var.enable_cognito ? aws_cognito_user_pool_domain.sh24_m2m[0].domain : null
-}
-
-output "cognito_sh24_m2m_token_endpoint" {
-  description = "The OAuth token endpoint URL for SH:24 M2M"
-  value       = var.enable_cognito ? "https://${aws_cognito_user_pool_domain.sh24_m2m[0].domain}.auth.${var.aws_region}.amazoncognito.com/oauth2/token" : null
-}
-
-output "cognito_sh24_m2m_resource_server_identifier" {
-  description = "The resource server identifier for SH:24 M2M"
-  value       = var.enable_cognito ? aws_cognito_resource_server.sh24_m2m[0].identifier : null
+output "cognito_sh24_resource_server_identifier" {
+  description = "The resource server identifier for SH:24 API"
+  value       = var.enable_cognito ? aws_cognito_resource_server.sh24[0].identifier : null
 }
