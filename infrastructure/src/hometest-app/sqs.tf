@@ -31,6 +31,55 @@ resource "aws_sqs_queue" "order_results" {
 }
 
 ################################################################################
+# SQS Queue for Order Placement (triggers order-router-lambda)
+################################################################################
+
+resource "aws_sqs_queue" "order_placement" {
+  count = var.enable_sqs_access ? 1 : 0
+
+  name                       = "${var.project_name}-${var.environment}-order-placement"
+  visibility_timeout_seconds = 360     # Should be 6x Lambda timeout (60s)
+  message_retention_seconds  = 1209600 # 14 days
+  delay_seconds              = 0
+  max_message_size           = 262144 # 256 KB
+  receive_wait_time_seconds  = 20     # Long polling
+
+  # Enable server-side encryption with KMS
+  kms_master_key_id                 = var.kms_key_arn
+  kms_data_key_reuse_period_seconds = 300
+
+  # Enable dead letter queue for failed order processing
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.order_placement_dlq[0].arn
+    maxReceiveCount     = 3
+  })
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-${var.environment}-order-placement"
+  })
+}
+
+################################################################################
+# Dead Letter Queue for Order Placement Failed Messages
+################################################################################
+
+resource "aws_sqs_queue" "order_placement_dlq" {
+  count = var.enable_sqs_access ? 1 : 0
+
+  name                       = "${var.project_name}-${var.environment}-order-placement-dlq"
+  visibility_timeout_seconds = 300
+  message_retention_seconds  = 1209600 # 14 days
+
+  # Enable server-side encryption with KMS
+  kms_master_key_id                 = var.kms_key_arn
+  kms_data_key_reuse_period_seconds = 300
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-${var.environment}-order-placement-dlq"
+  })
+}
+
+################################################################################
 # SQS Queue for Event Processing (triggers lambdas)
 ################################################################################
 
@@ -137,6 +186,29 @@ resource "aws_lambda_event_source_mapping" "sqs" {
 }
 
 ################################################################################
+# Lambda Event Source Mapping for Order Placement Queue -> Order Router Lambda
+################################################################################
+
+resource "aws_lambda_event_source_mapping" "order_placement" {
+  count = var.enable_sqs_access && contains(keys(local.all_lambdas), "order-router-lambda") ? 1 : 0
+
+  event_source_arn = aws_sqs_queue.order_placement[0].arn
+  function_name    = module.lambdas["order-router-lambda"].function_arn
+  enabled          = true
+
+  batch_size                         = 1
+  maximum_batching_window_in_seconds = 0
+
+  # Enable partial batch failure reporting
+  function_response_types = ["ReportBatchItemFailures"]
+
+  # Scaling configuration
+  scaling_config {
+    maximum_concurrency = 10
+  }
+}
+
+################################################################################
 # Outputs
 ################################################################################
 
@@ -168,4 +240,24 @@ output "order_results_queue_url" {
 output "order_results_queue_arn" {
   description = "ARN of the order results SQS queue"
   value       = var.enable_sqs_access ? aws_sqs_queue.order_results[0].arn : null
+}
+
+output "order_placement_queue_url" {
+  description = "URL of the order placement SQS queue"
+  value       = var.enable_sqs_access ? aws_sqs_queue.order_placement[0].url : null
+}
+
+output "order_placement_queue_arn" {
+  description = "ARN of the order placement SQS queue"
+  value       = var.enable_sqs_access ? aws_sqs_queue.order_placement[0].arn : null
+}
+
+output "order_placement_dlq_url" {
+  description = "URL of the order placement DLQ"
+  value       = var.enable_sqs_access ? aws_sqs_queue.order_placement_dlq[0].url : null
+}
+
+output "order_placement_dlq_arn" {
+  description = "ARN of the order placement DLQ"
+  value       = var.enable_sqs_access ? aws_sqs_queue.order_placement_dlq[0].arn : null
 }

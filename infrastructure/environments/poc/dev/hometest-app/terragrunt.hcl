@@ -156,46 +156,37 @@ inputs = {
     }
 
     # Order Router Lambda - SQS triggered for async order processing
-    # NOT exposed via API Gateway - processes orders from SQS queue
-    # Orders are submitted to SQS via eligibility-test-info-lambda or directly
-    # Matches local: api_path = "test-order/order" (but async via SQS here)
+    # Triggered by order-placement SQS queue (NOT API Gateway)
+    # Orders are submitted to SQS via eligibility-test-info-lambda or front-end
+    # Routes orders to appropriate supplier based on supplier_code in database
     "order-router-lambda" = {
       description     = "Order Router Service - Processes orders from SQS queue"
-      sqs_trigger     = false          # Triggered by SQS, no API Gateway endpoint
-      api_path_prefix = "order-router" # Not used for routing since this is SQS-triggered, but included for consistency
+      sqs_trigger     = false          # Event source mapping created separately in sqs.tf
+      api_path_prefix = null           # SQS-triggered, no API Gateway endpoint
       handler         = "index.handler"
       timeout         = 60 # Longer timeout for external API calls to supplier
       memory_size     = 512
       environment = {
-        NODE_OPTIONS                = "--enable-source-maps"
-        ENVIRONMENT                 = include.envcommon.locals.environment
-        SUPPLIER_BASE_URL           = "https://func-nhshometest-dev.azurewebsites.net/"
-        SUPPLIER_OAUTH_TOKEN_PATH   = "/api/oauth"
-        SUPPLIER_CLIENT_ID          = "7e9b8f16-4686-46f4-903e-2d364774fc82"
-        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/preventex-dev-client-secret"
-        SUPPLIER_ORDER_PATH         = "/api/order"
-        # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = include.envcommon.locals.environment
+        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
       }
     }
 
+    # NOTE: This lambda may be redundant - order-router-lambda handles all suppliers
+    # dynamically based on supplier_code from the database. Consider removing this.
     "order-router-lambda-sh24" = {
       description     = "Order Router Service - Processes orders from SQS queue for SH24 supplier"
-      sqs_trigger     = false               # Triggered by SQS, no API Gateway endpoint
-      api_path_prefix = "order-router-sh24" # Not used for routing since this is SQS-triggered, but included for consistency
+      sqs_trigger     = false          # Not currently triggered by SQS
+      api_path_prefix = null           # SQS-triggered, no API Gateway endpoint
       handler         = "index.handler"
       timeout         = 60 # Longer timeout for external API calls to supplier
       memory_size     = 512
       zip_path        = "${include.envcommon.locals.lambdas_base_path}/order-router-lambda/order-router-lambda.zip"
       environment = {
-        NODE_OPTIONS                = "--enable-source-maps"
-        ENVIRONMENT                 = include.envcommon.locals.environment
-        SUPPLIER_BASE_URL           = "https://admin.qa3.sh24.org.uk/"
-        SUPPLIER_OAUTH_TOKEN_PATH   = "/oauth/token"
-        SUPPLIER_CLIENT_ID          = "zrgmf33Zdk-515BIMrds29v9Z3KzoH-tfYDgxLsYtZE"
-        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/sh24-dev-client-secret"
-        SUPPLIER_ORDER_PATH         = "/order"
-        SUPPLIER_OAUTH_SCOPE        = "order results"
-        # AWS_DEFAULT_REGION      = include.envcommon.locals.global_vars.locals.aws_region
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = include.envcommon.locals.environment
+        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
       }
     }
 

@@ -11,11 +11,11 @@ locals {
   # Combine with variable-provided secrets ARNs
   all_secrets_arns = distinct(concat(var.lambda_secrets_arns, local.lambda_secrets_from_map))
 
-  # SQS queue ARNs (add the event queue if any lambda has sqs_trigger, and order-results queue if enabled)
+  # SQS queue ARNs (add the event queue if any lambda has sqs_trigger, and order-results/order-placement queues if enabled)
   sqs_queue_arns = distinct(concat(
     var.lambda_sqs_queue_arns,
     length(local.sqs_lambdas) > 0 ? [aws_sqs_queue.main[0].arn] : [],
-    var.enable_sqs_access ? [aws_sqs_queue.order_results[0].arn] : []
+    var.enable_sqs_access ? [aws_sqs_queue.order_results[0].arn, aws_sqs_queue.order_placement[0].arn] : []
   ))
 }
 
