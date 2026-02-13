@@ -55,7 +55,7 @@ runs:
         ls -l "/home/runner/work/hometest-mgmt-terraform/hometest-mgmt-terraform/.github/actions"
 
     - name: Install mise tools
-      uses: ./.github/actions/install-mise
+      uses: NHSDigital/hometest-mgmt-terraform/.github/actions/install-mise@main
 
     - name: Terragrunt Init
       working-directory: ${{ inputs.working_directory }}
