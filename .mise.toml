@@ -56,7 +56,13 @@ vale = "latest"
 
 # https://github.com/commitizen-tools/commitizen/releases
 "pipx:commitizen" = "latest"
+
+# https://github.com/pressly/goose/releases
+#"aqua:pressly/goose" = "latest"
+"go:github.com/pressly/goose/v3/cmd/goose" = "latest"
+
 tfupdate = "latest"
+go = "latest"
 
 # https://github.com/igorshubovych/markdownlint-cli/releases
 # markdownlint-cli = "latest"
@@ -64,3 +70,11 @@ tfupdate = "latest"
 [tasks.pre-commit]
 description = "Run pre-commit checks on all files"
 run = "pre-commit run --all-files --show-diff-on-failure --color=always"
+
+[tasks.test-migrations]
+description = "Test Goose DB migrations against local PostgreSQL in Docker"
+run = "./scripts/tests/goose-migrations.sh"
+
+[tasks.test-migrations-keep]
+description = "Test migrations and keep PostgreSQL container running"
+run = "KEEP_CONTAINER=true ./scripts/tests/goose-migrations.sh"

@@ -132,3 +132,20 @@ jobs:
       #     sonar_organisation_key: "${{ vars.SONAR_ORGANISATION_KEY }}"
       #     sonar_project_key: "${{ vars.SONAR_PROJECT_KEY }}"
       #     sonar_token: "${{ secrets.SONAR_TOKEN }}"
+
+  test-goose-migrations:
+    name: "Test Goose DB Migrations"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v6
+
+      - name: Install mise
+        uses: jdx/mise-action@v3
+        with:
+          cache: true
+          install: true
+
+      - name: "Run Goose Migration Tests"
+        run: mise run test-migrations
