@@ -38,6 +38,18 @@ inputs:
     description: "Git branch"
     required: false
     default: ""
+  service_repo:
+    description: "Service repository name"
+    required: false
+    default: ""
+  service_ref:
+    description: "Service repository branch/tag/ref"
+    required: false
+    default: ""
+  service_commit:
+    description: "Service repository commit SHA"
+    required: false
+    default: ""
   run_url:
     description: "GitHub Actions run URL"
     required: true
@@ -102,6 +114,19 @@ runs:
 
         if [ -n "${{ inputs.branch }}" ]; then
           FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Branch:*\n${{ inputs.branch }}\" }"
+        fi
+
+        if [ -n "${{ inputs.service_repo }}" ]; then
+          FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Service Repo:*\n${{ inputs.service_repo }}\" }"
+        fi
+
+        if [ -n "${{ inputs.service_ref }}" ]; then
+          FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Service Ref:*\n${{ inputs.service_ref }}\" }"
+        fi
+
+        if [ -n "${{ inputs.service_commit }}" ]; then
+          SHORT_SHA=$(echo "${{ inputs.service_commit }}" | cut -c1-7)
+          FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Service Commit:*\n${SHORT_SHA}\" }"
         fi
 
         FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Status:*\n${{ inputs.status }}\" }]"

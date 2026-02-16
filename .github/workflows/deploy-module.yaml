@@ -60,6 +60,7 @@ jobs:
     outputs:
       modules: ${{ steps.set-modules.outputs.modules }}
       working_dir_base: ${{ steps.set-modules.outputs.working_dir_base }}
+      service_commit: ${{ steps.service-info.outputs.commit }}
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
@@ -73,6 +74,11 @@ jobs:
           ref: ${{ inputs.hometest_service_ref }}
           path: hometest-service
           ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
+
+      - name: "Get service commit info"
+        id: service-info
+        working-directory: hometest-service
+        run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: "Set modules to deploy"
         id: set-modules
@@ -203,4 +209,7 @@ jobs:
           module: ${{ inputs.module }}
           action: ${{ inputs.action }}
           actor: ${{ github.actor }}
+          service_repo: NHSDigital/hometest-service
+          service_ref: ${{ inputs.hometest_service_ref }}
+          service_commit: ${{ needs.validate-inputs.outputs.service_commit }}
           run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

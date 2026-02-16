@@ -201,6 +201,21 @@ jobs:
         if: steps.check.outputs.secret_exists == 'true'
         uses: actions/checkout@v6
 
+      - name: "Checkout hometest-service"
+        if: steps.check.outputs.secret_exists == 'true'
+        uses: actions/checkout@v6
+        with:
+          repository: "NHSDigital/hometest-service"
+          ref: ${{ inputs.hometest_service_ref || 'develop' }}
+          path: hometest-service
+          ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
+
+      - name: "Get service commit info"
+        if: steps.check.outputs.secret_exists == 'true'
+        id: service
+        working-directory: hometest-service
+        run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: "Determine deployment status"
         if: steps.check.outputs.secret_exists == 'true'
         id: status
@@ -224,4 +239,7 @@ jobs:
           version: ${{ needs.metadata.outputs.version }}
           actor: ${{ github.actor }}
           branch: ${{ github.ref_name }}
+          service_repo: NHSDigital/hometest-service
+          service_ref: ${{ inputs.hometest_service_ref || 'develop' }}
+          service_commit: ${{ steps.service.outputs.commit }}
           run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
