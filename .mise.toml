@@ -54,6 +54,9 @@ pre-commit = "latest"
 # https://github.com/errata-ai/vale/releases
 vale = "latest"
 
+# https://github.com/commitizen-tools/commitizen/releases
+"pipx:commitizen" = "latest"
+tfupdate = "latest"
 
 # https://github.com/igorshubovych/markdownlint-cli/releases
 # markdownlint-cli = "latest"
