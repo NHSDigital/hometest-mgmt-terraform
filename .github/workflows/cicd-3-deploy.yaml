@@ -197,68 +197,31 @@ jobs:
         id: check
         run: echo "secret_exists=${{ secrets.SLACK_WEBHOOK_URL != '' }}" >> "$GITHUB_OUTPUT"
 
+      - name: "Checkout code"
+        if: steps.check.outputs.secret_exists == 'true'
+        uses: actions/checkout@v6
+
       - name: "Determine deployment status"
+        if: steps.check.outputs.secret_exists == 'true'
         id: status
         run: |
           if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
-            {
-              echo "status=failure"
-              echo "color=#dc3545"
-              echo "emoji=:x:"
-            } >> "$GITHUB_OUTPUT"
+            echo "result=failure" >> "$GITHUB_OUTPUT"
           elif [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
-            {
-              echo "status=cancelled"
-              echo "color=#ffc107"
-              echo "emoji=:warning:"
-            } >> "$GITHUB_OUTPUT"
+            echo "result=cancelled" >> "$GITHUB_OUTPUT"
           else
-            {
-              echo "status=success"
-              echo "color=#28a745"
-              echo "emoji=:white_check_mark:"
-            } >> "$GITHUB_OUTPUT"
+            echo "result=success" >> "$GITHUB_OUTPUT"
           fi
 
       - name: "Send Slack notification"
         if: steps.check.outputs.secret_exists == 'true'
-        uses: slackapi/slack-github-action@v2.0.0
+        uses: ./.github/actions/slack-notification
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            {
-              "attachments": [
-                {
-                  "color": "${{ steps.status.outputs.color }}",
-                  "blocks": [
-                    {
-                      "type": "header",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "${{ steps.status.outputs.emoji }} Hometest Deployment ${{ steps.status.outputs.status }}"
-                      }
-                    },
-                    {
-                      "type": "section",
-                      "fields": [
-                        { "type": "mrkdwn", "text": "*Environment:*\npoc" },
-                        { "type": "mrkdwn", "text": "*Version:*\n${{ needs.metadata.outputs.version }}" },
-                        { "type": "mrkdwn", "text": "*Triggered by:*\n${{ github.actor }}" },
-                        { "type": "mrkdwn", "text": "*Branch:*\n${{ github.ref_name }}" }
-                      ]
-                    },
-                    {
-                      "type": "actions",
-                      "elements": [
-                        {
-                          "type": "button",
-                          "text": { "type": "plain_text", "text": "View Run" },
-                          "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          status: ${{ steps.status.outputs.result }}
+          title: "Hometest Deployment"
+          environment: poc
+          version: ${{ needs.metadata.outputs.version }}
+          actor: ${{ github.actor }}
+          branch: ${{ github.ref_name }}
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
