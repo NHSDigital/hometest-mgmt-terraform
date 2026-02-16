@@ -114,6 +114,9 @@ jobs:
             echo "| Module(s) | ${{ inputs.module }} |"
             echo "| Action | ${{ inputs.action }} |"
             echo "| Triggered by | ${{ github.actor }} |"
+            echo "| Service Repo | NHSDigital/hometest-service |"
+            echo "| Service Ref | ${{ inputs.hometest_service_ref }} |"
+            echo "| Service Commit | ${{ steps.service-info.outputs.commit }} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
