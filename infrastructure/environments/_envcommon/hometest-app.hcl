@@ -77,36 +77,13 @@ terraform {
   # ---------------------------------------------------------------------------
 
   # Build and package Lambda code locally (Terraform uploads and deploys)
+  # Uses scripts/build-lambdas.sh which only rebuilds when source changes are detected
   before_hook "build_lambdas" {
-    commands = ["apply", "plan"]
+    commands = ["plan",
+    "apply"]
     execute = [
       "bash", "-c",
-      <<-EOF
-        LAMBDAS_DIR="${local.lambdas_source_dir}"
-        if [[ -d "$LAMBDAS_DIR" ]]; then
-          echo "Building lambdas from $LAMBDAS_DIR..."
-          cd "$LAMBDAS_DIR"
-          npm ci --silent 2>/dev/null || npm install --silent
-          npm run build --silent 2>/dev/null || true
-
-          # Package each lambda from dist to src (for Terraform to find)
-          if [[ -d "dist" ]]; then
-            for lambda_dist in dist/*/; do
-              lambda_name=$(basename "$lambda_dist")
-              if [[ -d "src/$lambda_name" ]]; then
-                echo "Packaging $lambda_name..."
-                cd "dist/$lambda_name"
-                zip -rq "../../src/$lambda_name/$lambda_name.zip" . 2>/dev/null || true
-                cd "$LAMBDAS_DIR"
-              fi
-            done
-          fi
-          echo "Lambda build complete!"
-        else
-          echo "Lambdas directory not found at $LAMBDAS_DIR"
-          exit 1
-        fi
-      EOF
+      "\"$(cd '${get_repo_root()}' && pwd)/scripts/build-lambdas.sh\" \"$(cd '${local.lambdas_source_dir}' && pwd)\" \"$(cd '${get_repo_root()}' && pwd)/.lambda-build-cache\""
     ]
   }
 
@@ -122,6 +99,11 @@ terraform {
           echo "Building $SPA_TYPE SPA from $SPA_DIR..."
           cd "$SPA_DIR"
           npm ci --silent 2>/dev/null || npm install --silent
+
+          # Set Next.js public environment variables for build
+          export NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT="https://${local.env_domain}/login"
+          echo "Setting NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT=$NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT"
+
           npm run build --silent 2>/dev/null || true
           echo "SPA build complete!"
         else

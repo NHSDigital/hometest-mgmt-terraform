@@ -21,8 +21,9 @@ dependency "network" {
 
   # Mock outputs for plan operations when network hasn't been deployed yet
   mock_outputs = {
-    vpc_id          = "vpc-mock-12345678"
-    data_subnet_ids = ["subnet-mock-1", "subnet-mock-2"]
+    vpc_id               = "vpc-mock-12345678"
+    data_subnet_ids      = ["subnet-mock-1", "subnet-mock-2"]
+    db_subnet_group_name = "mock-db-subnet-group"
   }
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
 }
