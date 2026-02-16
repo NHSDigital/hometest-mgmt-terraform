@@ -111,11 +111,17 @@ repos:
           - --hook-config=--output-mode=inject
           - --hook-config=--output-template='<!-- BEGIN_TF_DOCS -->\n{{ .Content }}\n<!-- END_TF_DOCS -->'
           - --hook-config=--working-dir=terraform
+
       - id: terraform_checkov
         files: ^infrastructure/src/
         args:
           - --args=--quiet
           - --args=--config-file __GIT_WORKING_DIR__/.checkov.yaml
+
+      # - id: infracost_breakdown
+      #   files: ^infrastructure/
+      #   args:
+      #     - --args=--path=.
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
@@ -137,3 +143,20 @@ repos:
         args: ["--config", ".sqlfluff"]   # optional, if you keep config elsewhere
       - id: sqlfluff-fix
         args: ["--config", ".sqlfluff"]   # auto-fix style issues
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.13.7
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.11
+    hooks:
+      - id: actionlint
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]

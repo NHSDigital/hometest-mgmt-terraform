@@ -32,6 +32,11 @@ on:
         description: "Version of the software, set by the CI/CD pipeline workflow"
         required: true
         type: string
+      hometest_service_ref:
+        description: "Branch, tag, or SHA to checkout for hometest-service"
+        required: false
+        type: string
+        default: "main"
 
 jobs:
   check-tf:

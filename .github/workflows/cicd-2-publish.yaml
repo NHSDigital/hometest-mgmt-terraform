@@ -28,14 +28,16 @@ jobs:
         id: variables
         run: |
           datetime=$(date -u +'%Y-%m-%dT%H:%M:%S%z')
-          echo "build_datetime=$datetime" >> $GITHUB_OUTPUT
-          echo "build_timestamp=$(date --date=$datetime -u +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
-          echo "build_epoch=$(date --date=$datetime -u +'%s')" >> $GITHUB_OUTPUT
-          echo "nodejs_version=$(grep "^nodejs\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
-          echo "python_version=$(grep "^python\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
-          echo "terraform_version=$(grep "^terraform\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
-          # TODO: Get the version, but it may not be the .version file as this should come from the CI/CD Pull Request Workflow
-          echo "version=$(head -n 1 .version 2> /dev/null || echo unknown)" >> $GITHUB_OUTPUT
+          {
+            echo "build_datetime=$datetime"
+            echo "build_timestamp=$(date --date="$datetime" -u +'%Y%m%d%H%M%S')"
+            echo "build_epoch=$(date --date="$datetime" -u +'%s')"
+            echo "nodejs_version=$(grep "^nodejs\s" .tool-versions | cut -f2 -d' ')"
+            echo "python_version=$(grep "^python\s" .tool-versions | cut -f2 -d' ')"
+            echo "terraform_version=$(grep "^terraform\s" .tool-versions | cut -f2 -d' ')"
+            # TODO: Get the version, but it may not be the .version file as this should come from the CI/CD Pull Request Workflow
+            echo "version=$(head -n 1 .version 2> /dev/null || echo unknown)"
+          } >> "$GITHUB_OUTPUT"
       - name: "List variables"
         run: |
           export BUILD_DATETIME="${{ steps.variables.outputs.build_datetime }}"
@@ -87,7 +89,7 @@ jobs:
     steps:
       - name: "Check prerequisites for notification"
         id: check
-        run: echo "secret_exist=${{ secrets.TEAMS_NOTIFICATION_WEBHOOK_URL != '' }}" >> $GITHUB_OUTPUT
+        run: echo "secret_exist=${{ secrets.TEAMS_NOTIFICATION_WEBHOOK_URL != '' }}" >> "$GITHUB_OUTPUT"
       - name: "Notify on publishing packages"
         if: steps.check.outputs.secret_exist == 'true'
         uses: nhs-england-tools/notify-msteams-action@v1.0.0

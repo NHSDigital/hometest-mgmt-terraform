@@ -32,6 +32,9 @@ awscli = "2.33.13"
 # https://adoptium.net/temurin/releases/
 #java = "temurin-25.0.0"
 
+# https://github.com/infracost/infracost
+infracost = "latest"
+
 ## Security scanning
 
 # https://github.com/aquasecurity/trivy/releases
@@ -50,6 +53,7 @@ pre-commit = "latest"
 
 # https://github.com/errata-ai/vale/releases
 vale = "latest"
+
 
 # https://github.com/igorshubovych/markdownlint-cli/releases
 # markdownlint-cli = "latest"
