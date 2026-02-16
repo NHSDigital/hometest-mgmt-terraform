@@ -1,0 +1,171 @@
+---
+name: "Slack Deployment Notification"
+description: "Send deployment status notification to Slack"
+
+inputs:
+  slack_webhook_url:
+    description: "Slack webhook URL"
+    required: true
+  status:
+    description: "Deployment status (success, failure, cancelled)"
+    required: true
+  title:
+    description: "Notification title"
+    required: true
+  environment:
+    description: "Target environment"
+    required: true
+  version:
+    description: "Deployment version"
+    required: false
+    default: ""
+  stack:
+    description: "Infrastructure stack"
+    required: false
+    default: ""
+  module:
+    description: "Terraform module"
+    required: false
+    default: ""
+  action:
+    description: "Terraform action performed"
+    required: false
+    default: ""
+  actor:
+    description: "User who triggered the deployment"
+    required: true
+  branch:
+    description: "Git branch"
+    required: false
+    default: ""
+  service_repo:
+    description: "Service repository name"
+    required: false
+    default: ""
+  service_ref:
+    description: "Service repository branch/tag/ref"
+    required: false
+    default: ""
+  service_commit:
+    description: "Service repository commit SHA"
+    required: false
+    default: ""
+  run_url:
+    description: "GitHub Actions run URL"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Determine status styling"
+      id: style
+      shell: bash
+      run: |
+        case "${{ inputs.status }}" in
+          success)
+            {
+              echo "color=#28a745"
+              echo "emoji=:white_check_mark:"
+            } >> "$GITHUB_OUTPUT"
+            ;;
+          failure)
+            {
+              echo "color=#dc3545"
+              echo "emoji=:x:"
+            } >> "$GITHUB_OUTPUT"
+            ;;
+          cancelled)
+            {
+              echo "color=#ffc107"
+              echo "emoji=:warning:"
+            } >> "$GITHUB_OUTPUT"
+            ;;
+          *)
+            {
+              echo "color=#6c757d"
+              echo "emoji=:grey_question:"
+            } >> "$GITHUB_OUTPUT"
+            ;;
+        esac
+
+    - name: "Build notification fields"
+      id: fields
+      shell: bash
+      run: |
+        FIELDS='[{ "type": "mrkdwn", "text": "*Environment:*\n${{ inputs.environment }}" }'
+
+        if [ -n "${{ inputs.version }}" ]; then
+          FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Version:*\n${{ inputs.version }}\" }"
+        fi
+
+        if [ -n "${{ inputs.stack }}" ]; then
+          FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Stack:*\n${{ inputs.stack }}\" }"
+        fi
+
+        if [ -n "${{ inputs.module }}" ]; then
+          FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Module:*\n${{ inputs.module }}\" }"
+        fi
+
+        if [ -n "${{ inputs.action }}" ]; then
+          FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Action:*\n${{ inputs.action }}\" }"
+        fi
+
+        FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Triggered by:*\n${{ inputs.actor }}\" }"
+
+        if [ -n "${{ inputs.branch }}" ]; then
+          FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Branch:*\n${{ inputs.branch }}\" }"
+        fi
+
+        if [ -n "${{ inputs.service_repo }}" ]; then
+          FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Service Repo:*\n${{ inputs.service_repo }}\" }"
+        fi
+
+        if [ -n "${{ inputs.service_ref }}" ]; then
+          FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Service Ref:*\n${{ inputs.service_ref }}\" }"
+        fi
+
+        if [ -n "${{ inputs.service_commit }}" ]; then
+          SHORT_SHA=$(echo "${{ inputs.service_commit }}" | cut -c1-7)
+          FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Service Commit:*\n${SHORT_SHA}\" }"
+        fi
+
+        FIELDS="${FIELDS}, { \"type\": \"mrkdwn\", \"text\": \"*Status:*\n${{ inputs.status }}\" }]"
+
+        echo "json=${FIELDS}" >> "$GITHUB_OUTPUT"
+
+    - name: "Send Slack notification"
+      uses: slackapi/slack-github-action@v2.0.0
+      with:
+        webhook: ${{ inputs.slack_webhook_url }}
+        webhook-type: incoming-webhook
+        payload: |
+          {
+            "attachments": [
+              {
+                "color": "${{ steps.style.outputs.color }}",
+                "blocks": [
+                  {
+                    "type": "header",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "${{ steps.style.outputs.emoji }} ${{ inputs.title }} ${{ inputs.status }}"
+                    }
+                  },
+                  {
+                    "type": "section",
+                    "fields": ${{ steps.fields.outputs.json }}
+                  },
+                  {
+                    "type": "actions",
+                    "elements": [
+                      {
+                        "type": "button",
+                        "text": { "type": "plain_text", "text": "View Run" },
+                        "url": "${{ inputs.run_url }}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }

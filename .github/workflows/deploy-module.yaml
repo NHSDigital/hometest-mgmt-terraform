@@ -60,6 +60,7 @@ jobs:
     outputs:
       modules: ${{ steps.set-modules.outputs.modules }}
       working_dir_base: ${{ steps.set-modules.outputs.working_dir_base }}
+      service_commit: ${{ steps.service-info.outputs.commit }}
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
@@ -73,6 +74,11 @@ jobs:
           ref: ${{ inputs.hometest_service_ref }}
           path: hometest-service
           ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
+
+      - name: "Get service commit info"
+        id: service-info
+        working-directory: hometest-service
+        run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: "Set modules to deploy"
         id: set-modules
@@ -176,3 +182,34 @@ jobs:
             echo "| Run ID | ${{ github.run_id }} |"
             echo "| Triggered by | ${{ github.actor }} |"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  slack-notification:
+    name: "Slack Notification"
+    runs-on: ubuntu-latest
+    needs: [validate-inputs, deploy]
+    if: always()
+    steps:
+      - name: "Check if Slack webhook exists"
+        id: check
+        run: echo "secret_exists=${{ secrets.SLACK_WEBHOOK_URL != '' }}" >> "$GITHUB_OUTPUT"
+
+      - name: "Checkout code"
+        if: steps.check.outputs.secret_exists == 'true'
+        uses: actions/checkout@v6
+
+      - name: "Send Slack notification"
+        if: steps.check.outputs.secret_exists == 'true'
+        uses: ./.github/actions/slack-notification
+        with:
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          status: ${{ needs.deploy.result }}
+          title: "Terraform ${{ inputs.action }}"
+          environment: ${{ inputs.environment }}
+          stack: ${{ inputs.stack }}
+          module: ${{ inputs.module }}
+          action: ${{ inputs.action }}
+          actor: ${{ github.actor }}
+          service_repo: NHSDigital/hometest-service
+          service_ref: ${{ inputs.hometest_service_ref }}
+          service_commit: ${{ needs.validate-inputs.outputs.service_commit }}
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

@@ -118,6 +118,16 @@ repos:
           - --args=--quiet
           - --args=--config-file __GIT_WORKING_DIR__/.checkov.yaml
 
+      # - id: infracost_breakdown
+      #   files: ^infrastructure/
+      #   args:
+      #     - --args=--path=.
+
+      # - id: tfupdate
+      #   files: ^infrastructure/
+      #   args:
+      #     - --args=terraform
+
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
     hooks:
@@ -138,6 +148,12 @@ repos:
         args: ["--config", ".sqlfluff"]   # optional, if you keep config elsewhere
       - id: sqlfluff-fix
         args: ["--config", ".sqlfluff"]   # auto-fix style issues
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.13.7
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
 
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.11
