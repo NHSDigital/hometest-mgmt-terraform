@@ -363,8 +363,8 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
 resource "aws_cognito_resource_server" "results" {
   count = var.enable_cognito ? 1 : 0
 
-  identifier   = "results-api"
-  name         = "${local.resource_prefix}-results-api"
+  identifier   = "results"
+  name         = "${local.resource_prefix}-results"
   user_pool_id = aws_cognito_user_pool.main[0].id
 
   scope {
@@ -376,8 +376,8 @@ resource "aws_cognito_resource_server" "results" {
 resource "aws_cognito_resource_server" "orders" {
   count = var.enable_cognito ? 1 : 0
 
-  identifier   = "orders-api"
-  name         = "${local.resource_prefix}-orders-api"
+  identifier   = "orders"
+  name         = "${local.resource_prefix}-orders"
   user_pool_id = aws_cognito_user_pool.main[0].id
 
   scope {
