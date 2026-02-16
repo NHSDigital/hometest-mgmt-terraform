@@ -355,3 +355,111 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     } : {}
   )
 }
+
+################################################################################
+# M2M Resource Servers
+################################################################################
+
+resource "aws_cognito_resource_server" "results" {
+  count = var.enable_cognito ? 1 : 0
+
+  identifier   = "results-api"
+  name         = "${local.resource_prefix}-results-api"
+  user_pool_id = aws_cognito_user_pool.main[0].id
+
+  scope {
+    scope_name        = "write"
+    scope_description = "Write access to Test Results"
+  }
+}
+
+resource "aws_cognito_resource_server" "orders" {
+  count = var.enable_cognito ? 1 : 0
+
+  identifier   = "orders-api"
+  name         = "${local.resource_prefix}-orders-api"
+  user_pool_id = aws_cognito_user_pool.main[0].id
+
+  scope {
+    scope_name        = "write"
+    scope_description = "Write access to Test Orders"
+  }
+}
+
+################################################################################
+# M2M App Clients
+################################################################################
+
+resource "aws_cognito_user_pool_client" "preventex_m2m" {
+  count = var.enable_cognito ? 1 : 0
+
+  name         = "${local.resource_prefix}-preventex-m2m"
+  user_pool_id = aws_cognito_user_pool.main[0].id
+
+  # Generate client secret for M2M
+  generate_secret = true
+
+  # Token validity
+  access_token_validity = 60 # 60 minutes
+
+  token_validity_units {
+    access_token = "minutes"
+  }
+
+  # OAuth settings for client credentials flow (M2M)
+  allowed_oauth_flows                  = ["client_credentials"]
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_scopes = [
+    "${aws_cognito_resource_server.results[0].identifier}/write",
+    "${aws_cognito_resource_server.orders[0].identifier}/write",
+  ]
+
+  # Disable user-based auth flows
+  explicit_auth_flows = []
+
+  # Security settings
+  prevent_user_existence_errors = "ENABLED"
+  enable_token_revocation       = true
+
+  depends_on = [
+    aws_cognito_resource_server.results,
+    aws_cognito_resource_server.orders
+  ]
+}
+
+resource "aws_cognito_user_pool_client" "sh24_m2m" {
+  count = var.enable_cognito ? 1 : 0
+
+  name         = "${local.resource_prefix}-sh24-m2m"
+  user_pool_id = aws_cognito_user_pool.main[0].id
+
+  # Generate client secret for M2M
+  generate_secret = true
+
+  # Token validity
+  access_token_validity = 60 # 60 minutes
+
+  token_validity_units {
+    access_token = "minutes"
+  }
+
+  # OAuth settings for client credentials flow (M2M)
+  allowed_oauth_flows                  = ["client_credentials"]
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_scopes = [
+    "${aws_cognito_resource_server.results[0].identifier}/write",
+    "${aws_cognito_resource_server.orders[0].identifier}/write",
+  ]
+
+  # Disable user-based auth flows
+  explicit_auth_flows = []
+
+  # Security settings
+  prevent_user_existence_errors = "ENABLED"
+  enable_token_revocation       = true
+
+  depends_on = [
+    aws_cognito_resource_server.results,
+    aws_cognito_resource_server.orders
+  ]
+}

@@ -272,3 +272,39 @@ output "cognito_oauth_authorize_endpoint" {
   description = "The OAuth authorize endpoint URL"
   value       = var.enable_cognito ? "https://${aws_cognito_user_pool_domain.main[0].domain}.auth.${var.aws_region}.amazoncognito.com/oauth2/authorize" : null
 }
+
+#------------------------------------------------------------------------------
+# M2M App Client Outputs
+#------------------------------------------------------------------------------
+
+output "cognito_preventex_m2m_client_id" {
+  description = "The client ID for Preventex M2M application"
+  value       = var.enable_cognito ? aws_cognito_user_pool_client.preventex_m2m[0].id : null
+}
+
+output "cognito_preventex_m2m_client_secret" {
+  description = "The client secret for Preventex M2M application"
+  value       = var.enable_cognito ? aws_cognito_user_pool_client.preventex_m2m[0].client_secret : null
+  sensitive   = true
+}
+
+output "cognito_results_resource_server_identifier" {
+  description = "The resource server identifier for Results API"
+  value       = var.enable_cognito ? aws_cognito_resource_server.results[0].identifier : null
+}
+
+output "cognito_orders_resource_server_identifier" {
+  description = "The resource server identifier for Orders API"
+  value       = var.enable_cognito ? aws_cognito_resource_server.orders[0].identifier : null
+}
+
+output "cognito_sh24_m2m_client_id" {
+  description = "The client ID for SH:24 M2M application"
+  value       = var.enable_cognito ? aws_cognito_user_pool_client.sh24_m2m[0].id : null
+}
+
+output "cognito_sh24_m2m_client_secret" {
+  description = "The client secret for SH:24 M2M application"
+  value       = var.enable_cognito ? aws_cognito_user_pool_client.sh24_m2m[0].client_secret : null
+  sensitive   = true
+}
