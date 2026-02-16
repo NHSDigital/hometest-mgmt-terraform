@@ -129,3 +129,15 @@ node_modules
 dist
 *.zip
 .source_hash
+
+# Ignore lambda build folders
+**/builds
+
+# Ignore gradle outputs
+**/.gradle
+**/build
+**/code/bin
+
+# Ignore Go build outputs
+**/lambda-goose-migrator/src/bootstrap
+.lambda-build-cache

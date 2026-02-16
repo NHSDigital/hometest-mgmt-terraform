@@ -259,6 +259,7 @@ After deployment, you'll have access to:
 | [aws_resourcegroups_group.rg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/resourcegroups_group) | resource |
 | [aws_sqs_queue.dlq](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
 | [aws_sqs_queue.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
+| [aws_sqs_queue.order_results](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
 | [aws_sqs_queue_policy.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue_policy) | resource |
 
 ## Inputs
@@ -283,6 +284,7 @@ After deployment, you'll have access to:
 | <a name="input_content_security_policy"></a> [content\_security\_policy](#input\_content\_security\_policy) | Content Security Policy header | `string` | `"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';"` | no |
 | <a name="input_custom_domain_name"></a> [custom\_domain\_name](#input\_custom\_domain\_name) | Custom domain name for the environment (e.g., dev1.hometest.service.nhs.uk) | `string` | `null` | no |
 | <a name="input_enable_cloudfront_logging"></a> [enable\_cloudfront\_logging](#input\_enable\_cloudfront\_logging) | Enable CloudFront access logging | `bool` | `false` | no |
+| <a name="input_enable_sqs_access"></a> [enable\_sqs\_access](#input\_enable\_sqs\_access) | Enable SQS access for Lambda functions (creates order-results queue) | `bool` | `false` | no |
 | <a name="input_enable_vpc_access"></a> [enable\_vpc\_access](#input\_enable\_vpc\_access) | Enable VPC access for Lambda functions | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (dev, dev1, dev2, staging, prod) | `string` | n/a | yes |
 | <a name="input_geo_restriction_locations"></a> [geo\_restriction\_locations](#input\_geo\_restriction\_locations) | List of country codes for geo restriction | `list(string)` | `[]` | no |
@@ -329,6 +331,9 @@ After deployment, you'll have access to:
 | <a name="output_lambda_execution_role_arn"></a> [lambda\_execution\_role\_arn](#output\_lambda\_execution\_role\_arn) | ARN of the Lambda execution role |
 | <a name="output_lambda_functions"></a> [lambda\_functions](#output\_lambda\_functions) | Map of all Lambda function details |
 | <a name="output_lambda_functions_detail"></a> [lambda\_functions\_detail](#output\_lambda\_functions\_detail) | Map of Lambda function details |
+| <a name="output_login_endpoint"></a> [login\_endpoint](#output\_login\_endpoint) | Login Lambda endpoint URL |
+| <a name="output_order_results_queue_arn"></a> [order\_results\_queue\_arn](#output\_order\_results\_queue\_arn) | ARN of the order results SQS queue |
+| <a name="output_order_results_queue_url"></a> [order\_results\_queue\_url](#output\_order\_results\_queue\_url) | URL of the order results SQS queue |
 | <a name="output_spa_bucket_arn"></a> [spa\_bucket\_arn](#output\_spa\_bucket\_arn) | S3 bucket ARN for SPA static assets |
 | <a name="output_spa_bucket_id"></a> [spa\_bucket\_id](#output\_spa\_bucket\_id) | S3 bucket ID for SPA static assets |
 | <a name="output_spa_url"></a> [spa\_url](#output\_spa\_url) | Full URL for SPA |

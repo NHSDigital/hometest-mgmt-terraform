@@ -1,7 +1,6 @@
 ################################################################################
 # AWS Configuration
 ################################################################################
-
 variable "aws_region" {
   description = "AWS region for resources"
   type        = string
@@ -20,7 +19,6 @@ variable "aws_account_shortname" {
 ################################################################################
 # Project Configuration
 ################################################################################
-
 variable "project_name" {
   description = "Project name used for resource naming"
   type        = string
@@ -40,14 +38,8 @@ variable "environment" {
 # Network Configuration - References from Network Module
 # VPC and DB subnet group are passed from Terragrunt dependency on network module
 ################################################################################
-
 variable "vpc_id" {
   description = "VPC ID from network module (passed via Terragrunt dependency)"
-  type        = string
-}
-
-variable "db_subnet_group_name" {
-  description = "DB subnet group name from network module (passed via Terragrunt dependency)"
   type        = string
 }
 
@@ -72,42 +64,37 @@ variable "publicly_accessible" {
 ################################################################################
 # PostgreSQL Configuration
 ################################################################################
+variable "kms_key_id" {
+  description = "The ARN for the KMS encryption key"
+  type        = string
+  default     = ""
+}
 
-variable "postgres_engine_version" {
+# Aurora module requires engine_version for the database engine version
+variable "engine_version" {
   description = "PostgreSQL engine version"
   type        = string
-  default     = "18.1"
+  default     = "17.7"
 }
-
-variable "postgres_parameter_group_family" {
-  description = "The family of the DB parameter group"
+# Aurora module requires db_subnet_group_name if not creating a new subnet group
+variable "db_subnet_group_name" {
+  description = "Name of the DB subnet group to use for the Aurora cluster. If not provided, the module will attempt to create one."
   type        = string
-  default     = "postgres18"
+  default     = null
 }
 
-variable "postgres_major_engine_version" {
-  description = "Major version of the DB engine"
-  type        = string
-  default     = "18"
-}
-
-variable "instance_class" {
-  description = "The instance type of the RDS instance"
-  type        = string
-  default     = "db.t4g.micro"
-}
-
-variable "allocated_storage" {
-  description = "The allocated storage in gigabytes"
+variable "serverlessv2_min_capacity" {
+  description = "Minimum Aurora capacity units (ACUs) for Aurora Serverless v2"
   type        = number
-  default     = 20
+  default     = 0.5
 }
 
-variable "max_allocated_storage" {
-  description = "The upper limit to which Amazon RDS can automatically scale the storage"
+variable "serverlessv2_max_capacity" {
+  description = "Maximum Aurora capacity units (ACUs) for Aurora Serverless v2"
   type        = number
-  default     = 100
+  default     = 4
 }
+
 
 variable "storage_encrypted" {
   description = "Specifies whether the DB instance is encrypted"
@@ -115,22 +102,9 @@ variable "storage_encrypted" {
   default     = true
 }
 
-variable "storage_type" {
-  description = "One of 'standard' (magnetic), 'gp2' (general purpose SSD), 'gp3', or 'io1' (provisioned IOPS SSD)"
-  type        = string
-  default     = "gp3"
-}
-
-variable "kms_key_id" {
-  description = "The ARN for the KMS encryption key"
-  type        = string
-  default     = ""
-}
-
 ################################################################################
 # Database Configuration
 ################################################################################
-
 variable "db_name" {
   description = "The name of the database to create when the DB instance is created"
   type        = string
@@ -143,33 +117,18 @@ variable "username" {
   default     = "postgres"
 }
 
-variable "password" {
-  description = "Password for the master DB user (only used if manage_master_user_password is false)"
-  type        = string
-  default     = null
-  sensitive   = true
-}
-
-variable "manage_master_user_password" {
-  description = "Set to true to allow RDS to manage the master user password in Secrets Manager"
-  type        = bool
-  default     = true
-}
-
 ################################################################################
 # High Availability Configuration
 ################################################################################
-
-variable "multi_az" {
-  description = "Specifies if the RDS instance is multi-AZ"
-  type        = bool
-  default     = false
+variable "number_of_instances" {
+  description = "Number of Aurora instances to create in the cluster"
+  type        = number
+  default     = 1
 }
 
 ################################################################################
 # Backup Configuration
 ################################################################################
-
 variable "backup_retention_period" {
   description = "The days to retain backups for"
   type        = number
@@ -200,64 +159,10 @@ variable "deletion_protection" {
   default     = false
 }
 
-################################################################################
-# Monitoring Configuration
-################################################################################
-
-variable "enabled_cloudwatch_logs_exports" {
-  description = "List of log types to enable for exporting to CloudWatch logs"
-  type        = list(string)
-  default     = ["postgresql"]
-}
-
-variable "performance_insights_enabled" {
-  description = "Specifies whether Performance Insights are enabled"
-  type        = bool
-  default     = false
-}
-
-variable "performance_insights_retention_period" {
-  description = "Amount of time in days to retain Performance Insights data"
-  type        = number
-  default     = 7
-}
-
-variable "monitoring_interval" {
-  description = "The interval, in seconds, between points when Enhanced Monitoring metrics are collected"
-  type        = number
-  default     = 0
-}
-
-################################################################################
-# Parameter Group Configuration
-################################################################################
-
-variable "create_parameter_group" {
-  description = "Whether to create a parameter group"
-  type        = bool
-  default     = true
-}
-
-variable "parameters" {
-  description = "A list of DB parameters to apply"
-  type = list(object({
-    name         = string
-    value        = string
-    apply_method = optional(string, "immediate")
-  }))
-  default = []
-}
 
 ################################################################################
 # Update Configuration
 ################################################################################
-
-variable "auto_minor_version_upgrade" {
-  description = "Indicates that minor engine upgrades will be applied automatically"
-  type        = bool
-  default     = true
-}
-
 variable "apply_immediately" {
   description = "Specifies whether any database modifications are applied immediately"
   type        = bool
@@ -267,7 +172,6 @@ variable "apply_immediately" {
 ################################################################################
 # Tags
 ################################################################################
-
 variable "tags" {
   description = "Additional tags for all resources"
   type        = map(string)
@@ -277,7 +181,6 @@ variable "tags" {
 ################################################################################
 # Region Configuration
 ################################################################################
-
 variable "aws_allowed_regions" {
   description = "List of AWS regions allowed for resource deployment"
   type        = list(string)

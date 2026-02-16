@@ -98,6 +98,73 @@ output "developer_role_arn" {
   value       = aws_iam_role.developer.arn
 }
 
+#------------------------------------------------------------------------------
+# SQS Queues
+#------------------------------------------------------------------------------
+
+# Orders Queue
+output "sqs_orders_queue_url" {
+  description = "URL of the orders SQS queue"
+  value       = module.sqs_orders.queue_url
+}
+
+output "sqs_orders_queue_arn" {
+  description = "ARN of the orders SQS queue"
+  value       = module.sqs_orders.queue_arn
+}
+
+output "sqs_orders_dlq_url" {
+  description = "URL of the orders DLQ"
+  value       = module.sqs_orders.dlq_url
+}
+
+output "sqs_orders_dlq_arn" {
+  description = "ARN of the orders DLQ"
+  value       = module.sqs_orders.dlq_arn
+}
+
+# Notifications Queue (FIFO)
+output "sqs_notifications_queue_url" {
+  description = "URL of the notifications SQS queue"
+  value       = module.sqs_notifications.queue_url
+}
+
+output "sqs_notifications_queue_arn" {
+  description = "ARN of the notifications SQS queue"
+  value       = module.sqs_notifications.queue_arn
+}
+
+output "sqs_notifications_dlq_url" {
+  description = "URL of the notifications DLQ"
+  value       = module.sqs_notifications.dlq_url
+}
+
+output "sqs_notifications_dlq_arn" {
+  description = "ARN of the notifications DLQ"
+  value       = module.sqs_notifications.dlq_arn
+}
+
+# Events Queue
+output "sqs_events_queue_url" {
+  description = "URL of the events SQS queue"
+  value       = module.sqs_events.queue_url
+}
+
+output "sqs_events_queue_arn" {
+  description = "ARN of the events SQS queue"
+  value       = module.sqs_events.queue_arn
+}
+
+output "sqs_events_dlq_url" {
+  description = "URL of the events DLQ"
+  value       = module.sqs_events.dlq_url
+}
+
+output "sqs_events_dlq_arn" {
+  description = "ARN of the events DLQ"
+  value       = module.sqs_events.dlq_arn
+}
+
 output "developer_role_name" {
   description = "Name of the developer deployment role"
   value       = aws_iam_role.developer.name
@@ -204,4 +271,40 @@ output "cognito_oauth_token_endpoint" {
 output "cognito_oauth_authorize_endpoint" {
   description = "The OAuth authorize endpoint URL"
   value       = var.enable_cognito ? "https://${aws_cognito_user_pool_domain.main[0].domain}.auth.${var.aws_region}.amazoncognito.com/oauth2/authorize" : null
+}
+
+#------------------------------------------------------------------------------
+# M2M App Client Outputs
+#------------------------------------------------------------------------------
+
+output "cognito_preventex_m2m_client_id" {
+  description = "The client ID for Preventex M2M application"
+  value       = var.enable_cognito ? aws_cognito_user_pool_client.preventex_m2m[0].id : null
+}
+
+output "cognito_preventex_m2m_client_secret" {
+  description = "The client secret for Preventex M2M application"
+  value       = var.enable_cognito ? aws_cognito_user_pool_client.preventex_m2m[0].client_secret : null
+  sensitive   = true
+}
+
+output "cognito_results_resource_server_identifier" {
+  description = "The resource server identifier for Results API"
+  value       = var.enable_cognito ? aws_cognito_resource_server.results[0].identifier : null
+}
+
+output "cognito_orders_resource_server_identifier" {
+  description = "The resource server identifier for Orders API"
+  value       = var.enable_cognito ? aws_cognito_resource_server.orders[0].identifier : null
+}
+
+output "cognito_sh24_m2m_client_id" {
+  description = "The client ID for SH:24 M2M application"
+  value       = var.enable_cognito ? aws_cognito_user_pool_client.sh24_m2m[0].id : null
+}
+
+output "cognito_sh24_m2m_client_secret" {
+  description = "The client secret for SH:24 M2M application"
+  value       = var.enable_cognito ? aws_cognito_user_pool_client.sh24_m2m[0].client_secret : null
+  sensitive   = true
 }

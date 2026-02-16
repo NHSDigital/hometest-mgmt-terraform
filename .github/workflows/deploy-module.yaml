@@ -8,7 +8,7 @@ on:
       hometest_service_ref:
         description: "Branch, tag, or SHA to checkout for hometest-service"
         required: false
-        default: "develop"
+        default: "main"
       environment:
         description: "Target environment"
         required: true
@@ -21,20 +21,21 @@ on:
         required: true
         type: choice
         options:
-          - core
           - dev
-        default: core
+          - core
+        default: dev
       module:
         description: "Terraform module to deploy"
         required: true
         type: choice
         options:
+          - hometest-app
           - bootstrap
           - network
-          - rds-postgres
-          - hometest-app
+          - aurora-postgres
+          - shared_services
           - all
-        default: bootstrap
+        default: hometest-app
       action:
         description: "Terraform action to perform"
         required: true
@@ -71,24 +72,22 @@ jobs:
           repository: "NHSDigital/hometest-service"
           ref: ${{ inputs.hometest_service_ref }}
           path: hometest-service
-          token: ${{ secrets.NHS_HOMETEST_ORG_PAT }}
+          ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
 
       - name: "Set modules to deploy"
         id: set-modules
-        working-directory: hometest-mgmt-terraform
         run: |
           WORKING_DIR_BASE="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment }}/${{ inputs.stack }}"
-          echo "working_dir_base=${WORKING_DIR_BASE}" >> $GITHUB_OUTPUT
+          echo "working_dir_base=${WORKING_DIR_BASE}" >> "$GITHUB_OUTPUT"
 
           if [ "${{ inputs.module }}" == "all" ]; then
             # Deploy in dependency order
-            echo 'modules=["bootstrap", "network", "rds-postgres"]' >> $GITHUB_OUTPUT
+            echo 'modules=["bootstrap", "network", "aurora-postgres", "shared_services", "hometest-app"]' >> "$GITHUB_OUTPUT"
           else
-            echo 'modules=["${{ inputs.module }}"]' >> $GITHUB_OUTPUT
+            echo 'modules=["${{ inputs.module }}"]' >> "$GITHUB_OUTPUT"
           fi
 
       - name: "Validate module path exists"
-        working-directory: hometest-mgmt-terraform
         run: |
           BASE_PATH="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment }}/${{ inputs.stack }}"
           if [ "${{ inputs.module }}" != "all" ]; then
@@ -100,15 +99,16 @@ jobs:
 
       - name: "Display deployment info"
         run: |
-          echo "## Deployment Configuration" >> $GITHUB_STEP_SUMMARY
-          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Environment | ${{ inputs.environment }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Stack | ${{ inputs.stack }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Module(s) | ${{ inputs.module }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Action | ${{ inputs.action }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Tag | ${{ inputs.tag }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Triggered by | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Deployment Configuration"
+            echo "| Parameter | Value |"
+            echo "|-----------|---------|"
+            echo "| Environment | ${{ inputs.environment }} |"
+            echo "| Stack | ${{ inputs.stack }} |"
+            echo "| Module(s) | ${{ inputs.module }} |"
+            echo "| Action | ${{ inputs.action }} |"
+            echo "| Triggered by | ${{ github.actor }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
     name: "Deploy ${{ matrix.module }}"
@@ -132,14 +132,13 @@ jobs:
       - name: "Checkout hometest-service"
         uses: actions/checkout@v6
         with:
+          path: hometest-service
           repository: "NHSDigital/hometest-service"
           ref: ${{ inputs.hometest_service_ref }}
-          path: hometest-service
-          token: ${{ secrets.NHS_HOMETEST_ORG_PAT }}
-
+          ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
 
       - name: "Deploy ${{ matrix.module }}"
-        uses: ./.github/actions/deploy-terragrunt
+        uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region: ${{ env.AWS_REGION }}
@@ -149,10 +148,12 @@ jobs:
       - name: "Post deployment summary"
         if: always()
         run: |
-          echo "## Module: ${{ matrix.module }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Action**: ${{ inputs.action }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Path**: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.module }}" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Module: ${{ matrix.module }}"
+            echo "- **Status**: ${{ job.status }}"
+            echo "- **Action**: ${{ inputs.action }}"
+            echo "- **Path**: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.module }}"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   summary:
     name: "Deployment Summary"
@@ -162,14 +163,16 @@ jobs:
     steps:
       - name: "Generate summary"
         run: |
-          echo "## Deployment Complete" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Detail | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Environment | ${{ inputs.environment }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Stack | ${{ inputs.stack }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Module(s) | ${{ inputs.module }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Action | ${{ inputs.action }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Overall Status | ${{ needs.deploy.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Run ID | ${{ github.run_id }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Triggered by | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Deployment Complete"
+            echo ""
+            echo "| Detail | Value |"
+            echo "|--------|-------|"
+            echo "| Environment | ${{ inputs.environment }} |"
+            echo "| Stack | ${{ inputs.stack }} |"
+            echo "| Module(s) | ${{ inputs.module }} |"
+            echo "| Action | ${{ inputs.action }} |"
+            echo "| Overall Status | ${{ needs.deploy.result }} |"
+            echo "| Run ID | ${{ github.run_id }} |"
+            echo "| Triggered by | ${{ github.actor }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

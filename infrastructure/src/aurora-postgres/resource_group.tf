@@ -1,17 +1,17 @@
 ################################################################################
-# Resource Group for rds-postgres Resources
-# Allows viewing all rds-postgres resources in AWS Console
+# Resource Group for aurora-postgres Resources
+# Allows viewing all aurora-postgres resources in AWS Console
 ################################################################################
 
 locals {
-  rg_name = "${local.resource_prefix}-rg-rds-postgres"
+  rg_name = "${local.resource_prefix}-rg-aurora-postgres"
 }
 
 resource "aws_resourcegroups_group" "rg" {
   for_each = toset(var.aws_allowed_regions)
 
   name        = "${local.rg_name}-${each.key}"
-  description = "Resource group containing rds-postgres Terraform infrastructure"
+  description = "Resource group containing aurora-postgres Terraform infrastructure"
 
   region = each.key
 
@@ -29,7 +29,7 @@ resource "aws_resourcegroups_group" "rg" {
         },
         {
           Key    = "Component"
-          Values = ["rds-postgres"]
+          Values = ["aurora-postgres"]
         }
       ]
     })

@@ -11,10 +11,11 @@ locals {
   # Combine with variable-provided secrets ARNs
   all_secrets_arns = distinct(concat(var.lambda_secrets_arns, local.lambda_secrets_from_map))
 
-  # SQS queue ARNs (add the event queue if any lambda has sqs_trigger)
+  # SQS queue ARNs (add the event queue if any lambda has sqs_trigger, and order-results queue if enabled)
   sqs_queue_arns = distinct(concat(
     var.lambda_sqs_queue_arns,
-    length(local.sqs_lambdas) > 0 ? [aws_sqs_queue.main[0].arn] : []
+    length(local.sqs_lambdas) > 0 ? [aws_sqs_queue.main[0].arn] : [],
+    var.enable_sqs_access ? [aws_sqs_queue.order_results[0].arn] : []
   ))
 }
 
@@ -40,9 +41,9 @@ module "lambda_iam" {
   s3_bucket_arns      = concat(var.lambda_s3_bucket_arns)
   dynamodb_table_arns = var.lambda_dynamodb_table_arns
   sqs_queue_arns      = local.sqs_queue_arns
-  enable_sqs_access   = length(local.sqs_lambdas) > 0 || length(var.lambda_sqs_queue_arns) > 0
+  enable_sqs_access   = var.enable_sqs_access || length(local.sqs_lambdas) > 0 || length(var.lambda_sqs_queue_arns) > 0
 
   tags = local.common_tags
 
-  depends_on = [aws_sqs_queue.main]
+  depends_on = [aws_sqs_queue.main, aws_sqs_queue.order_results]
 }

@@ -8,11 +8,21 @@ repos:
         args: [--markdown-linebreak-ext=md]
       - id: end-of-file-fixer
       - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+      - id: check-toml
       - id: check-added-large-files
+        args: ["--maxkb=500"]
       - id: check-case-conflict
       - id: check-merge-conflict
+      - id: check-symlinks
       - id: detect-private-key
       - id: check-executables-have-shebangs
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: no-commit-to-branch
+        args: [--branch, main, --branch, master, --branch, develop]
+
 
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.38.0
@@ -23,6 +33,7 @@ repos:
         entry: yamllint
         language: python
         types: [file, yaml]
+        files: \.(yml|yaml)$
 
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.105.0
@@ -49,8 +60,36 @@ repos:
           - --args=--skip-dirs=.external_modules
 
       - id: terragrunt_validate_inputs
-        name: Terragrunt validate inputs
+        name: Terragrunt validate inputs Bootstrap
         files: ^infrastructure/environments/poc/core/bootstrap/[^/]+$
+        args:
+          # Optionally check for unused inputs
+          - --args=--terragrunt-strict-validate
+
+      - id: terragrunt_validate_inputs
+        name: Terragrunt validate inputs Network
+        files: ^infrastructure/environments/poc/core/network/[^/]+$
+        args:
+          # Optionally check for unused inputs
+          - --args=--terragrunt-strict-validate
+
+      - id: terragrunt_validate_inputs
+        name: Terragrunt validate inputs Shared Services
+        files: ^infrastructure/environments/poc/core/shared_services/[^/]+$
+        args:
+          # Optionally check for unused inputs
+          - --args=--terragrunt-strict-validate
+
+      - id: terragrunt_validate_inputs
+        name: Terragrunt validate inputs Aurora
+        files: ^infrastructure/environments/poc/core/aurora-postgres/[^/]+$
+        args:
+          # Optionally check for unused inputs
+          - --args=--terragrunt-strict-validate
+
+      - id: terragrunt_validate_inputs
+        name: Terragrunt validate inputs Dev
+        files: ^infrastructure/environments/poc/dev/hometest-app/[^/]+$
         args:
           # Optionally check for unused inputs
           - --args=--terragrunt-strict-validate
@@ -72,6 +111,7 @@ repos:
           - --hook-config=--output-mode=inject
           - --hook-config=--output-template='<!-- BEGIN_TF_DOCS -->\n{{ .Content }}\n<!-- END_TF_DOCS -->'
           - --hook-config=--working-dir=terraform
+
       - id: terraform_checkov
         files: ^infrastructure/src/
         args:
@@ -90,3 +130,22 @@ repos:
       - id: markdownlint
         exclude: ^infrastructure/src
         args: [--fix]
+
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 4.0.4        # pin to a specific version
+    hooks:
+      - id: sqlfluff-lint
+        args: ["--config", ".sqlfluff"]   # optional, if you keep config elsewhere
+      - id: sqlfluff-fix
+        args: ["--config", ".sqlfluff"]   # auto-fix style issues
+
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.11
+    hooks:
+      - id: actionlint
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]

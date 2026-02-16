@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # TERRAGRUNT CONFIGURATION
-# This deploys a PostgreSQL RDS instance for POC environment
+# This deploys a PostgreSQL Aurora instance for POC environment
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Include the root `terragrunt.hcl` configuration
@@ -10,19 +10,20 @@ include "root" {
 
 # Configure the version of the module to use in this environment
 terraform {
-  source = "../../../..//src/rds-postgres"
+  source = "../../../..//src/aurora-postgres"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Dependencies - RDS requires network module to be deployed first
+# Dependencies - Aurora requires network module to be deployed first
 # ---------------------------------------------------------------------------------------------------------------------
 dependency "network" {
   config_path = "../network"
 
   # Mock outputs for plan operations when network hasn't been deployed yet
   mock_outputs = {
-    vpc_id          = "vpc-mock-12345678"
-    data_subnet_ids = ["subnet-mock-1", "subnet-mock-2"]
+    vpc_id               = "vpc-mock-12345678"
+    data_subnet_ids      = ["subnet-mock-1", "subnet-mock-2"]
+    db_subnet_group_name = "mock-db-subnet-group"
   }
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
 }
@@ -37,11 +38,14 @@ inputs = {
   vpc_id               = dependency.network.outputs.vpc_id
   db_subnet_group_name = dependency.network.outputs.db_subnet_group_name
 
-  # Storage autoscaling - reduced for POC (default is 100 GB)
-  max_allocated_storage = 50
 
-  # Database name - POC specific
-  db_name = "hometest_poc"
+  # Aurora Serverless v2 configuration
+  db_name                   = "hometest_poc"
+  username                  = "postgres"
+  serverlessv2_min_capacity = 0.5
+  serverlessv2_max_capacity = 4
+
+  number_of_instances = 1
 
   # Network - Allow access from VPC CIDR for POC
   allowed_cidr_blocks = ["10.0.0.0/16"]
