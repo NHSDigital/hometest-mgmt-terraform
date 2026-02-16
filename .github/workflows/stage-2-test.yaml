@@ -140,11 +140,8 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@v6
 
-      - name: Install mise
-        uses: jdx/mise-action@v3
-        with:
-          cache: true
-          install: true
+      - name: "Install mise"
+        uses: ./.github/actions/install-mise
 
       - name: "Run Goose Migration Tests"
         run: mise run test-migrations
