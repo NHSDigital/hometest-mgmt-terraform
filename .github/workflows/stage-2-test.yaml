@@ -48,8 +48,7 @@ jobs:
     strategy:
       matrix:
         module: [core/bootstrap, core/network, core/aurora-postgres, core/shared_services, dev/hometest-app]
-      max-parallel: 1  # Forces sequential
-      fail-fast: true
+      fail-fast: false  # Continue other modules if one fails
     steps:
       - name: "Checkout hometest-mgmt-terraform"
         uses: actions/checkout@v6
