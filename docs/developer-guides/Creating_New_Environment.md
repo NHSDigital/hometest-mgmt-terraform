@@ -16,7 +16,7 @@ All environments share core infrastructure (VPC, WAF, ACM, KMS, Cognito, RDS) de
 
 ## Prerequisites
 
-- Core infrastructure already deployed (`network`, `shared_services`, `rds-postgres`)
+- Core infrastructure already deployed (`network`, `shared_services`, `aurora-postgres`, `lambda-goose-migrator`)
 - AWS SSO access configured (`aws sso login --profile Admin-PoC`)
 - Terraform >= 1.14.0 and Terragrunt >= 0.99.0 installed (run `mise install`)
 - The `hometest-service` repo cloned alongside this repo (for Lambda and SPA source code)
@@ -212,7 +212,8 @@ infrastructure/environments/poc/
 │   ├── bootstrap/
 │   ├── network/
 │   ├── shared_services/
-│   └── rds-postgres/
+│   ├── aurora-postgres/
+│   └── lambda-goose-migrator/
 ├── dev/                         # Existing environment
 │   ├── env.hcl
 │   └── hometest-app/
@@ -231,7 +232,7 @@ The Terragrunt configuration chain:
 2. **`terragrunt.hcl`** includes:
    - `root.hcl` — S3 backend config, tags (state key uses `{environment}`)
    - `_envcommon/hometest-app.hcl` — Shared defaults, build hooks, source paths
-3. **Dependencies** (`network`, `shared_services`, `rds-postgres`) — Read outputs from core via `dependency` blocks with mock outputs for plan/validate
+3. **Dependencies** (`network`, `shared_services`, `aurora-postgres`) — Read outputs from core via `dependency` blocks with mock outputs for plan/validate
 4. **`inputs`** — Environment-specific values override the shared defaults
 
 The state file will be stored at:

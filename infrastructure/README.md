@@ -25,11 +25,12 @@ This repository contains Terraform infrastructure code with Terragrunt for manag
 │  ├─ NAT Gateways         │  ├─ Cognito User Pool + Identity Pool                │
 │  ├─ Network Firewall     │  └─ Developer IAM Role                               │
 │  ├─ VPC Endpoints        │                                                      │
-│  ├─ VPC Flow Logs        │  rds-postgres/                                       │
-│  ├─ Route53 (public +    │  ├─ PostgreSQL 18.1 (db.t4g.micro)                   │
+│  ├─ VPC Flow Logs        │  aurora-postgres/                                    │
+│  ├─ Route53 (public +    │  ├─ Aurora PostgreSQL Serverless v2                  │
 │  │  private zones, DNSSEC│  └─ Security Group (CIDR + SG rules)                 │
 │  │  DNS query logging)   │                                                      │
-│  └─ NACLs                │                                                      │
+│  └─ NACLs                │  lambda-goose-migrator/                              │
+│                          │  └─ Goose database migrations                        │
 └─────────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -75,7 +76,9 @@ infrastructure/
 │       │   │   └── terragrunt.hcl
 │       │   ├── shared_services/        # WAF, ACM, KMS, Cognito, IAM
 │       │   │   └── terragrunt.hcl
-│       │   └── rds-postgres/           # PostgreSQL 18.1 database
+│       │   ├── aurora-postgres/        # Aurora PostgreSQL Serverless v2
+│       │   │   └── terragrunt.hcl
+│       │   └── lambda-goose-migrator/  # Database migrations
 │       │       └── terragrunt.hcl
 │       └── dev/
 │           ├── env.hcl                 # environment = "dev"
@@ -87,14 +90,16 @@ infrastructure/
 │   ├── deployment-artifacts/           # S3 bucket for Lambda packages
 │   ├── developer-iam/                  # Developer deploy role with scoped policies
 │   ├── lambda/                         # Lambda function with placeholder support
+│   ├── lambda-goose-migrator/          # Goose database migrator Lambda
 │   ├── lambda-iam/                     # Lambda execution role + policies
-│   ├── rds-postgres/                   # RDS PostgreSQL via community module
+│   ├── aurora-postgres/                # Aurora PostgreSQL via community module
+│   ├── sqs/                            # SQS queues with DLQ
 │   └── waf/                            # WAFv2 Web ACL with managed rules
 └── src/                                # Terraform root modules (composed from modules/)
     ├── bootstrap/                      # State backend + GitHub OIDC bootstrap
     ├── network/                        # VPC, subnets, firewall, Route53, endpoints
     ├── shared_services/                # WAF, ACM, KMS, Cognito, IAM
-    ├── rds-postgres/                   # PostgreSQL RDS instance
+    ├── aurora-postgres/                # Aurora PostgreSQL Serverless v2 instance
     └── hometest-app/                   # Per-environment app (Lambda, API GW, CF, SQS)
 ```
 
@@ -141,8 +146,12 @@ terragrunt apply
 cd ../shared_services
 terragrunt apply
 
-# RDS PostgreSQL (depends on network)
-cd ../rds-postgres
+# Aurora PostgreSQL (depends on network)
+cd ../aurora-postgres
+terragrunt apply
+
+# Database migrations (depends on aurora-postgres)
+cd ../lambda-goose-migrator
 terragrunt apply
 ```
 
@@ -182,7 +191,7 @@ The hometest-app deployments depend on outputs from:
 |------------|--------------|
 | **network** | `vpc_id`, `private_subnet_ids`, `lambda_security_group_id`, `route53_zone_id` |
 | **shared_services** | `kms_key_arn`, `waf_cloudfront_arn`, `acm_cloudfront_certificate_arn` |
-| **rds-postgres** | `db_instance_endpoint`, `db_instance_master_user_secret_arn`, `connection_string`, `security_group_id` |
+| **aurora-postgres** | `cluster_endpoint`, `cluster_master_user_secret_arn`, `cluster_database_name`, `cluster_port` |
 
 ## Shared vs Per-Environment Resources
 
@@ -199,7 +208,7 @@ The hometest-app deployments depend on outputs from:
 | **ACM Certificates** | Wildcard covers all subdomains |
 | **Cognito** | Shared user pool and identity pool |
 | **Developer IAM** | Single role for all deployments |
-| **RDS PostgreSQL** | Shared database (POC) |
+| **Aurora PostgreSQL** | Shared database (POC) |
 
 ### Per-Environment (in `{env}/hometest-app/`)
 
@@ -218,7 +227,7 @@ The hometest-app deployments depend on outputs from:
 - **VPC** with public, private, and data subnets
 - **Network Firewall** with strict-order stateful rules, domain filtering, and IP filtering
 - **NACLs** with port restrictions on private and data subnets
-- **Security Groups** with least-privilege rules (Lambda, Lambda-RDS, RDS)
+- **Security Groups** with least-privilege rules (Lambda, Lambda-DB, Aurora)
 - **NAT Gateways** for outbound internet access from private subnets
 - **VPC Endpoints** for private connectivity (S3, Lambda, Secrets Manager, SQS, KMS, etc.)
 
@@ -288,14 +297,18 @@ aws acm describe-certificate --certificate-arn <ARN> --query 'Certificate.Status
 aws wafv2 list-resources-for-web-acl --web-acl-arn <ARN> --resource-type API_GATEWAY
 ```
 
-### RDS connection issues
+### Aurora connection issues
 
 ```bash
-# Check RDS instance status
-aws rds describe-db-instances --query 'DBInstances[*].[DBInstanceIdentifier,DBInstanceStatus]'
+# Check Aurora cluster status
+aws rds describe-db-clusters --query 'DBClusters[*].[DBClusterIdentifier,Status]'
 
 # Retrieve master user secret
 aws secretsmanager get-secret-value --secret-id <secret-arn>
+
+# Run database migrations manually
+cd infrastructure/environments/poc/core/lambda-goose-migrator
+terragrunt apply
 ```
 
 ### Lambda build failures

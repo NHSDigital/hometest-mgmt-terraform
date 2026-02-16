@@ -31,7 +31,7 @@ This repository manages the AWS infrastructure for the NHS HomeTest Service, inc
 - **Bootstrap** — Terraform state backend (S3 + KMS) and GitHub OIDC for CI/CD
 - **Networking** — VPC, subnets, NAT gateways, Network Firewall, VPC endpoints, Route53
 - **Shared Services** — WAF, ACM certificates, KMS, Cognito, IAM roles
-- **RDS PostgreSQL** — Managed database for the HomeTest application
+- **Aurora PostgreSQL** — Serverless v2 database with Goose migrations
 - **HomeTest Application** — Lambda functions, API Gateway, CloudFront + S3 SPA, SQS queues
 
 ## Architecture
@@ -89,7 +89,7 @@ graph TB
             end
 
             subgraph DATASUB["Data Subnets (isolated)"]
-                RDS["🐘 RDS PostgreSQL 18.1<br/>db.t4g.micro<br/>hometest_poc"]:::database
+                RDS["🐘 Aurora PostgreSQL<br/>Serverless v2<br/>hometest_poc"]:::database
             end
         end
 
@@ -149,6 +149,8 @@ The following tools are managed via [mise](https://github.com/jdx/mise) (see [.m
 | **Checkov** | latest | Policy-as-code scanning |
 | **Gitleaks** | 8.18.4 | Secret scanning |
 | **pre-commit** | latest | Git hooks |
+| **Go** | 1.26.0 | Lambda goose migrator builds |
+| **goose** | latest | Database migrations |
 
 Additional requirements:
 
@@ -212,8 +214,8 @@ See [infrastructure/README.md](./infrastructure/README.md) for the full infrastr
 
 | Directory | Purpose |
 |-----------|---------|
-| `infrastructure/src/` | Terraform root modules (bootstrap, network, shared_services, rds-postgres, hometest-app) |
-| `infrastructure/modules/` | Reusable Terraform modules (api-gateway, cloudfront-spa, lambda, lambda-iam, rds-postgres, waf, etc.) |
+| `infrastructure/src/` | Terraform root modules (bootstrap, network, shared_services, aurora-postgres, hometest-app) |
+| `infrastructure/modules/` | Reusable Terraform modules (api-gateway, cloudfront-spa, lambda, lambda-iam, aurora-postgres, lambda-goose-migrator, waf, etc.) |
 | `infrastructure/environments/` | Terragrunt environment configurations (poc/core, poc/dev) |
 | `scripts/` | Build, test, and deployment helper scripts |
 | `docs/` | ADRs, developer guides, diagrams, user guides |
@@ -228,14 +230,17 @@ See [infrastructure/README.md](./infrastructure/README.md) for the full infrastr
 cd infrastructure/src/bootstrap
 terraform init && terraform apply
 
-# 2. Deploy core (network → shared_services → rds-postgres)
+# 2. Deploy core (network → shared_services → aurora-postgres → lambda-goose-migrator)
 cd infrastructure/environments/poc/core/network
 terragrunt apply
 
 cd ../shared_services
 terragrunt apply
 
-cd ../rds-postgres
+cd ../aurora-postgres
+terragrunt apply
+
+cd ../lambda-goose-migrator
 terragrunt apply
 
 # 3. Deploy application environment
