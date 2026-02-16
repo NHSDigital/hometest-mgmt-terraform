@@ -56,7 +56,6 @@ vale = "latest"
 "go:github.com/pressly/goose/v3/cmd/goose" = "latest"
 
 tfupdate = "latest"
-go = "latest"
 
 # https://github.com/igorshubovych/markdownlint-cli/releases
 # markdownlint-cli = "latest"
