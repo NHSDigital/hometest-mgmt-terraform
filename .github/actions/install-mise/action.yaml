@@ -16,3 +16,4 @@ runs:
       with:
         cache: true
         install: true
+        cache_key_prefix: mise-${{ runner.os }}-mgmt-

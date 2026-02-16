@@ -26,7 +26,6 @@ jobs:
       python_version: ${{ steps.variables.outputs.python_version }}
       terraform_version: ${{ steps.variables.outputs.terraform_version }}
       version: ${{ steps.variables.outputs.version }}
-      tag: ${{ steps.variables.outputs.tag }}
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
@@ -35,15 +34,16 @@ jobs:
         id: variables
         run: |
           datetime=$(date -u +'%Y-%m-%dT%H:%M:%S%z')
-          echo "build_datetime=$datetime" >> $GITHUB_OUTPUT
-          echo "build_timestamp=$(date --date=$datetime -u +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
-          echo "build_epoch=$(date --date=$datetime -u +'%s')" >> $GITHUB_OUTPUT
-          echo "nodejs_version=$(grep "^nodejs\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
-          echo "python_version=$(grep "^python\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
-          echo "terraform_version=$(grep "^terraform\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
-          # TODO: Get the version, but it may not be the .version file as this should come from the CI/CD Pull Request Workflow
-          echo "version=$(head -n 1 .version 2> /dev/null || echo unknown)" >> $GITHUB_OUTPUT
-          echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          {
+            echo "build_datetime=$datetime"
+            echo "build_timestamp=$(date --date="$datetime" -u +'%Y%m%d%H%M%S')"
+            echo "build_epoch=$(date --date="$datetime" -u +'%s')"
+            echo "nodejs_version=$(grep "^nodejs\s" .tool-versions | cut -f2 -d' ')"
+            echo "python_version=$(grep "^python\s" .tool-versions | cut -f2 -d' ')"
+            echo "terraform_version=$(grep "^terraform\s" .tool-versions | cut -f2 -d' ')"
+            # TODO: Get the version, but it may not be the .version file as this should come from the CI/CD Pull Request Workflow
+            echo "version=$(head -n 1 .version 2> /dev/null || echo unknown)"
+          } >> "$GITHUB_OUTPUT"
       - name: "List variables"
         run: |
           export BUILD_DATETIME="${{ steps.variables.outputs.build_datetime }}"
@@ -53,7 +53,6 @@ jobs:
           export PYTHON_VERSION="${{ steps.variables.outputs.python_version }}"
           export TERRAFORM_VERSION="${{ steps.variables.outputs.terraform_version }}"
           export VERSION="${{ steps.variables.outputs.version }}"
-          export TAG="${{ steps.variables.outputs.tag }}"
           make list-variables
 
   deploy-bootstrap:
