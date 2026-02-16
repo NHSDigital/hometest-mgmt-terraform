@@ -1,8 +1,10 @@
-# This file is for you! Please, updated to the versions agreed by your team.
+# This file is for compatibility with asdf. Preferred tool: mise (.mise.toml)
+# See .mise.toml for the authoritative tool versions.
 
-# terraform 1.14.3
-# pre-commit 4.3.0
-# vale 3.6.0
+# terraform 1.14.4
+# terragrunt 0.99.1
+# pre-commit latest
+# vale latest
 # gitleaks 8.18.4
 
 # ==============================================================================
