@@ -11,7 +11,7 @@ INSERT INTO supplier (
   oauth_scope
 )
 VALUES (
-  '11111111-1111-1111-1111-111111111111',
+  '11111111-1111-4111-8111-111111111111',
   'Preventx',
   'https://func-nhshometest-dev.azurewebsites.net/',
   'https://www.preventx.com/',
@@ -35,7 +35,7 @@ INSERT INTO supplier (
   oauth_scope
 )
 VALUES (
-  '77777777-7777-7777-7777-777777777777',
+  '77777777-7777-4777-8777-777777777777',
   'SH:24',
   'https://admin.qa3.sh24.org.uk/',
   'https://sh24.org.uk/',
@@ -49,6 +49,6 @@ ON CONFLICT (supplier_id) DO NOTHING;
 
 -- +goose Down
 DELETE FROM supplier
-WHERE supplier_id = '11111111-1111-1111-1111-111111111111';
+WHERE supplier_id = '11111111-1111-4111-8111-111111111111';
 DELETE FROM supplier
-WHERE supplier_id = '77777777-7777-7777-7777-777777777777';
+WHERE supplier_id = '77777777-7777-4777-8777-777777777777';
