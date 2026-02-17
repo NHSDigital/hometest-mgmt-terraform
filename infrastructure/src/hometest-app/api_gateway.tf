@@ -56,9 +56,9 @@ resource "aws_api_gateway_method" "proxy_any" {
 
   # Apply authorization if this API prefix is in authorized list
   authorization = contains(local.authorized_api_prefixes, each.key) ? "COGNITO_USER_POOLS" : "NONE"
-  authorizer_id = contains(local.authorized_api_prefixes, each.key) ? aws_api_gateway_authorizer.cognito_supplier[0].id : null
+  authorizer_id = contains(local.authorized_api_prefixes, each.key) ? aws_api_gateway_authorizer.cognito_supplier[each.key].id : null
 
-  # Optional: Add authorization scopes per lambda
+  # Authorization scopes
   authorization_scopes = (
     contains(local.authorized_api_prefixes, each.key) &&
     lookup(local.api_lambdas[local.api_to_lambda[each.key]], "authorization_scopes", null) != null
@@ -104,10 +104,10 @@ resource "aws_api_gateway_integration" "root" {
 ################################################################################
 
 resource "aws_api_gateway_authorizer" "cognito_supplier" {
-  count = length(local.authorized_api_prefixes) > 0 ? 1 : 0
+  for_each = toset(local.authorized_api_prefixes)
 
-  name            = "${var.project_name}-${var.environment}-supplier-cognito-authorizer"
-  rest_api_id     = values(aws_api_gateway_rest_api.apis)[0].id
+  name            = "${var.project_name}-${var.environment}-${each.key}-supplier-cognito-authorizer"
+  rest_api_id     = aws_api_gateway_rest_api.apis[each.key].id
   type            = "COGNITO_USER_POOLS"
   provider_arns   = [var.cognito_user_pool_arn]
   identity_source = "method.request.header.Authorization"
