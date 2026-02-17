@@ -102,7 +102,7 @@ inputs = {
   ]
 
   # Cognito User Pool for API Gateway authorizer
-  enable_cognito = true
+  enable_cognito        = true
   cognito_user_pool_arn = dependency.shared_services.outputs.cognito_user_pool_arn
 
   # API prefixes that require authorization
