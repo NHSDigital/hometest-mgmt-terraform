@@ -268,10 +268,6 @@ After deployment, you'll have access to:
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_acm_certificate_arn"></a> [acm\_certificate\_arn](#input\_acm\_certificate\_arn) | ACM certificate ARN for CloudFront (us-east-1, from shared\_services) | `string` | `null` | no |
-| <a name="input_api1_env_vars"></a> [api1\_env\_vars](#input\_api1\_env\_vars) | DEPRECATED: Use lambdas map instead | `map(string)` | `{}` | no |
-| <a name="input_api1_lambda_hash"></a> [api1\_lambda\_hash](#input\_api1\_lambda\_hash) | DEPRECATED: Use lambdas map instead | `string` | `null` | no |
-| <a name="input_api2_env_vars"></a> [api2\_env\_vars](#input\_api2\_env\_vars) | DEPRECATED: Use lambdas map instead | `map(string)` | `{}` | no |
-| <a name="input_api2_lambda_hash"></a> [api2\_lambda\_hash](#input\_api2\_lambda\_hash) | DEPRECATED: Use lambdas map instead | `string` | `null` | no |
 | <a name="input_api_endpoint_type"></a> [api\_endpoint\_type](#input\_api\_endpoint\_type) | API Gateway endpoint type | `string` | `"REGIONAL"` | no |
 | <a name="input_api_stage_name"></a> [api\_stage\_name](#input\_api\_stage\_name) | API Gateway stage name | `string` | `"v1"` | no |
 | <a name="input_api_throttling_burst_limit"></a> [api\_throttling\_burst\_limit](#input\_api\_throttling\_burst\_limit) | API Gateway throttling burst limit | `number` | `1000` | no |

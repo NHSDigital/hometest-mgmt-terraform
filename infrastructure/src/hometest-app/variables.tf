@@ -228,31 +228,6 @@ variable "lambdas_base_path" {
   default     = "../../../examples/lambdas"
 }
 
-# Legacy variables (deprecated - use lambdas map instead)
-variable "api1_lambda_hash" {
-  description = "DEPRECATED: Use lambdas map instead"
-  type        = string
-  default     = null
-}
-
-variable "api2_lambda_hash" {
-  description = "DEPRECATED: Use lambdas map instead"
-  type        = string
-  default     = null
-}
-
-variable "api1_env_vars" {
-  description = "DEPRECATED: Use lambdas map instead"
-  type        = map(string)
-  default     = {}
-}
-
-variable "api2_env_vars" {
-  description = "DEPRECATED: Use lambdas map instead"
-  type        = map(string)
-  default     = {}
-}
-
 #------------------------------------------------------------------------------
 # API Gateway Configuration
 #------------------------------------------------------------------------------
