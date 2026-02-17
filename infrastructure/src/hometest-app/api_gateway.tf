@@ -106,7 +106,6 @@ resource "aws_api_gateway_integration" "root" {
 resource "aws_api_gateway_authorizer" "cognito_supplier" {
   count = length(local.authorized_api_prefixes) > 0 ? 1 : 0
 
-  for_each        = local.authorized_api_prefixes
   name            = "${var.project_name}-${var.environment}-supplier-cognito-authorizer"
   rest_api_id     = values(aws_api_gateway_rest_api.apis)[0].id
   type            = "COGNITO_USER_POOLS"
