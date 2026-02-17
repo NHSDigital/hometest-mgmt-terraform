@@ -60,6 +60,11 @@ inputs = {
   ]
   require_mfa = false # Set to true for production
 
+  # SNS Configuration
+  sns_alerts_email_subscriptions = [
+    "england.HomeTestInfraAdmins@nhs.net"
+  ]
+
   # SQS Configuration
   create_sqs_alarms = true
   # sqs_alarm_sns_topics = []  # Add SNS topic ARNs for alerts

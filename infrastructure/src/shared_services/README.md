@@ -189,6 +189,7 @@ inputs = {
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project | `string` | n/a | yes |
 | <a name="input_require_mfa"></a> [require\_mfa](#input\_require\_mfa) | Require MFA for developer role assumption | `bool` | `true` | no |
 | <a name="input_route53_zone_id"></a> [route53\_zone\_id](#input\_route53\_zone\_id) | Route53 zone ID for DNS validation | `string` | n/a | yes |
+| <a name="input_sns_alerts_email_subscriptions"></a> [sns\_alerts\_email\_subscriptions](#input\_sns\_alerts\_email\_subscriptions) | List of email addresses to subscribe to the shared alerts SNS topic (requires subscription confirmation) | `list(string)` | `[]` | no |
 | <a name="input_sqs_alarm_sns_topics"></a> [sqs\_alarm\_sns\_topics](#input\_sqs\_alarm\_sns\_topics) | List of SNS topic ARNs for SQS alarm notifications. If empty, defaults to the shared alerts SNS topic. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | `{}` | no |
 | <a name="input_waf_log_retention_days"></a> [waf\_log\_retention\_days](#input\_waf\_log\_retention\_days) | Days to retain WAF logs | `number` | `30` | no |
