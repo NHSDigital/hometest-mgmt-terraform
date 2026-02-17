@@ -45,6 +45,7 @@ dependency "shared_services" {
     deployment_artifacts_bucket_arn = "arn:aws:s3:::mock-deployment-bucket"
     api_config_secret_arn           = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:mock-secret"
     api_config_secret_name          = "mock/secret/name"
+    cognito_user_pool_arn           = "arn:aws:cognito-idp:eu-west-2:123456789012:userpool/eu-west-2_mockpool"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
