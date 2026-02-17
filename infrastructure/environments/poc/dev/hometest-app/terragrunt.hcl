@@ -101,6 +101,12 @@ inputs = {
     # "arn:aws:kms:eu-west-2:781863586270:key/YOUR-KEY-ID-HERE"
   ]
 
+  # Cognito User Pool for API Gateway authorizer
+  cognito_user_pool_arn = dependency.shared_services.outputs.cognito_user_pool_arn
+
+  # API prefixes that require authorization
+  authorized_api_prefixes = ["result"]
+
   # Lambda code deployment
   use_placeholder_lambda = false
 
@@ -243,6 +249,8 @@ inputs = {
         RESULT_QUEUE_URL = "https://sqs.${include.envcommon.locals.global_vars.locals.aws_region}.amazonaws.com/${include.envcommon.locals.account_id}/${include.envcommon.locals.project_name}-${include.envcommon.locals.environment}-order-results"
         # AWS_REGION       = include.envcommon.locals.global_vars.locals.aws_region
       }
+      authorization = "COGNITO_USER_POOLS"
+      authorization_scopes = ["results/write"]
     }
   }
 

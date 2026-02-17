@@ -62,6 +62,17 @@ variable "waf_cloudfront_arn" {
 #   type        = string
 # }
 
+variable "cognito_user_pool_arn" {
+  description = "ARN of the Cognito User Pool"
+  type        = string
+}
+
+variable "authorized_api_prefixes" {
+  description = "Set of API prefixes that require Cognito authorization"
+  type        = set(string)
+  default     = []
+}
+
 #------------------------------------------------------------------------------
 # Dependencies from network
 #------------------------------------------------------------------------------
@@ -189,6 +200,9 @@ variable "lambdas" {
     sqs_trigger                    = optional(bool, false)  # Enable SQS event source mapping
     secrets_arn                    = optional(string, null) # Secrets Manager ARN for this lambda
     reserved_concurrent_executions = optional(number, -1)
+
+    authorization        = optional(string, "NONE") # "NONE" or "COGNITO_USER_POOLS"
+    authorization_scopes = optional(list(string), []) # e.g., ["results/write", "orders/read"]
   }))
   default = {}
 
