@@ -12,7 +12,55 @@ This Terraform source contains resources shared across all HomeTest environments
 | **ACM Regional** | Wildcard certificate for API Gateway | All API custom domains |
 | **ACM CloudFront** | Wildcard certificate (us-east-1) | All SPA custom domains |
 | **S3 Bucket** | Deployment artifacts bucket | Lambda packages |
-| **Developer IAM** | Cross-account deployment role | CI/CD |
+| **Developer IAM Role** | Cross-account deployment role | CI/CD pipelines |
+| **Developer Deployment Policy** | Customer-managed IAM policy | SSO (Hometest-NonProd-ReadOnly) |
+
+## IAM & Access Control
+
+### Developer Role (CI/CD)
+Cross-account deployment role used by CI/CD pipelines with broad automated deployment permissions.
+
+### Developer Deployment Policy (SSO)
+Customer-managed IAM policy attached to the **Hometest-NonProd-ReadOnly** SSO permission set in account 781863586270.
+
+**Permissions:**
+- **Lambda**: Update function code/configuration, publish versions, manage aliases
+- **API Gateway**: Deploy API changes and manage stages
+- **CloudFront**: Create cache invalidations
+- **S3**: Put/Delete objects in hometest-* buckets
+- **SQS**: Send/Delete messages, purge hometest-* queues
+- **KMS**: Encrypt/decrypt using hometest-* KMS keys
+
+**Combined with AWS ReadOnlyAccess managed policy** to provide full read access plus scoped write permissions for deployments.
+
+**Scope Restrictions:**
+- All write permissions scoped to resources with `hometest-` prefix
+- No infrastructure modification (VPC, IAM roles, security groups)
+- No cross-project or cross-account access
+- 12-hour session duration via SSO
+
+**Usage:**
+```bash
+# Login via AWS SSO
+aws sso login --profile hometest-nonprod
+
+# Deploy Lambda function
+aws lambda update-function-code \
+  --function-name hometest-poc-dev-api1-handler \
+  --zip-file fileb://function.zip \
+  --profile hometest-nonprod
+
+# Invalidate CloudFront cache
+aws cloudfront create-invalidation \
+  --distribution-id DISTRIBUTION_ID \
+  --paths "/*" \
+  --profile hometest-nonprod
+```
+
+**Configuration:**
+- Policy defined in: `infrastructure/src/shared_services/iam.tf`
+- SSO attachment in: `aws-prod-sso-config/terraform/programmes/Hometest/permission-sets.tf`
+- Applied to account: 781863586270
 
 ## Usage
 
@@ -86,6 +134,7 @@ inputs = {
 | [aws_cognito_user_pool_client.preventex_m2m](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_user_pool_client) | resource |
 | [aws_cognito_user_pool_client.sh24_m2m](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_user_pool_client) | resource |
 | [aws_cognito_user_pool_domain.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cognito_user_pool_domain) | resource |
+| [aws_iam_policy.developer_deployment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_role.cognito_authenticated](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role.cognito_unauthenticated](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role.developer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
@@ -228,6 +277,8 @@ inputs = {
 | <a name="output_cognito_user_pool_domain_cloudfront_distribution"></a> [cognito\_user\_pool\_domain\_cloudfront\_distribution](#output\_cognito\_user\_pool\_domain\_cloudfront\_distribution) | The CloudFront distribution for the Cognito User Pool domain (for custom domains) |
 | <a name="output_cognito_user_pool_endpoint"></a> [cognito\_user\_pool\_endpoint](#output\_cognito\_user\_pool\_endpoint) | The endpoint of the Cognito User Pool |
 | <a name="output_cognito_user_pool_id"></a> [cognito\_user\_pool\_id](#output\_cognito\_user\_pool\_id) | The ID of the Cognito User Pool |
+| <a name="output_developer_deployment_policy_arn"></a> [developer\_deployment\_policy\_arn](#output\_developer\_deployment\_policy\_arn) | ARN of the developer deployment policy (for SSO permission set attachment) |
+| <a name="output_developer_deployment_policy_name"></a> [developer\_deployment\_policy\_name](#output\_developer\_deployment\_policy\_name) | Name of the developer deployment policy |
 | <a name="output_developer_role_arn"></a> [developer\_role\_arn](#output\_developer\_role\_arn) | ARN of the developer deployment role |
 | <a name="output_developer_role_name"></a> [developer\_role\_name](#output\_developer\_role\_name) | Name of the developer deployment role |
 | <a name="output_kms_key_alias_arn"></a> [kms\_key\_alias\_arn](#output\_kms\_key\_alias\_arn) | ARN of the KMS key alias |

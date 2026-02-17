@@ -91,3 +91,102 @@ resource "aws_iam_role_policy" "developer_lambda" {
     ]
   })
 }
+
+################################################################################
+# Developer Deployment Policy
+# Customer-managed policy for SSO Permission Set attachment
+# Allows developers to deploy/update their environment's resources
+################################################################################
+
+resource "aws_iam_policy" "developer_deployment" {
+  name        = "${local.resource_prefix}-developer-deployment"
+  description = "Deployment permissions for HomeTest developers via SSO"
+  path        = "/"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      # Lambda deployment
+      {
+        Sid    = "LambdaDeployment"
+        Effect = "Allow"
+        Action = [
+          "lambda:UpdateFunctionCode",
+          "lambda:UpdateFunctionConfiguration",
+          "lambda:PublishVersion",
+          "lambda:CreateAlias",
+          "lambda:UpdateAlias",
+          "lambda:DeleteAlias"
+        ]
+        Resource = "arn:aws:lambda:*:*:function:${var.project_name}-*"
+      },
+      # API Gateway deployment
+      {
+        Sid    = "APIGatewayDeployment"
+        Effect = "Allow"
+        Action = [
+          "apigateway:POST",
+          "apigateway:PUT",
+          "apigateway:PATCH"
+        ]
+        Resource = [
+          "arn:aws:apigateway:*::/restapis/*/deployments",
+          "arn:aws:apigateway:*::/restapis/*/deployments/*",
+          "arn:aws:apigateway:*::/restapis/*/stages/*"
+        ]
+      },
+      # CloudFront cache invalidation
+      {
+        Sid    = "CloudFrontInvalidation"
+        Effect = "Allow"
+        Action = [
+          "cloudfront:CreateInvalidation"
+        ]
+        Resource = "*"
+      },
+      # S3 deployment access
+      {
+        Sid    = "S3DeploymentAccess"
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:PutObjectAcl"
+        ]
+        Resource = "arn:aws:s3:::${var.project_name}-*/*"
+      },
+      # SQS queue management
+      {
+        Sid    = "SQSQueueManagement"
+        Effect = "Allow"
+        Action = [
+          "sqs:SendMessage",
+          "sqs:DeleteMessage",
+          "sqs:PurgeQueue"
+        ]
+        Resource = "arn:aws:sqs:*:*:${var.project_name}-*"
+      },
+      # KMS encryption/decryption
+      {
+        Sid    = "KMSAccess"
+        Effect = "Allow"
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:ReEncrypt*"
+        ]
+        Resource = "arn:aws:kms:*:${var.aws_account_id}:key/*"
+        Condition = {
+          StringLike = {
+            "kms:ResourceAliases" = "alias/${var.project_name}-*"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = "${local.resource_prefix}-developer-deployment"
+  })
+}
