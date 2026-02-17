@@ -6,6 +6,7 @@ Terraform module for deploying AWS Lambda functions with security best practices
 
 - **Security First**: KMS encryption for environment variables and CloudWatch logs
 - **Observability**: X-Ray tracing enabled by default
+- **Monitoring**: Optional CloudWatch alarm for Lambda errors (failed invocations)
 - **VPC Support**: Optional VPC configuration for private resources
 - **Dead Letter Queue**: Failed invocations can be sent to SQS/SNS
 - **Function URL**: Optional direct HTTPS endpoint
@@ -66,6 +67,11 @@ module "my_lambda" {
 | runtime | Lambda runtime | `string` | `"nodejs20.x"` | no |
 | timeout | Function timeout (seconds) | `number` | `30` | no |
 | memory_size | Function memory (MB) | `number` | `256` | no |
+| create_cloudwatch_alarms | Create CloudWatch alarms for Lambda errors | `bool` | `true` | no |
+| alarm_actions | ARNs notified when the alarm triggers (e.g., SNS topics) | `list(string)` | `[]` | no |
+| alarm_period | Period over which to evaluate the error metric (seconds) | `number` | `300` | no |
+| alarm_evaluation_periods | Number of periods over which to evaluate the alarm | `number` | `1` | no |
+| alarm_error_threshold | Threshold for Lambda error alarm (errors per period) | `number` | `1` | no |
 
 ## Outputs
 
@@ -75,3 +81,4 @@ module "my_lambda" {
 | function_arn | ARN of the Lambda function |
 | function_invoke_arn | Invoke ARN for API Gateway integration |
 | log_group_name | CloudWatch log group name |
+| error_alarm_arn | ARN of the Lambda errors CloudWatch alarm (if created) |

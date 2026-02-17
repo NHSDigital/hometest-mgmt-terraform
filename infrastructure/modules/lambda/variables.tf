@@ -143,6 +143,38 @@ variable "log_retention_days" {
   default     = 30
 }
 
+# CloudWatch Alarms
+
+variable "create_cloudwatch_alarms" {
+  description = "Create CloudWatch alarms for Lambda errors"
+  type        = bool
+  default     = true
+}
+
+variable "alarm_actions" {
+  description = "List of ARNs to notify when an alarm triggers (e.g., SNS topics)"
+  type        = list(string)
+  default     = []
+}
+
+variable "alarm_period" {
+  description = "Period in seconds over which to evaluate the Lambda error metric"
+  type        = number
+  default     = 300
+}
+
+variable "alarm_evaluation_periods" {
+  description = "Number of periods over which to evaluate the Lambda error alarm"
+  type        = number
+  default     = 1
+}
+
+variable "alarm_error_threshold" {
+  description = "Threshold for Lambda error alarm (number of errors per evaluation period)"
+  type        = number
+  default     = 1
+}
+
 # Tracing
 variable "tracing_mode" {
   description = "X-Ray tracing mode (Active or PassThrough)"

@@ -92,6 +92,8 @@ module "lambdas" {
   lambda_kms_key_arn     = var.kms_key_arn
   cloudwatch_kms_key_arn = var.kms_key_arn
 
+  alarm_actions = var.sns_alerts_topic_arn != null ? [var.sns_alerts_topic_arn] : []
+
   reserved_concurrent_executions = each.value.reserved_concurrent_executions
 
   environment_variables = merge(

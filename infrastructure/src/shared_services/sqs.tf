@@ -30,7 +30,7 @@ module "sqs_orders" {
 
   # CloudWatch alarms
   create_cloudwatch_alarms = var.create_sqs_alarms
-  alarm_actions            = var.sqs_alarm_sns_topics
+  alarm_actions            = length(var.sqs_alarm_sns_topics) > 0 ? var.sqs_alarm_sns_topics : [module.sns_alerts.topic_arn]
   alarm_age_threshold      = var.orders_queue_age_threshold
   alarm_depth_threshold    = var.orders_queue_depth_threshold
 
@@ -73,7 +73,7 @@ module "sqs_notifications" {
 
   # CloudWatch alarms
   create_cloudwatch_alarms = var.create_sqs_alarms
-  alarm_actions            = var.sqs_alarm_sns_topics
+  alarm_actions            = length(var.sqs_alarm_sns_topics) > 0 ? var.sqs_alarm_sns_topics : [module.sns_alerts.topic_arn]
   alarm_age_threshold      = var.notifications_queue_age_threshold
   alarm_depth_threshold    = var.notifications_queue_depth_threshold
 
@@ -110,7 +110,7 @@ module "sqs_events" {
 
   # CloudWatch alarms
   create_cloudwatch_alarms = var.create_sqs_alarms
-  alarm_actions            = var.sqs_alarm_sns_topics
+  alarm_actions            = length(var.sqs_alarm_sns_topics) > 0 ? var.sqs_alarm_sns_topics : [module.sns_alerts.topic_arn]
   alarm_age_threshold      = var.events_queue_age_threshold
   alarm_depth_threshold    = var.events_queue_depth_threshold
 

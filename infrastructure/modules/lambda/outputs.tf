@@ -51,3 +51,8 @@ output "alias_invoke_arn" {
   description = "Invoke ARN of the Lambda alias (if created)"
   value       = try(aws_lambda_alias.this[0].invoke_arn, null)
 }
+
+output "error_alarm_arn" {
+  description = "ARN of the Lambda errors CloudWatch alarm (if created)"
+  value       = try(aws_cloudwatch_metric_alarm.lambda_errors[0].arn, null)
+}
