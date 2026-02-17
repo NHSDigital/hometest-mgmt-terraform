@@ -307,6 +307,7 @@ After deployment, you'll have access to:
 | <a name="input_permissions_policy"></a> [permissions\_policy](#input\_permissions\_policy) | Permissions Policy header | `string` | `"accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project | `string` | n/a | yes |
 | <a name="input_route53_zone_id"></a> [route53\_zone\_id](#input\_route53\_zone\_id) | Route53 hosted zone ID (from network) | `string` | n/a | yes |
+| <a name="input_sns_alerts_topic_arn"></a> [sns\_alerts\_topic\_arn](#input\_sns\_alerts\_topic\_arn) | ARN of shared alerts SNS topic (from shared\_services) | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | `{}` | no |
 | <a name="input_use_placeholder_lambda"></a> [use\_placeholder\_lambda](#input\_use\_placeholder\_lambda) | Use placeholder Lambda code for initial deployment (when S3 code doesn't exist yet) | `bool` | `false` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID (from network) | `string` | `null` | no |

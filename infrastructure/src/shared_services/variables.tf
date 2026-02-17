@@ -111,7 +111,7 @@ variable "create_sqs_alarms" {
 }
 
 variable "sqs_alarm_sns_topics" {
-  description = "List of SNS topic ARNs for SQS alarm notifications"
+  description = "List of SNS topic ARNs for SQS alarm notifications. If empty, defaults to the shared alerts SNS topic."
   type        = list(string)
   default     = []
 }

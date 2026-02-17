@@ -61,6 +61,7 @@ inputs = {
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_sns_alerts"></a> [sns\_alerts](#module\_sns\_alerts) | ../../modules/sns | n/a |
 | <a name="module_sqs_events"></a> [sqs\_events](#module\_sqs\_events) | ../../modules/sqs | n/a |
 | <a name="module_sqs_notifications"></a> [sqs\_notifications](#module\_sqs\_notifications) | ../../modules/sqs | n/a |
 | <a name="module_sqs_orders"></a> [sqs\_orders](#module\_sqs\_orders) | ../../modules/sqs | n/a |
@@ -188,7 +189,7 @@ inputs = {
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project | `string` | n/a | yes |
 | <a name="input_require_mfa"></a> [require\_mfa](#input\_require\_mfa) | Require MFA for developer role assumption | `bool` | `true` | no |
 | <a name="input_route53_zone_id"></a> [route53\_zone\_id](#input\_route53\_zone\_id) | Route53 zone ID for DNS validation | `string` | n/a | yes |
-| <a name="input_sqs_alarm_sns_topics"></a> [sqs\_alarm\_sns\_topics](#input\_sqs\_alarm\_sns\_topics) | List of SNS topic ARNs for SQS alarm notifications | `list(string)` | `[]` | no |
+| <a name="input_sqs_alarm_sns_topics"></a> [sqs\_alarm\_sns\_topics](#input\_sqs\_alarm\_sns\_topics) | List of SNS topic ARNs for SQS alarm notifications. If empty, defaults to the shared alerts SNS topic. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | `{}` | no |
 | <a name="input_waf_log_retention_days"></a> [waf\_log\_retention\_days](#input\_waf\_log\_retention\_days) | Days to retain WAF logs | `number` | `30` | no |
 | <a name="input_waf_rate_limit"></a> [waf\_rate\_limit](#input\_waf\_rate\_limit) | Rate limit for WAF (requests per 5 minutes per IP) | `number` | `2000` | no |
@@ -231,6 +232,7 @@ inputs = {
 | <a name="output_kms_key_arn"></a> [kms\_key\_arn](#output\_kms\_key\_arn) | ARN of the shared KMS key |
 | <a name="output_kms_key_id"></a> [kms\_key\_id](#output\_kms\_key\_id) | ID of the shared KMS key |
 | <a name="output_shared_config"></a> [shared\_config](#output\_shared\_config) | All shared service configuration for app deployments |
+| <a name="output_sns_alerts_topic_arn"></a> [sns\_alerts\_topic\_arn](#output\_sns\_alerts\_topic\_arn) | ARN of the shared alerts SNS topic |
 | <a name="output_sqs_events_dlq_arn"></a> [sqs\_events\_dlq\_arn](#output\_sqs\_events\_dlq\_arn) | ARN of the events DLQ |
 | <a name="output_sqs_events_dlq_url"></a> [sqs\_events\_dlq\_url](#output\_sqs\_events\_dlq\_url) | URL of the events DLQ |
 | <a name="output_sqs_events_queue_arn"></a> [sqs\_events\_queue\_arn](#output\_sqs\_events\_queue\_arn) | ARN of the events SQS queue |
