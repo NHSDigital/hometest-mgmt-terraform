@@ -50,9 +50,9 @@ resource "aws_api_gateway_resource" "proxy" {
 resource "aws_api_gateway_method" "proxy_any" {
   for_each = local.api_prefixes
 
-  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
-  resource_id   = aws_api_gateway_resource.proxy[each.key].id
-  http_method   = "ANY"
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id = aws_api_gateway_resource.proxy[each.key].id
+  http_method = "ANY"
 
   # Apply authorization if this API prefix is in authorized list
   authorization = contains(local.authorized_api_prefixes, each.key) ? "COGNITO_USER_POOLS" : "NONE"

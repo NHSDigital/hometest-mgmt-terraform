@@ -201,7 +201,7 @@ variable "lambdas" {
     secrets_arn                    = optional(string, null) # Secrets Manager ARN for this lambda
     reserved_concurrent_executions = optional(number, -1)
 
-    authorization        = optional(string, "NONE") # "NONE" or "COGNITO_USER_POOLS"
+    authorization        = optional(string, "NONE")   # "NONE" or "COGNITO_USER_POOLS"
     authorization_scopes = optional(list(string), []) # e.g., ["results/write", "orders/read"]
   }))
   default = {}

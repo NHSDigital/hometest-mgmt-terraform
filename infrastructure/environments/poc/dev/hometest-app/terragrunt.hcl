@@ -249,7 +249,7 @@ inputs = {
         RESULT_QUEUE_URL = "https://sqs.${include.envcommon.locals.global_vars.locals.aws_region}.amazonaws.com/${include.envcommon.locals.account_id}/${include.envcommon.locals.project_name}-${include.envcommon.locals.environment}-order-results"
         # AWS_REGION       = include.envcommon.locals.global_vars.locals.aws_region
       }
-      authorization = "COGNITO_USER_POOLS"
+      authorization        = "COGNITO_USER_POOLS"
       authorization_scopes = ["results/write"]
     }
   }
