@@ -101,6 +101,16 @@ variable "developer_account_arns" {
 }
 
 ################################################################################
+# SNS Configuration
+################################################################################
+
+variable "sns_alerts_email_subscriptions" {
+  description = "List of email addresses to subscribe to the shared alerts SNS topic (requires subscription confirmation)"
+  type        = list(string)
+  default     = []
+}
+
+################################################################################
 # SQS Configuration
 ################################################################################
 
@@ -111,7 +121,7 @@ variable "create_sqs_alarms" {
 }
 
 variable "sqs_alarm_sns_topics" {
-  description = "List of SNS topic ARNs for SQS alarm notifications"
+  description = "List of SNS topic ARNs for SQS alarm notifications. If empty, defaults to the shared alerts SNS topic."
   type        = list(string)
   default     = []
 }

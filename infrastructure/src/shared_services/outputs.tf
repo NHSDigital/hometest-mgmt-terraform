@@ -98,6 +98,15 @@ output "developer_role_arn" {
   value       = aws_iam_role.developer.arn
 }
 
+################################################################################
+# SNS Topics
+################################################################################
+
+output "sns_alerts_topic_arn" {
+  description = "ARN of the shared alerts SNS topic"
+  value       = module.sns_alerts.topic_arn
+}
+
 #------------------------------------------------------------------------------
 # SQS Queues
 #------------------------------------------------------------------------------
@@ -182,6 +191,7 @@ output "shared_config" {
     waf_cloudfront_arn             = aws_wafv2_web_acl.cloudfront.arn
     acm_regional_certificate_arn   = var.create_acm_certificates ? aws_acm_certificate.regional[0].arn : null
     acm_cloudfront_certificate_arn = var.create_acm_certificates ? aws_acm_certificate.cloudfront[0].arn : null
+    sns_alerts_topic_arn           = module.sns_alerts.topic_arn
     # deployment_bucket_id           = aws_s3_bucket.deployment_artifacts.id
     # deployment_bucket_arn          = aws_s3_bucket.deployment_artifacts.arn
     developer_role_arn = aws_iam_role.developer.arn

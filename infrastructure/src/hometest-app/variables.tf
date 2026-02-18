@@ -46,6 +46,12 @@ variable "kms_key_arn" {
   type        = string
 }
 
+variable "sns_alerts_topic_arn" {
+  description = "ARN of shared alerts SNS topic (from shared_services)"
+  type        = string
+  default     = null
+}
+
 variable "waf_cloudfront_arn" {
   description = "ARN of CloudFront WAF Web ACL (from shared_services)"
   type        = string

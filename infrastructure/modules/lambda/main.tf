@@ -170,6 +170,36 @@ resource "aws_lambda_alias" "this" {
   }
 }
 
+################################################################################
+# CloudWatch Alarm - Lambda Errors (Failed Invocations)
+################################################################################
+
+resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
+  count = var.create_cloudwatch_alarms ? 1 : 0
+
+  alarm_name          = "${local.function_name}-errors-high"
+  alarm_description   = "Alert when Lambda function reports errors (failed invocations)"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = var.alarm_evaluation_periods
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = var.alarm_period
+  statistic           = "Sum"
+  threshold           = var.alarm_error_threshold
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    FunctionName = aws_lambda_function.this.function_name
+  }
+
+  alarm_actions = var.alarm_actions
+  ok_actions    = var.alarm_actions
+
+  tags = merge(local.common_tags, {
+    ResourceType = "cloudwatch-alarm"
+  })
+}
+
 # * Failed to execute "terraform apply -auto-approve" in ./.terragrunt-cache/Omq22eG3YTbbRpQQRiuSifYiqLI/R-jNQY0q8KEUNT6OtV-g2bdzJkU/src/hometest-app
 #   ╷
 #   │ Error: creating Lambda Function (nhs-hometest-dev1-api2-handler): operation error Lambda: CreateFunction, https response error StatusCode: 400, RequestID: 1d444545-512a-490c-b759-3af233f5e51f, InvalidParameterValueException: The provided execution role does not have permissions to call CreateNetworkInterface on EC2
