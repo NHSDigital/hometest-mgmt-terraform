@@ -1,21 +1,21 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # COMMON TERRAGRUNT CONFIGURATION FOR HOMETEST-APP
-# This file contains the shared configuration for all dev environments (dev, dev-mikmio, etc.)
+# Location: poc/hometest-app/app.hcl
+#
+# Shared configuration for all environments (dev, dev-mikmio, etc.) under poc/hometest-app/.
 # Environment-specific terragrunt.hcl files include this and override only what's needed.
 #
-# The environment name is derived automatically:
-#   1. From env.hcl (if found in parent folders) - for backward compatibility
-#   2. From the directory name of the calling terragrunt.hcl (e.g., dev/, dev-mikmio/)
+# Environment name is derived automatically from the child directory name (e.g., dev/, dev-mikmio/).
 #
-# Usage in environment terragrunt.hcl:
-#   include "envcommon" {
-#     path           = "${dirname(find_in_parent_folders("root.hcl"))}/_envcommon/hometest-app.hcl"
+# Usage in child terragrunt.hcl:
+#   include "app" {
+#     path           = find_in_parent_folders("app.hcl")
 #     expose         = true
 #     merge_strategy = "deep"
 #   }
 #
 # To add environment-specific overrides (e.g., extra lambdas), define an inputs block
-# in the child terragrunt.hcl - it will be deep-merged with the inputs below.
+# in the child terragrunt.hcl — it will be deep-merged with the inputs below.
 # ---------------------------------------------------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -27,31 +27,27 @@ locals {
   account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
   global_vars  = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
 
-  # Environment: from env.hcl if available, otherwise derived from directory name
-  # This allows environments to work without a separate env.hcl file
-  # Uses find_in_parent_folders with fallback to a non-existent path; try() catches the read error
-  _env_hcl_path = find_in_parent_folders("env.hcl", "${get_terragrunt_dir()}/__no_env_hcl__")
-  _env_locals   = try(read_terragrunt_config(local._env_hcl_path).locals, {})
-  environment   = try(local._env_locals.environment, basename(get_terragrunt_dir()))
+  # Environment derived from child directory name (e.g., dev/, dev-mikmio/)
+  environment = basename(get_terragrunt_dir())
 
   # Extract commonly used values
   project_name = local.global_vars.locals.project_name
   account_id   = local.account_vars.locals.aws_account_id
+  aws_region   = local.global_vars.locals.aws_region
 
   # Domain configuration
   base_domain = "hometest.service.nhs.uk"
   env_domain  = "${local.environment}.${local.base_domain}"
 
   # ---------------------------------------------------------------------------
-  # SOURCE PATHS - Can be overridden via env.hcl in each environment
+  # SOURCE PATHS
+  # Override these in child terragrunt.hcl locals if needed
   # ---------------------------------------------------------------------------
-  # Check if env.hcl has path overrides, otherwise use defaults
-  # Default: hometest-service repo (production code)
-  lambdas_source_dir = try(local._env_locals.lambdas_source_dir, "${get_repo_root()}/../hometest-service/lambdas")
-  lambdas_base_path  = try(local._env_locals.lambdas_base_path, "${local.lambdas_source_dir}/src")
-  spa_source_dir     = try(local._env_locals.spa_source_dir, "${get_repo_root()}/../hometest-service/ui")
-  spa_dist_dir       = try(local._env_locals.spa_dist_dir, "${local.spa_source_dir}/out")
-  spa_type           = try(local._env_locals.spa_type, "nextjs") # "nextjs" or "vite"
+  lambdas_source_dir = "${get_repo_root()}/../hometest-service/lambdas"
+  lambdas_base_path  = "${local.lambdas_source_dir}/src"
+  spa_source_dir     = "${get_repo_root()}/../hometest-service/ui"
+  spa_dist_dir       = "${local.spa_source_dir}/out"
+  spa_type           = "nextjs" # "nextjs" or "vite"
 
   # Lambda Configuration Defaults
   # https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
@@ -433,7 +429,7 @@ inputs = {
       environment = {
         NODE_OPTIONS     = "--enable-source-maps"
         ENVIRONMENT      = local.environment
-        RESULT_QUEUE_URL = "https://sqs.${local.global_vars.locals.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-results"
+        RESULT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-results"
       }
     }
   }
