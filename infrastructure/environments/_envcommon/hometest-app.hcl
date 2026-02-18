@@ -1,14 +1,21 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # COMMON TERRAGRUNT CONFIGURATION FOR HOMETEST-APP
-# This file contains the shared configuration for all dev environments (dev1, dev2, etc.)
+# This file contains the shared configuration for all dev environments (dev, dev-mikmio, etc.)
 # Environment-specific terragrunt.hcl files include this and override only what's needed.
+#
+# The environment name is derived automatically:
+#   1. From env.hcl (if found in parent folders) - for backward compatibility
+#   2. From the directory name of the calling terragrunt.hcl (e.g., dev/, dev-mikmio/)
 #
 # Usage in environment terragrunt.hcl:
 #   include "envcommon" {
-#     path   = "${dirname(find_in_parent_folders("root.hcl"))}/_envcommon/hometest-app.hcl"
-#     expose = true
+#     path           = "${dirname(find_in_parent_folders("root.hcl"))}/_envcommon/hometest-app.hcl"
+#     expose         = true
 #     merge_strategy = "deep"
 #   }
+#
+# To add environment-specific overrides (e.g., extra lambdas), define an inputs block
+# in the child terragrunt.hcl - it will be deep-merged with the inputs below.
 # ---------------------------------------------------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -18,13 +25,18 @@
 locals {
   # Load configuration from parent folders
   account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
-  env_vars     = read_terragrunt_config(find_in_parent_folders("env.hcl"))
   global_vars  = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
+
+  # Environment: from env.hcl if available, otherwise derived from directory name
+  # This allows environments to work without a separate env.hcl file
+  # Uses find_in_parent_folders with fallback to a non-existent path; try() catches the read error
+  _env_hcl_path = find_in_parent_folders("env.hcl", "${get_terragrunt_dir()}/__no_env_hcl__")
+  _env_locals   = try(read_terragrunt_config(local._env_hcl_path).locals, {})
+  environment   = try(local._env_locals.environment, basename(get_terragrunt_dir()))
 
   # Extract commonly used values
   project_name = local.global_vars.locals.project_name
   account_id   = local.account_vars.locals.aws_account_id
-  environment  = local.env_vars.locals.environment
 
   # Domain configuration
   base_domain = "hometest.service.nhs.uk"
@@ -35,11 +47,11 @@ locals {
   # ---------------------------------------------------------------------------
   # Check if env.hcl has path overrides, otherwise use defaults
   # Default: hometest-service repo (production code)
-  lambdas_source_dir = try(local.env_vars.locals.lambdas_source_dir, "${get_repo_root()}/../hometest-service/lambdas")
-  lambdas_base_path  = try(local.env_vars.locals.lambdas_base_path, "${local.lambdas_source_dir}/src")
-  spa_source_dir     = try(local.env_vars.locals.spa_source_dir, "${get_repo_root()}/../hometest-service/ui")
-  spa_dist_dir       = try(local.env_vars.locals.spa_dist_dir, "${local.spa_source_dir}/out")
-  spa_type           = try(local.env_vars.locals.spa_type, "nextjs") # "nextjs" or "vite"
+  lambdas_source_dir = try(local._env_locals.lambdas_source_dir, "${get_repo_root()}/../hometest-service/lambdas")
+  lambdas_base_path  = try(local._env_locals.lambdas_base_path, "${local.lambdas_source_dir}/src")
+  spa_source_dir     = try(local._env_locals.spa_source_dir, "${get_repo_root()}/../hometest-service/ui")
+  spa_dist_dir       = try(local._env_locals.spa_dist_dir, "${local.spa_source_dir}/out")
+  spa_type           = try(local._env_locals.spa_type, "nextjs") # "nextjs" or "vite"
 
   # Lambda Configuration Defaults
   # https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
@@ -221,4 +233,221 @@ terraform {
       EOF
     ]
   }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# DEPENDENCIES
+# These are shared across all hometest-app environments.
+# Config paths are resolved relative to the child terragrunt.hcl that includes this file.
+# ---------------------------------------------------------------------------------------------------------------------
+
+dependency "network" {
+  config_path = "${get_terragrunt_dir()}/../../core/network"
+
+  mock_outputs = {
+    route53_zone_id          = "Z0123456789ABCDEFGHIJ"
+    vpc_id                   = "vpc-mock12345"
+    private_subnet_ids       = ["subnet-mock1", "subnet-mock2", "subnet-mock3"]
+    lambda_security_group_id = "sg-mock12345"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
+dependency "shared_services" {
+  config_path = "${get_terragrunt_dir()}/../../core/shared_services"
+
+  mock_outputs = {
+    kms_key_arn                     = "arn:aws:kms:eu-west-2:123456789012:key/mock-key-id"
+    sns_alerts_topic_arn            = "arn:aws:sns:eu-west-2:123456789012:mock-alerts-topic"
+    waf_regional_arn                = "arn:aws:wafv2:eu-west-2:123456789012:regional/webacl/mock/mock-id"
+    waf_cloudfront_arn              = "arn:aws:wafv2:us-east-1:123456789012:global/webacl/mock/mock-id"
+    acm_regional_certificate_arn    = "arn:aws:acm:eu-west-2:123456789012:certificate/mock-cert"
+    acm_cloudfront_certificate_arn  = "arn:aws:acm:us-east-1:123456789012:certificate/mock-cert"
+    deployment_artifacts_bucket_id  = "mock-deployment-bucket"
+    deployment_artifacts_bucket_arn = "arn:aws:s3:::mock-deployment-bucket"
+    api_config_secret_arn           = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:mock-secret"
+    api_config_secret_name          = "mock/secret/name"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
+dependency "aurora_postgres" {
+  config_path = "${get_terragrunt_dir()}/../../core/aurora-postgres"
+
+  mock_outputs = {
+    connection_string = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# INPUTS - Shared across all hometest-app environments
+# Environment-specific terragrunt.hcl files can override any of these via deep merge.
+# To add extra lambdas, define an inputs block with a lambdas map in the child.
+# ---------------------------------------------------------------------------------------------------------------------
+
+inputs = {
+  project_name = local.project_name
+  environment  = local.environment
+
+  # Dependencies from network
+  vpc_id                    = dependency.network.outputs.vpc_id
+  lambda_subnet_ids         = dependency.network.outputs.private_subnet_ids
+  lambda_security_group_ids = [dependency.network.outputs.lambda_security_group_id]
+  route53_zone_id           = dependency.network.outputs.route53_zone_id
+
+  # Dependencies from shared_services
+  kms_key_arn          = dependency.shared_services.outputs.kms_key_arn
+  sns_alerts_topic_arn = dependency.shared_services.outputs.sns_alerts_topic_arn
+  waf_cloudfront_arn   = dependency.shared_services.outputs.waf_cloudfront_arn
+
+  # Lambda Configuration
+  enable_vpc_access  = true
+  enable_sqs_access  = true # Required for order-router-lambda SQS trigger
+  lambda_runtime     = local.lambda_runtime
+  lambda_timeout     = local.lambda_timeout
+  lambda_memory_size = local.lambda_memory_size
+  log_retention_days = local.log_retention_days
+
+  # IAM Permissions - Grant Lambda access to secrets
+  # Note: AWS Secrets Manager ARNs have a random suffix, use -* wildcard to match
+  lambda_secrets_arns = [
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/preventex-dev-client-secret-*",
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/sh24-dev-client-secret-*",
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/nhs-login-private-key-*"
+  ]
+
+  # KMS keys for secrets encrypted with different keys than shared_services KMS
+  lambda_additional_kms_key_arns = []
+
+  # Lambda code deployment
+  use_placeholder_lambda = false
+
+  # Base path for hometest-service lambdas
+  lambdas_base_path = local.lambdas_base_path
+
+  # =============================================================================
+  # LAMBDA DEFINITIONS - hometest-service lambdas
+  # Based on hometest-service/local-environment/infra/main.tf configuration
+  #
+  # CloudFront Routing (path-based):
+  # - / and /*              → S3 SPA (Next.js)
+  # - /test-order/*         → API Gateway → eligibility-test-info-lambda
+  # - /order-router/*       → API Gateway → order-router-lambda (SQS-triggered)
+  # - /order-router-sh24/*  → API Gateway → order-router-lambda-sh24 (SQS-triggered)
+  # - /login/*              → API Gateway → login-lambda
+  # - /result/*             → API Gateway → order-result-lambda
+  #
+  # To add extra lambdas (e.g., hello-world), define them in the child terragrunt.hcl:
+  #   inputs = { lambdas = { "hello-world-lambda" = { ... } } }
+  # =============================================================================
+  lambdas = {
+    # Eligibility Test Info Lambda
+    # CloudFront: /test-order/* → API Gateway → Lambda
+    # Handles: GET /test-order/info (returns test eligibility information)
+    "eligibility-test-info-lambda" = {
+      description     = "Eligibility Test Info Service - Returns test eligibility information"
+      api_path_prefix = "test-order"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = local.environment
+        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
+      }
+    }
+
+    # Order Router Lambda - SQS triggered for async order processing
+    # NOT exposed via API Gateway - processes orders from SQS queue
+    "order-router-lambda" = {
+      description     = "Order Router Service - Processes orders from SQS queue"
+      sqs_trigger     = false          # Triggered by SQS, no API Gateway endpoint
+      api_path_prefix = "order-router" # Not used for routing since this is SQS-triggered, but included for consistency
+      handler         = "index.handler"
+      timeout         = 60 # Longer timeout for external API calls to supplier
+      memory_size     = 512
+      environment = {
+        NODE_OPTIONS                = "--enable-source-maps"
+        ENVIRONMENT                 = local.environment
+        SUPPLIER_BASE_URL           = "https://func-nhshometest-dev.azurewebsites.net/"
+        SUPPLIER_OAUTH_TOKEN_PATH   = "/api/oauth"
+        SUPPLIER_CLIENT_ID          = "7e9b8f16-4686-46f4-903e-2d364774fc82"
+        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/preventex-dev-client-secret"
+        SUPPLIER_ORDER_PATH         = "/api/order"
+      }
+    }
+
+    # Order Router Lambda for SH24 supplier - SQS triggered for async order processing
+    # Separate lambda to connect to SH24 test environment without affecting other suppliers
+    "order-router-lambda-sh24" = {
+      description     = "Order Router Service - Processes orders from SQS queue for SH24 supplier"
+      sqs_trigger     = false               # Triggered by SQS, no API Gateway endpoint
+      api_path_prefix = "order-router-sh24" # Not used for routing since this is SQS-triggered, but included for consistency
+      handler         = "index.handler"
+      timeout         = 60 # Longer timeout for external API calls to supplier
+      memory_size     = 512
+      zip_path        = "${local.lambdas_base_path}/order-router-lambda/order-router-lambda.zip"
+      environment = {
+        NODE_OPTIONS                = "--enable-source-maps"
+        ENVIRONMENT                 = local.environment
+        SUPPLIER_BASE_URL           = "https://admin.qa3.sh24.org.uk/"
+        SUPPLIER_OAUTH_TOKEN_PATH   = "/oauth/token"
+        SUPPLIER_CLIENT_ID          = "zrgmf33Zdk-515BIMrds29v9Z3KzoH-tfYDgxLsYtZE"
+        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/sh24-dev-client-secret"
+        SUPPLIER_ORDER_PATH         = "/order"
+        SUPPLIER_OAUTH_SCOPE        = "order results"
+      }
+    }
+
+    # Login Lambda - NHS Login authentication
+    # CloudFront: /login/* → API Gateway → Lambda
+    "login-lambda" = {
+      description     = "Login Service - NHS Login authentication"
+      api_path_prefix = "login"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS                               = "--enable-source-maps"
+        ENVIRONMENT                                = local.environment
+        NHS_LOGIN_BASE_ENDPOINT_URL                = "https://auth.sandpit.signin.nhs.uk"
+        NHS_LOGIN_CLIENT_ID                        = "hometest"
+        NHS_LOGIN_REDIRECT_URL                     = "https://${local.env_domain}/callback"
+        NHS_LOGIN_PRIVATE_KEY_SECRET_NAME          = "nhs-hometest/dev/nhs-login-private-key"
+        AUTH_SESSION_MAX_DURATION_MINUTES          = "60"
+        AUTH_ACCESS_TOKEN_EXPIRY_DURATION_MINUTES  = "60"
+        AUTH_REFRESH_TOKEN_EXPIRY_DURATION_MINUTES = "60"
+        AUTH_COOKIE_SAME_SITE                      = "Lax"
+      }
+    }
+
+    # Order Result Lambda - Receives test results from suppliers
+    # CloudFront: /result/* → API Gateway → Lambda
+    "order-result-lambda" = {
+      description     = "Order Result Service - Receives test results from suppliers"
+      api_path_prefix = "result"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS     = "--enable-source-maps"
+        ENVIRONMENT      = local.environment
+        RESULT_QUEUE_URL = "https://sqs.${local.global_vars.locals.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-results"
+      }
+    }
+  }
+
+  # API Gateway Configuration
+  api_stage_name             = local.api_stage_name
+  api_endpoint_type          = local.api_endpoint_type
+  api_throttling_burst_limit = local.api_throttling_burst_limit
+  api_throttling_rate_limit  = local.api_throttling_rate_limit
+
+  # Domain configuration
+  custom_domain_name  = local.env_domain
+  acm_certificate_arn = dependency.shared_services.outputs.acm_cloudfront_certificate_arn
+
+  # CloudFront Configuration
+  cloudfront_price_class = local.cloudfront_price_class
 }

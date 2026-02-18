@@ -11,8 +11,10 @@ locals {
   # Automatically load region-level variables
   # region_vars = read_terragrunt_config(find_in_parent_folders("region.hcl"))
 
-  # Automatically load environment-level variables
-  environment_vars = read_terragrunt_config(find_in_parent_folders("env.hcl"))
+  # Automatically load environment-level variables (optional - environments can define inline)
+  # Uses find_in_parent_folders with fallback to a non-existent path; try() catches the read error
+  _env_hcl_path = find_in_parent_folders("env.hcl", "${get_terragrunt_dir()}/__no_env_hcl__")
+  _env_locals   = try(read_terragrunt_config(local._env_hcl_path).locals, {})
 
   # Automatically load global variables
   global_vars = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
@@ -22,7 +24,8 @@ locals {
   account_name = local.account_vars.locals.aws_account_name
   account_id   = local.account_vars.locals.aws_account_id
 
-  environment = local.environment_vars.locals.environment
+  # Environment: from env.hcl if available, otherwise derived from directory name
+  environment = try(local._env_locals.environment, basename(path_relative_to_include()))
 }
 
 remote_state {
@@ -52,7 +55,7 @@ remote_state {
 inputs = merge(
   local.global_vars.locals,
   local.account_vars.locals,
-  local.environment_vars.locals,
+  local._env_locals,
   {
     tags = {
       Owner       = "platform-team"
