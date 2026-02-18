@@ -244,6 +244,24 @@ inputs = {
         ENVIRONMENT      = include.envcommon.locals.environment
         RESULT_QUEUE_URL = "https://sqs.${include.envcommon.locals.global_vars.locals.aws_region}.amazonaws.com/${include.envcommon.locals.account_id}/${include.envcommon.locals.project_name}-${include.envcommon.locals.environment}-order-results"
         # AWS_REGION       = include.envcommon.locals.global_vars.locals.aws_region
+        # SQS_ENDPOINT     = "http://localstack:4566"
+      }
+    }
+
+    # Order Service Lambda - Handles order submission
+    # CloudFront: /order/* → API Gateway → Lambda
+    # Handles: POST /order (submits new test orders)
+    # Matches local: api_path = "order", http_method = "POST"
+    "order-service-lambda" = {
+      description     = "Order Service - Handles order submission"
+      api_path_prefix = "order"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = include.envcommon.locals.environment
+        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
       }
     }
   }
