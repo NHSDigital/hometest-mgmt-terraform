@@ -1,6 +1,6 @@
 ---
-name: "Deploy Terraform Module"
-run-name: "Deploy env: ${{ inputs.environment }}, module: ${{ inputs.module }}, tf: ${{ inputs.action }}"
+name: "Deploy Terraform HomeTest App"
+run-name: "Deploy env: ${{ inputs.environment }}, subenv: ${{ inputs.subenv }}, tf: ${{ inputs.action }}"
 
 on:
   workflow_dispatch:
@@ -16,27 +16,13 @@ on:
         options:
           - poc
         default: poc
-      stack:
-        description: "Infrastructure stack"
+      subenv:
+        description: "Terraform subenv to deploy"
         required: true
         type: choice
+        default: dev
         options:
           - dev
-          - core
-        default: dev
-      module:
-        description: "Terraform module to deploy"
-        required: true
-        type: choice
-        options:
-          - hometest-app
-          - bootstrap
-          - network
-          - aurora-postgres
-          - shared_services
-          - lambda-goose-migrator
-          - all
-        default: hometest-app
       action:
         description: "Terraform action to perform"
         required: true
@@ -44,8 +30,8 @@ on:
         options:
           - plan
           - apply
-          - destroy-plan
-          - destroy
+          # - destroy-plan
+          # - destroy
         default: plan
 
 env:
@@ -59,8 +45,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     outputs:
-      modules: ${{ steps.set-modules.outputs.modules }}
-      working_dir_base: ${{ steps.set-modules.outputs.working_dir_base }}
+      subenvs: ${{ steps.set-subenvs.outputs.subenvs }}
+      working_dir_base: ${{ steps.set-subenvs.outputs.working_dir_base }}
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
@@ -75,25 +61,21 @@ jobs:
           path: hometest-service
           ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
 
-      - name: "Set modules to deploy"
-        id: set-modules
+      - name: "Set subenvs to deploy"
+        id: set-subenvs
         run: |
-          WORKING_DIR_BASE="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment }}/${{ inputs.stack }}"
+          WORKING_DIR_BASE="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment }}/hometest-app"
           echo "working_dir_base=${WORKING_DIR_BASE}" >> "$GITHUB_OUTPUT"
 
-          if [ "${{ inputs.module }}" == "all" ]; then
-            # Deploy in dependency order
-            echo 'modules=["bootstrap", "network", "aurora-postgres", "shared_services", "hometest-app"]' >> "$GITHUB_OUTPUT"
-          else
-            echo 'modules=["${{ inputs.module }}"]' >> "$GITHUB_OUTPUT"
-          fi
+          echo 'subenvs=["${{ inputs.subenv }}"]' >> "$GITHUB_OUTPUT"
 
-      - name: "Validate module path exists"
+
+      - name: "Validate subenv path exists"
         run: |
-          BASE_PATH="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment }}/${{ inputs.stack }}"
-          if [ "${{ inputs.module }}" != "all" ]; then
-            if [ ! -d "${BASE_PATH}/${{ inputs.module }}" ]; then
-              echo "::error::Module path '${BASE_PATH}/${{ inputs.module }}' does not exist"
+          BASE_PATH="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment }}/hometest-app"
+          if [ "${{ inputs.subenv }}" != "all" ]; then
+            if [ ! -d "${BASE_PATH}/${{ inputs.subenv }}" ]; then
+              echo "::error::subenv path '${BASE_PATH}/${{ inputs.subenv }}' does not exist"
               exit 1
             fi
           fi
@@ -105,14 +87,14 @@ jobs:
             echo "| Parameter | Value |"
             echo "|-----------|---------|"
             echo "| Environment | ${{ inputs.environment }} |"
-            echo "| Stack | ${{ inputs.stack }} |"
-            echo "| Module(s) | ${{ inputs.module }} |"
+            echo "| Stack | hometest-app |"
+            echo "| Subenv(s) | ${{ inputs.subenv }} |"
             echo "| Action | ${{ inputs.action }} |"
             echo "| Triggered by | ${{ github.actor }} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
-    name: "Deploy ${{ matrix.module }}"
+    name: "Deploy ${{ matrix.subenv }}"
     runs-on: ubuntu-latest
     needs: [validate-inputs]
     timeout-minutes: 30
@@ -123,37 +105,29 @@ jobs:
       fail-fast: true
       max-parallel: 1  # Sequential deployment to respect dependencies
       matrix:
-        module: ${{ fromJson(needs.validate-inputs.outputs.modules) }}
+        subenv: ${{ fromJson(needs.validate-inputs.outputs.subenvs) }}
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
         with:
           path: hometest-mgmt-terraform
 
-      - name: "Checkout hometest-service"
-        uses: actions/checkout@v6
-        with:
-          path: hometest-service
-          repository: "NHSDigital/hometest-service"
-          ref: ${{ inputs.hometest_service_ref }}
-          ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
-
-      - name: "Deploy ${{ matrix.module }}"
+      - name: "Deploy ${{ matrix.subenv }}"
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region: ${{ env.AWS_REGION }}
-          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.module }}
+          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}
           action: ${{ inputs.action }}
 
       - name: "Post deployment summary"
         if: always()
         run: |
           {
-            echo "## Module: ${{ matrix.module }}"
+            echo "## Subenv: ${{ matrix.subenv }}"
             echo "- **Status**: ${{ job.status }}"
             echo "- **Action**: ${{ inputs.action }}"
-            echo "- **Path**: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.module }}"
+            echo "- **Path**: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
   summary:
@@ -170,8 +144,8 @@ jobs:
             echo "| Detail | Value |"
             echo "|--------|-------|"
             echo "| Environment | ${{ inputs.environment }} |"
-            echo "| Stack | ${{ inputs.stack }} |"
-            echo "| Module(s) | ${{ inputs.module }} |"
+            echo "| Stack | hometest-app |"
+            echo "| Subenv(s) | ${{ inputs.subenv }} |"
             echo "| Action | ${{ inputs.action }} |"
             echo "| Overall Status | ${{ needs.deploy.result }} |"
             echo "| Run ID | ${{ github.run_id }} |"
