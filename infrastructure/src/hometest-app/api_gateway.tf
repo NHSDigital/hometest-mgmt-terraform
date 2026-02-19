@@ -81,10 +81,18 @@ resource "aws_api_gateway_integration" "proxy" {
 resource "aws_api_gateway_method" "root" {
   for_each = local.api_prefixes
 
-  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
-  resource_id   = aws_api_gateway_rest_api.apis[each.key].root_resource_id
-  http_method   = "ANY"
-  authorization = "NONE"
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id = aws_api_gateway_rest_api.apis[each.key].root_resource_id
+  http_method = "ANY"
+
+  # Apply authorization if this API prefix is in authorized list
+  authorization = contains(local.authorized_api_prefixes, each.key) ? "COGNITO_USER_POOLS" : "NONE"
+  authorizer_id = contains(local.authorized_api_prefixes, each.key) ? aws_api_gateway_authorizer.cognito_supplier[each.key].id : null
+
+  authorization_scopes = (
+    contains(local.authorized_api_prefixes, each.key) &&
+    lookup(local.api_lambdas[local.api_to_lambda[each.key]], "authorization_scopes", null) != null
+  ) ? local.api_lambdas[local.api_to_lambda[each.key]].authorization_scopes : null
 }
 
 # Lambda integration for root
