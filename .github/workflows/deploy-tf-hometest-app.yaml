@@ -1,6 +1,6 @@
 ---
 name: "Deploy Terraform HomeTest App"
-run-name: "Deploy env: ${{ inputs.environment }}, subenv: ${{ inputs.subenv }}, tf: ${{ inputs.action }}"
+run-name: "Deploy env: ${{ inputs.environment || 'poc' }}, subenv: ${{ inputs.subenv || 'dev' }}, tf: ${{ inputs.action || 'plan' }}"
 
 on:
   pull_request:
@@ -60,25 +60,23 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: "NHSDigital/hometest-service"
-          ref: ${{ inputs.hometest_service_ref }}
+          ref: ${{ inputs.hometest_service_ref || 'main' }}
           path: hometest-service
           ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
 
       - name: "Set subenvs to deploy"
         id: set-subenvs
         run: |
-          WORKING_DIR_BASE="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment }}/hometest-app"
+          WORKING_DIR_BASE="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment || 'poc' }}/hometest-app"
           echo "working_dir_base=${WORKING_DIR_BASE}" >> "$GITHUB_OUTPUT"
-
-          echo 'subenvs=["${{ inputs.subenv }}"]' >> "$GITHUB_OUTPUT"
-
+          echo "subenvs=[\"${{ inputs.subenv || 'dev' }}\"]" >> "$GITHUB_OUTPUT"
 
       - name: "Validate subenv path exists"
         run: |
-          BASE_PATH="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment }}/hometest-app"
-          if [ "${{ inputs.subenv }}" != "all" ]; then
-            if [ ! -d "${BASE_PATH}/${{ inputs.subenv }}" ]; then
-              echo "::error::subenv path '${BASE_PATH}/${{ inputs.subenv }}' does not exist"
+          BASE_PATH="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment || 'poc' }}/hometest-app"
+          if [ "${{ inputs.subenv || 'dev' }}" != "all" ]; then
+            if [ ! -d "${BASE_PATH}/${{ inputs.subenv || 'dev' }}" ]; then
+              echo "::error::subenv path '${BASE_PATH}/${{ inputs.subenv || 'dev' }}' does not exist"
               exit 1
             fi
           fi
@@ -89,10 +87,10 @@ jobs:
             echo "## Deployment Configuration"
             echo "| Parameter | Value |"
             echo "|-----------|---------|"
-            echo "| Environment | ${{ inputs.environment }} |"
+            echo "| Environment | ${{ inputs.environment || 'poc' }} |"
             echo "| Stack | hometest-app |"
-            echo "| Subenv(s) | ${{ inputs.subenv }} |"
-            echo "| Action | ${{ inputs.action }} |"
+            echo "| Subenv(s) | ${{ inputs.subenv || 'dev' }} |"
+            echo "| Action | ${{ inputs.action || 'plan' }} |"
             echo "| Triggered by | ${{ github.actor }} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -121,7 +119,7 @@ jobs:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region: ${{ env.AWS_REGION }}
           working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}
-          action: ${{ inputs.action }}
+          action: ${{ inputs.action || 'plan' }}
 
       - name: "Post deployment summary"
         if: always()
@@ -129,7 +127,7 @@ jobs:
           {
             echo "## Subenv: ${{ matrix.subenv }}"
             echo "- **Status**: ${{ job.status }}"
-            echo "- **Action**: ${{ inputs.action }}"
+            echo "- **Action**: ${{ inputs.action || 'plan' }}"
             echo "- **Path**: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -146,10 +144,10 @@ jobs:
             echo ""
             echo "| Detail | Value |"
             echo "|--------|-------|"
-            echo "| Environment | ${{ inputs.environment }} |"
+            echo "| Environment | ${{ inputs.environment || 'poc' }} |"
             echo "| Stack | hometest-app |"
-            echo "| Subenv(s) | ${{ inputs.subenv }} |"
-            echo "| Action | ${{ inputs.action }} |"
+            echo "| Subenv(s) | ${{ inputs.subenv || 'dev' }} |"
+            echo "| Action | ${{ inputs.action || 'plan' }} |"
             echo "| Overall Status | ${{ needs.deploy.result }} |"
             echo "| Run ID | ${{ github.run_id }} |"
             echo "| Triggered by | ${{ github.actor }} |"
