@@ -176,7 +176,7 @@ inputs = {
         SUPPLIER_BASE_URL           = "https://func-nhshometest-dev.azurewebsites.net/"
         SUPPLIER_OAUTH_TOKEN_PATH   = "/api/oauth"
         SUPPLIER_CLIENT_ID          = "7e9b8f16-4686-46f4-903e-2d364774fc82"
-        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/piotrkas-testing/preventex-dev-client-secret"
+        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/preventex-dev-client-secret"
         SUPPLIER_ORDER_PATH         = "/api/order"
       }
     }
@@ -199,7 +199,7 @@ inputs = {
         SUPPLIER_BASE_URL           = "https://admin.qa3.sh24.org.uk/"
         SUPPLIER_OAUTH_TOKEN_PATH   = "/oauth/token"
         SUPPLIER_CLIENT_ID          = "zrgmf33Zdk-515BIMrds29v9Z3KzoH-tfYDgxLsYtZE"
-        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/piotrkas-testing/sh24-dev-client-secret"
+        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/sh24-dev-client-secret"
         SUPPLIER_ORDER_PATH         = "/order"
         SUPPLIER_OAUTH_SCOPE        = "order results"
       }
@@ -221,7 +221,7 @@ inputs = {
         NHS_LOGIN_BASE_ENDPOINT_URL                = "https://auth.sandpit.signin.nhs.uk"
         NHS_LOGIN_CLIENT_ID                        = "hometest"
         NHS_LOGIN_REDIRECT_URL                     = "https://${include.envcommon.locals.env_domain}/callback"
-        NHS_LOGIN_PRIVATE_KEY_SECRET_NAME          = "nhs-hometest/piotrkas-testing/nhs-login-private-key"
+        NHS_LOGIN_PRIVATE_KEY_SECRET_NAME          = "nhs-hometest/dev/nhs-login-private-key"
         AUTH_SESSION_MAX_DURATION_MINUTES          = "60"
         AUTH_ACCESS_TOKEN_EXPIRY_DURATION_MINUTES  = "60"
         AUTH_REFRESH_TOKEN_EXPIRY_DURATION_MINUTES = "60"

@@ -155,6 +155,20 @@ resource "aws_iam_policy" "developer_deployment" {
         ]
         Resource = "arn:aws:s3:::${var.project_name}-*/*"
       },
+      # S3 Terraform state access
+      {
+        Sid    = "S3TerraformStateAccess"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "arn:aws:s3:::${var.project_name}-*-s3-tfstate",
+          "arn:aws:s3:::${var.project_name}-*-s3-tfstate/*"
+        ]
+      },
       # SQS queue management
       {
         Sid    = "SQSQueueManagement"
@@ -174,7 +188,8 @@ resource "aws_iam_policy" "developer_deployment" {
           "kms:Encrypt",
           "kms:Decrypt",
           "kms:GenerateDataKey",
-          "kms:ReEncrypt*"
+          "kms:ReEncrypt*",
+          "kms:DescribeKey"
         ]
         Resource = "arn:aws:kms:*:${var.aws_account_id}:key/*"
         Condition = {
@@ -188,5 +203,55 @@ resource "aws_iam_policy" "developer_deployment" {
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-developer-deployment"
+  })
+}
+
+################################################################################
+# ReadOnly Terraform State Access Policy
+# Customer-managed policy for SSO ReadOnly Permission Set attachment
+# Allows read-only users to decrypt terraform state files
+################################################################################
+
+resource "aws_iam_policy" "tfstate_readonly" {
+  name        = "${local.resource_prefix}-tfstate-readonly"
+  description = "Read-only access to Terraform state for SSO ReadOnly users"
+  path        = "/"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      # S3 Terraform state read access
+      {
+        Sid    = "S3TerraformStateReadAccess"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "arn:aws:s3:::${var.project_name}-*-s3-tfstate",
+          "arn:aws:s3:::${var.project_name}-*-s3-tfstate/*"
+        ]
+      },
+      # KMS decryption for state files
+      {
+        Sid    = "KMSDecryptTerraformState"
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey"
+        ]
+        Resource = "arn:aws:kms:*:${var.aws_account_id}:key/*"
+        Condition = {
+          StringLike = {
+            "kms:ResourceAliases" = "alias/${var.project_name}-*-kms-tfstate-key"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = "${local.resource_prefix}-tfstate-readonly"
   })
 }
