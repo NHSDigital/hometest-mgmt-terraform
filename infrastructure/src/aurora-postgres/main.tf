@@ -5,9 +5,6 @@
 locals {
   resource_prefix = "${var.project_name}-${var.aws_account_shortname}-${var.environment}"
 
-  # Use VPC from network module (passed via variables from Terragrunt dependency)
-  vpc_id = var.vpc_id
-
   common_tags = merge(var.tags, {
     Component = "aurora-postgres"
   })
@@ -21,7 +18,7 @@ module "aurora_postgres" {
   source = "../../modules/aurora-postgres"
 
   identifier = "${local.resource_prefix}-postgres"
-  vpc_id     = local.vpc_id
+  vpc_id     = var.vpc_id
 
   # Use DB subnet group from network module
   db_subnet_group_name = var.db_subnet_group_name

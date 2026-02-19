@@ -1,5 +1,21 @@
-data "aws_aurora_cluster" "db" {
-  cluster_identifier = var.db_cluster_id
+resource "aws_iam_role" "lambda_goose_migrator" {
+  name               = "${local.resource_prefix}-goose-migrator-role"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_policy" "lambda_goose_migrator_policy" {
+  name        = "${local.resource_prefix}-goose-migrator-policy"
+  description = "Allow Lambda to connect to RDS and fetch secrets."
+  policy      = data.aws_iam_policy_document.lambda_goose_migrator_policy.json
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_goose_migrator_attach" {
+  role       = aws_iam_role.lambda_goose_migrator.name
+  policy_arn = aws_iam_policy.lambda_goose_migrator_policy.arn
 }
 
 data "aws_iam_policy_document" "lambda_assume_role" {
