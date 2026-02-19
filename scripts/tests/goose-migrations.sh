@@ -25,7 +25,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-MIGRATIONS_DIR="${PROJECT_ROOT}/infrastructure/modules/lambda-goose-migrator/src/migrations"
+MIGRATIONS_DIR="${PROJECT_ROOT}/infrastructure/src/lambda-goose-migrator/src/migrations"
 
 POSTGRES_IMAGE="${POSTGRES_IMAGE:-postgres:16}"
 POSTGRES_USER="${POSTGRES_USER:-testuser}"
