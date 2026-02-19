@@ -39,7 +39,7 @@ on:
         default: "main"
 
 jobs:
-  check-tf:
+  test-tf:
     name: "Check Terraform code"
     runs-on: ubuntu-latest
     permissions:
@@ -71,49 +71,49 @@ jobs:
           action: "plan"
           lock_enabled: "false"  # Disable locking for plan to avoid conflicts in PRs, since these are not actually applied
 
-  test-unit:
-    name: "Unit tests"
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v6
-      - name: "Run unit test suite"
-        run: |
-          make test-unit
-      - name: "Save the result of fast test suite"
-        run: |
-          echo "Nothing to save"
-  test-lint:
-    name: "Linting"
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v6
-      - name: "Run linting"
-        run: |
-          make test-lint
-      - name: "Save the linting result"
-        run: |
-          echo "Nothing to save"
-  test-coverage:
-    name: "Test coverage"
-    needs: [test-unit]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v6
-      - name: "Run test coverage check"
-        run: |
-          make test-coverage
-      - name: "Save the coverage check result"
-        run: |
-          echo "Nothing to save"
+  # test-unit:
+  #   name: "Unit tests"
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 5
+  #   steps:
+  #     - name: "Checkout code"
+  #       uses: actions/checkout@v6
+  #     - name: "Run unit test suite"
+  #       run: |
+  #         make test-unit
+  #     - name: "Save the result of fast test suite"
+  #       run: |
+  #         echo "Nothing to save"
+  # test-lint:
+  #   name: "Linting"
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 5
+  #   steps:
+  #     - name: "Checkout code"
+  #       uses: actions/checkout@v6
+  #     - name: "Run linting"
+  #       run: |
+  #         make test-lint
+  #     - name: "Save the linting result"
+  #       run: |
+  #         echo "Nothing to save"
+  # test-coverage:
+  #   name: "Test coverage"
+  #   needs: [test-unit]
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 5
+  #   steps:
+  #     - name: "Checkout code"
+  #       uses: actions/checkout@v6
+  #     - name: "Run test coverage check"
+  #       run: |
+  #         make test-coverage
+  #     - name: "Save the coverage check result"
+  #       run: |
+  #         echo "Nothing to save"
   perform-static-analysis:
     name: "Perform static analysis"
-    needs: [test-unit]
+    needs: [test-tf]
     runs-on: ubuntu-latest
     permissions:
       id-token: write

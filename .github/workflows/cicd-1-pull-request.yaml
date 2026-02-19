@@ -54,6 +54,7 @@ jobs:
 
   metadata:
     name: "Set CI/CD metadata"
+    needs: [pr-title-check]
     runs-on: ubuntu-latest
     timeout-minutes: 1
     outputs:
