@@ -4,7 +4,7 @@
 
 output "vpc_id" {
   description = "The ID of the VPC"
-  value       = local.vpc_id
+  value       = var.vpc_id
 }
 
 ################################################################################

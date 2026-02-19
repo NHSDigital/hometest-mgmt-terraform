@@ -88,8 +88,15 @@ repos:
           - --args=--terragrunt-strict-validate
 
       - id: terragrunt_validate_inputs
+        name: Terragrunt validate inputs Lambda Goose Migrator
+        files: ^infrastructure/environments/poc/core/lambda-goose-migrator/[^/]+$
+        args:
+          # Optionally check for unused inputs
+          - --args=--terragrunt-strict-validate
+
+      - id: terragrunt_validate_inputs
         name: Terragrunt validate inputs Dev
-        files: ^infrastructure/environments/poc/dev/hometest-app/[^/]+$
+        files: ^infrastructure/environments/poc/hometest-app/dev/[^/]+$
         args:
           # Optionally check for unused inputs
           - --args=--terragrunt-strict-validate
@@ -118,10 +125,10 @@ repos:
           - --args=--quiet
           - --args=--config-file __GIT_WORKING_DIR__/.checkov.yaml
 
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.30.0
-    hooks:
-      - id: gitleaks
+  # - repo: https://github.com/gitleaks/gitleaks
+  #   rev: v8.30.0
+  #   hooks:
+  #     - id: gitleaks
 
   # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli
@@ -149,3 +156,17 @@ repos:
     hooks:
       - id: shellcheck
         args: [--severity=warning]
+
+  - repo: local
+    hooks:
+      # - id: trivy-fs-scan
+      #   name: Trivy filesystem scan
+      #   entry: trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 .
+      #   language: system
+      #   pass_filenames: false
+
+      - id: gitleaks
+        name: gitleaks
+        entry: gitleaks detect --no-git --redact --verbose --config=scripts/config/gitleaks.toml
+        language: system
+        pass_filenames: false

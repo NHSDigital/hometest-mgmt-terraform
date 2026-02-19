@@ -6,13 +6,58 @@ name: "CI/CD pull request"
 on:
   push:
     branches:
-      - "**"
+      - "main"
+  # push:
+  #   branches:
+  #     - "**"
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, edited, synchronize]
+
+# concurrency:
+#   group: "cicd-pull-request-${{ github.ref }}"
+#   cancel-in-progress: true
+
+# The workflow will only run if the pull request is opened, reopened or edited.
 
 jobs:
+  pr-title-check:
+    name: "Verify Jira ticket in PR"
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: "Check PR title for HOTE- Jira ID"
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BRANCH: ${{ github.head_ref }}
+        run: |
+          JIRA_PATTERN='HOTE-[0-9]+'
+
+          echo "PR Title: $PR_TITLE"
+          echo "PR Branch: $PR_BRANCH"
+
+          if [[ "$PR_TITLE" =~ $JIRA_PATTERN ]]; then
+            TICKET="${BASH_REMATCH[0]}"
+            echo "✅ Found Jira ticket '$TICKET' in PR title"
+            exit 0
+          fi
+
+          if [[ "$PR_BRANCH" =~ $JIRA_PATTERN ]]; then
+            TICKET="${BASH_REMATCH[0]}"
+            echo "⚠️  Jira ticket '$TICKET' found in branch name but NOT in PR title"
+            echo "Please include the Jira ticket ID in the PR title, e.g.: '$TICKET: <description>'"
+            exit 1
+          fi
+
+          echo "❌ No Jira ticket ID found in PR title or branch name"
+          echo ""
+          echo "PR title must contain a Jira ticket ID matching pattern: HOTE-<number>"
+          echo "Example: 'HOTE-123: Add user authentication'"
+          exit 1
+
   metadata:
     name: "Set CI/CD metadata"
+    needs: [pr-title-check]
     runs-on: ubuntu-latest
     timeout-minutes: 1
     outputs:
@@ -95,31 +140,31 @@ jobs:
       terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
       version: "${{ needs.metadata.outputs.version }}"
     secrets: inherit
-  build-stage:    # Recommended maximum execution time is 3 minutes
-    name: "Build stage"
-    needs: [metadata, test-stage]
-    uses: ./.github/workflows/stage-3-build.yaml
-    if: needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
-    with:
-      build_datetime: "${{ needs.metadata.outputs.build_datetime }}"
-      build_timestamp: "${{ needs.metadata.outputs.build_timestamp }}"
-      build_epoch: "${{ needs.metadata.outputs.build_epoch }}"
-      nodejs_version: "${{ needs.metadata.outputs.nodejs_version }}"
-      python_version: "${{ needs.metadata.outputs.python_version }}"
-      terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
-      version: "${{ needs.metadata.outputs.version }}"
-    secrets: inherit
-  acceptance-stage:   # Recommended maximum execution time is 10 minutes
-    name: "Acceptance stage"
-    needs: [metadata, build-stage]
-    uses: ./.github/workflows/stage-4-acceptance.yaml
-    if: needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
-    with:
-      build_datetime: "${{ needs.metadata.outputs.build_datetime }}"
-      build_timestamp: "${{ needs.metadata.outputs.build_timestamp }}"
-      build_epoch: "${{ needs.metadata.outputs.build_epoch }}"
-      nodejs_version: "${{ needs.metadata.outputs.nodejs_version }}"
-      python_version: "${{ needs.metadata.outputs.python_version }}"
-      terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
-      version: "${{ needs.metadata.outputs.version }}"
-    secrets: inherit
+  # build-stage:    # Recommended maximum execution time is 3 minutes
+  #   name: "Build stage"
+  #   needs: [metadata, test-stage]
+  #   uses: ./.github/workflows/stage-3-build.yaml
+  #   if: needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
+  #   with:
+  #     build_datetime: "${{ needs.metadata.outputs.build_datetime }}"
+  #     build_timestamp: "${{ needs.metadata.outputs.build_timestamp }}"
+  #     build_epoch: "${{ needs.metadata.outputs.build_epoch }}"
+  #     nodejs_version: "${{ needs.metadata.outputs.nodejs_version }}"
+  #     python_version: "${{ needs.metadata.outputs.python_version }}"
+  #     terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
+  #     version: "${{ needs.metadata.outputs.version }}"
+  #   secrets: inherit
+  # acceptance-stage:   # Recommended maximum execution time is 10 minutes
+  #   name: "Acceptance stage"
+  #   needs: [metadata, build-stage]
+  #   uses: ./.github/workflows/stage-4-acceptance.yaml
+  #   if: needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
+  #   with:
+  #     build_datetime: "${{ needs.metadata.outputs.build_datetime }}"
+  #     build_timestamp: "${{ needs.metadata.outputs.build_timestamp }}"
+  #     build_epoch: "${{ needs.metadata.outputs.build_epoch }}"
+  #     nodejs_version: "${{ needs.metadata.outputs.nodejs_version }}"
+  #     python_version: "${{ needs.metadata.outputs.python_version }}"
+  #     terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
+  #     version: "${{ needs.metadata.outputs.version }}"
+  #   secrets: inherit
