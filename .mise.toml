@@ -84,5 +84,6 @@ echo "Done."
 '''
 
 [env]
+# https://terragrunt.gruntwork.io/docs/troubleshooting/performance/
 TF_PLUGIN_CACHE_DIR = "{{config_root}}/.terraform-plugin-cache"
 #TG_EXPERIMENT = "dependency-fetch-output-from-state"
