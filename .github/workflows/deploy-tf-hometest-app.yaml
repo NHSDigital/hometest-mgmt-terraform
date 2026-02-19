@@ -3,9 +3,6 @@ name: "Deploy Terraform HomeTest App"
 run-name: "Deploy env: ${{ inputs.environment || 'poc' }}, subenv: ${{ inputs.subenv || 'dev' }}, tf: ${{ inputs.action || 'plan' }}"
 
 on:
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       hometest_service_ref:

@@ -3,9 +3,6 @@ name: "Deploy Terraform Core"
 run-name: "Deploy env: ${{ inputs.environment || 'poc' }}, module: ${{ inputs.module || 'all' }}, tf: ${{ inputs.action || 'plan' }}"
 
 on:
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       environment:

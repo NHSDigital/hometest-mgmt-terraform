@@ -125,11 +125,6 @@ repos:
           - --args=--quiet
           - --args=--config-file __GIT_WORKING_DIR__/.checkov.yaml
 
-  # - repo: https://github.com/gitleaks/gitleaks
-  #   rev: v8.30.0
-  #   hooks:
-  #     - id: gitleaks
-
   # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.47.0
@@ -159,12 +154,6 @@ repos:
 
   - repo: local
     hooks:
-      # - id: trivy-fs-scan
-      #   name: Trivy filesystem scan
-      #   entry: trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 .
-      #   language: system
-      #   pass_filenames: false
-
       - id: gitleaks
         name: gitleaks
         entry: gitleaks detect --no-git --redact --verbose --config=scripts/config/gitleaks.toml
