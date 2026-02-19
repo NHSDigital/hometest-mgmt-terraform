@@ -71,6 +71,20 @@ jobs:
           action: "plan"
           lock_enabled: "false"  # Disable locking for plan to avoid conflicts in PRs, since these are not actually applied
 
+  test-goose-migrations:
+    name: "Test Goose DB Migrations"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v6
+
+      - name: "Install mise"
+        uses: ./.github/actions/install-mise
+
+      - name: "Run Goose Migration Tests"
+        run: mise run test-migrations
+
   # test-unit:
   #   name: "Unit tests"
   #   runs-on: ubuntu-latest
@@ -113,7 +127,7 @@ jobs:
   #         echo "Nothing to save"
   perform-static-analysis:
     name: "Perform static analysis"
-    needs: [test-tf]
+    needs: [test-tf, test-goose-migrations]
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -131,17 +145,3 @@ jobs:
       #     sonar_organisation_key: "${{ vars.SONAR_ORGANISATION_KEY }}"
       #     sonar_project_key: "${{ vars.SONAR_PROJECT_KEY }}"
       #     sonar_token: "${{ secrets.SONAR_TOKEN }}"
-
-  test-goose-migrations:
-    name: "Test Goose DB Migrations"
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v6
-
-      - name: "Install mise"
-        uses: ./.github/actions/install-mise
-
-      - name: "Run Goose Migration Tests"
-        run: mise run test-migrations
