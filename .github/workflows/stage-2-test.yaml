@@ -47,7 +47,7 @@ jobs:
       contents: read     # For checkout
     strategy:
       matrix:
-        module: [core/bootstrap, core/network, core/aurora-postgres, core/shared_services, dev/hometest-app]
+        module: [core/bootstrap, core/network, core/aurora-postgres, core/shared_services, core/lambda-goose-migrator, hometest-app/dev]
       fail-fast: false  # Continue other modules if one fails
     steps:
       - name: "Checkout hometest-mgmt-terraform"
