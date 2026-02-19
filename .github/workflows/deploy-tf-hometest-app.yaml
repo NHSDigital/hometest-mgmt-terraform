@@ -113,6 +113,14 @@ jobs:
         with:
           path: hometest-mgmt-terraform
 
+      - name: "Checkout hometest-service"
+        uses: actions/checkout@v6
+        with:
+          repository: "NHSDigital/hometest-service"
+          ref: ${{ inputs.hometest_service_ref || 'main' }}
+          path: hometest-service
+          ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
+
       - name: "Deploy ${{ matrix.subenv }}"
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
