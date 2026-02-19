@@ -301,7 +301,11 @@ resource "aws_api_gateway_deployment" "apis" {
     redeployment = sha1(jsonencode([
       aws_api_gateway_resource.proxy[each.key].id,
       aws_api_gateway_method.proxy_any[each.key].id,
+      aws_api_gateway_method.proxy_any[each.key].authorization,
+      aws_api_gateway_method.proxy_any[each.key].authorizer_id,
       aws_api_gateway_method.root[each.key].id,
+      aws_api_gateway_method.root[each.key].authorization,
+      aws_api_gateway_method.root[each.key].authorizer_id,
       aws_api_gateway_integration.proxy[each.key].id,
       aws_api_gateway_integration.root[each.key].id,
     ]))
