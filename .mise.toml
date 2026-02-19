@@ -62,3 +62,7 @@ run = "./scripts/tests/goose-migrations.sh"
 [tasks.test-migrations-keep]
 description = "Test migrations and keep PostgreSQL container running"
 run = "KEEP_CONTAINER=true ./scripts/tests/goose-migrations.sh"
+
+[env]
+TF_PLUGIN_CACHE_DIR = "{{config_root}}/.terraform-plugin-cache"
+#TG_EXPERIMENT = "dependency-fetch-output-from-state"

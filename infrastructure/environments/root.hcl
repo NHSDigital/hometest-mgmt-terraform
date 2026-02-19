@@ -28,6 +28,29 @@ locals {
   environment = try(local._env_locals.environment, basename(path_relative_to_include()))
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# TERRAFORM CONFIGURATION
+# Settings applied to all terraform/tofu invocations across every module.
+# ---------------------------------------------------------------------------------------------------------------------
+
+# terragrunt --log-level debug plan
+# find . -name ".terragrunt-cache" -type d | head -10 && echo "---" && du -sh poc/core/*/.terragrunt-cache 2>/dev/null && du -sh poc/hometest-app/dev/.terragrunt-cache 2>/dev/null
+# terraform {
+#   # Share a single provider plugin cache across all modules and dependency inits.
+#   # Avoids re-downloading the AWS provider (~100MB) for each dependency resolution.
+#   # Must include "init" and "output" — these are used by Terragrunt during dependency resolution.
+#   extra_arguments "plugin_cache" {
+#     commands = concat(
+#       get_terraform_commands_that_need_vars(),
+#       ["init", "output"]
+#     )
+#     env_vars = {
+#       TF_PLUGIN_CACHE_DIR                            = "${get_repo_root()}/.terraform-plugin-cache"
+#       TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE = "true"
+#     }
+#   }
+# }
+
 remote_state {
   backend = "s3"
   config = {
