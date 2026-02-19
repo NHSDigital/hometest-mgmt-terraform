@@ -63,6 +63,26 @@ run = "./scripts/tests/goose-migrations.sh"
 description = "Test migrations and keep PostgreSQL container running"
 run = "KEEP_CONTAINER=true ./scripts/tests/goose-migrations.sh"
 
+[tasks.tf-clean-cache]
+description = "Find and remove .external_modules, .terragrunt-cache directories and .terraform.lock.hcl files"
+run = '''
+echo "Searching for .external_modules, .terragrunt-cache directories and .terraform.lock.hcl files..."
+dirs=$(find . \( -type d \( -name ".external_modules" -o -name ".terragrunt-cache" \) -o -type f -name ".terraform.lock.hcl" \) 2>/dev/null)
+if [ -z "$dirs" ]; then
+  echo "No directories found."
+  exit 0
+fi
+echo ""
+echo "$dirs" | while read -r d; do
+  du -sh "$d"
+done | sort -rh | sed 's/^/  /'
+echo ""
+count=$(echo "$dirs" | wc -l)
+echo "Found $count directories. Removing..."
+echo "$dirs" | xargs rm -rf
+echo "Done."
+'''
+
 [env]
 TF_PLUGIN_CACHE_DIR = "{{config_root}}/.terraform-plugin-cache"
 #TG_EXPERIMENT = "dependency-fetch-output-from-state"
