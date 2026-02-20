@@ -18,6 +18,8 @@ resource "aws_vpc_endpoint" "s3" {
 }
 
 # DynamoDB not used in this deployment - only Aurora PostgreSQL, Lambda, API Gateway, WAF, SQS, S3
+# Interface endpoints kept: secretsmanager, logs, sqs, kms, sts (5 endpoints)
+# Removed: lambda (service-side invocation), execute-api (REGIONAL API GW), monitoring (no PutMetricData), ecr.api/ecr.dkr (ZIP Lambdas)
 
 # Security Group for Interface Endpoints
 resource "aws_security_group" "vpc_endpoints" {
