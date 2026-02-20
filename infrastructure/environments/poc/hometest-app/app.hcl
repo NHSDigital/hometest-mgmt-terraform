@@ -1,0 +1,464 @@
+# ---------------------------------------------------------------------------------------------------------------------
+# COMMON TERRAGRUNT CONFIGURATION FOR HOMETEST-APP
+# Location: poc/hometest-app/app.hcl
+#
+# Shared configuration for all environments (dev, dev-mikmio, etc.) under poc/hometest-app/.
+# Environment-specific terragrunt.hcl files include this and override only what's needed.
+#
+# Environment name is derived automatically from the child directory name (e.g., dev/, dev-mikmio/).
+#
+# Usage in child terragrunt.hcl:
+#   include "app" {
+#     path           = find_in_parent_folders("app.hcl")
+#     expose         = true
+#     merge_strategy = "deep"
+#   }
+#
+# To add environment-specific overrides (e.g., extra lambdas), define an inputs block
+# in the child terragrunt.hcl — it will be deep-merged with the inputs below.
+# ---------------------------------------------------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------------------------------------------------
+# LOCALS - Common configuration values
+# ---------------------------------------------------------------------------------------------------------------------
+
+locals {
+  # Load configuration from parent folders
+  account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
+  global_vars  = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
+
+  # Environment derived from child directory name (e.g., dev/, dev-mikmio/)
+  environment = basename(get_terragrunt_dir())
+
+  # Extract commonly used values
+  project_name = local.global_vars.locals.project_name
+  account_id   = local.account_vars.locals.aws_account_id
+  aws_region   = local.global_vars.locals.aws_region
+
+  # Domain configuration
+  base_domain = "hometest.service.nhs.uk"
+  env_domain  = "${local.environment}.${local.base_domain}"
+  api_domain  = "${local.env_domain}"
+
+  # ---------------------------------------------------------------------------
+  # SOURCE PATHS
+  # Override these in child terragrunt.hcl locals if needed
+  # ---------------------------------------------------------------------------
+  lambdas_source_dir = "${get_repo_root()}/../hometest-service/lambdas"
+  lambdas_base_path  = "${local.lambdas_source_dir}/src"
+  spa_source_dir     = "${get_repo_root()}/../hometest-service/ui"
+  spa_dist_dir       = "${local.spa_source_dir}/out"
+  spa_type           = "nextjs" # "nextjs" or "vite"
+
+  # Lambda Configuration Defaults
+  # https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
+  lambda_runtime     = "nodejs24.x"
+  lambda_timeout     = 30
+  lambda_memory_size = 256
+  log_retention_days = 14
+
+  # API Gateway Defaults
+  api_stage_name             = "v1"
+  api_endpoint_type          = "REGIONAL"
+  api_throttling_burst_limit = 1000
+  api_throttling_rate_limit  = 2000
+
+  # CloudFront Defaults
+  cloudfront_price_class = "PriceClass_100"
+
+  # Security headers
+  content_security_policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';"
+  permissions_policy      = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# TERRAFORM SOURCE
+# ---------------------------------------------------------------------------------------------------------------------
+
+terraform {
+  source = "${get_repo_root()}/infrastructure//src/hometest-app"
+
+  # ---------------------------------------------------------------------------
+  # BUILD HOOKS
+  # These hooks build and package artifacts locally BEFORE terraform runs.
+  # Terraform then uploads and deploys the Lambda functions.
+  # Paths are configurable via locals: lambdas_source_dir, spa_source_dir, spa_type
+  # ---------------------------------------------------------------------------
+
+  # Build and package Lambda code locally (Terraform uploads and deploys)
+  # Uses scripts/build-lambdas.sh which only rebuilds when source changes are detected
+  before_hook "build_lambdas" {
+    commands = ["plan",
+    "apply"]
+    execute = [
+      "bash", "-c",
+      "\"$(cd '${get_repo_root()}' && pwd)/scripts/build-lambdas.sh\" \"$(cd '${local.lambdas_source_dir}' && pwd)\" \"$(cd '${get_repo_root()}' && pwd)/.lambda-build-cache\""
+    ]
+  }
+
+  # Build SPA before apply
+  before_hook "build_spa" {
+    commands = ["apply"]
+    execute = [
+      "bash", "-c",
+      <<-EOF
+        SPA_DIR="${local.spa_source_dir}"
+        SPA_TYPE="${local.spa_type}"
+        if [[ -d "$SPA_DIR" ]] && [[ -f "$SPA_DIR/package.json" ]]; then
+          echo "Building $SPA_TYPE SPA from $SPA_DIR..."
+          cd "$SPA_DIR"
+          npm ci --silent 2>/dev/null || npm install --silent
+
+          # Set Next.js public environment variables for build
+          export NEXT_PUBLIC_BACKEND_URL="https://${local.api_domain}"
+          echo "Setting NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL"
+
+          npm run build --silent 2>/dev/null || true
+          echo "SPA build complete!"
+        else
+          echo "SPA not found at $SPA_DIR, skipping..."
+        fi
+      EOF
+    ]
+  }
+
+  # Upload SPA to S3 after terraform creates the bucket
+  after_hook "upload_spa" {
+    commands     = ["apply"]
+    run_on_error = false
+    execute = [
+      "bash", "-c",
+      <<-EOF
+        SPA_TYPE="${local.spa_type}"
+        SPA_DIST="${local.spa_dist_dir}"
+
+        # Fallback paths based on SPA type
+        if [[ ! -d "$SPA_DIST" ]]; then
+          if [[ "$SPA_TYPE" == "nextjs" ]]; then
+            SPA_DIST="${local.spa_source_dir}/build"
+          else
+            SPA_DIST="${local.spa_source_dir}/dist"
+          fi
+        fi
+
+        if [[ -d "$SPA_DIST" ]]; then
+          SPA_BUCKET=$(terraform output -raw spa_bucket_id 2>/dev/null || echo "")
+          if [[ -n "$SPA_BUCKET" ]]; then
+            echo "Uploading $SPA_TYPE SPA from $SPA_DIST to s3://$SPA_BUCKET..."
+
+            if [[ "$SPA_TYPE" == "nextjs" ]]; then
+              # Next.js specific upload with proper caching
+              aws s3 sync "$SPA_DIST" "s3://$SPA_BUCKET" \
+                --delete \
+                --cache-control "max-age=31536000" \
+                --exclude "*.html" \
+                --exclude "_next/data/*" \
+                --region eu-west-2
+              # HTML files with no-cache
+              aws s3 cp "$SPA_DIST" "s3://$SPA_BUCKET" \
+                --recursive \
+                --exclude "*" \
+                --include "*.html" \
+                --cache-control "no-cache, no-store, must-revalidate" \
+                --region eu-west-2
+              # _next/data with short cache
+              if [[ -d "$SPA_DIST/_next/data" ]]; then
+                aws s3 sync "$SPA_DIST/_next/data" "s3://$SPA_BUCKET/_next/data" \
+                  --cache-control "max-age=60" \
+                  --region eu-west-2
+              fi
+            else
+              # Vite/standard SPA upload
+              aws s3 sync "$SPA_DIST" "s3://$SPA_BUCKET" \
+                --delete \
+                --cache-control "max-age=31536000" \
+                --exclude "index.html" \
+                --region eu-west-2
+              aws s3 cp "$SPA_DIST/index.html" "s3://$SPA_BUCKET/index.html" \
+                --cache-control "no-cache, no-store, must-revalidate" \
+                --region eu-west-2
+            fi
+            echo "SPA uploaded successfully!"
+
+            # Invalidate CloudFront cache
+            CLOUDFRONT_ID=$(terraform output -raw cloudfront_distribution_id 2>/dev/null || echo "")
+            if [[ -n "$CLOUDFRONT_ID" ]]; then
+              echo "Invalidating CloudFront cache for distribution $CLOUDFRONT_ID..."
+              aws cloudfront create-invalidation \
+                --distribution-id "$CLOUDFRONT_ID" \
+                --paths "/*" \
+                --output text
+              echo "CloudFront cache invalidation initiated!"
+            fi
+          else
+            echo "Could not determine SPA bucket, skipping upload..."
+          fi
+        else
+          echo "No SPA dist found at $SPA_DIST, skipping upload..."
+        fi
+      EOF
+    ]
+  }
+
+  # Empty SPA bucket before a destroy so deletion of an environment will proceed without errors due to non-empty bucket (including versioned objects)
+  before_hook "empty_spa_bucket_on_destroy" {
+    commands     = ["destroy"]
+    run_on_error = true
+    execute = [
+      "bash", "-c",
+      <<-EOF
+        SPA_BUCKET="${local.project_name}-${local.environment}-spa"
+        if [[ -n "$SPA_BUCKET" ]]; then
+          echo "Cleaning versioned objects in s3://$SPA_BUCKET..."
+          OBJECTS_JSON=$(aws s3api list-object-versions \
+            --bucket "$SPA_BUCKET" \
+            --query '{Objects: ([Versions[], DeleteMarkers[]][] | [].{Key: Key, VersionId: VersionId})}' \
+            --output json \
+            --region eu-west-2)
+
+          if [[ -n "$OBJECTS_JSON" && "$OBJECTS_JSON" != "{\"Objects\": []}" && "$OBJECTS_JSON" != "{\"Objects\":[]}" ]]; then
+            aws s3api delete-objects \
+              --bucket "$SPA_BUCKET" \
+              --delete "$OBJECTS_JSON" \
+              --region eu-west-2 || true
+          else
+            echo "No versioned objects found in $SPA_BUCKET."
+          fi
+        else
+          echo "Could not determine SPA bucket, skipping cleanup..."
+        fi
+      EOF
+    ]
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# DEPENDENCIES
+# These are shared across all hometest-app environments.
+# Config paths are resolved relative to the child terragrunt.hcl that includes this file.
+# ---------------------------------------------------------------------------------------------------------------------
+
+dependency "network" {
+  config_path = "${get_terragrunt_dir()}/../../core/network"
+
+  mock_outputs = {
+    route53_zone_id          = "Z0123456789ABCDEFGHIJ"
+    vpc_id                   = "vpc-mock12345"
+    private_subnet_ids       = ["subnet-mock1", "subnet-mock2", "subnet-mock3"]
+    lambda_security_group_id = "sg-mock12345"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
+dependency "shared_services" {
+  config_path = "${get_terragrunt_dir()}/../../core/shared_services"
+
+  mock_outputs = {
+    kms_key_arn                     = "arn:aws:kms:eu-west-2:123456789012:key/mock-key-id"
+    sns_alerts_topic_arn            = "arn:aws:sns:eu-west-2:123456789012:mock-alerts-topic"
+    waf_regional_arn                = "arn:aws:wafv2:eu-west-2:123456789012:regional/webacl/mock/mock-id"
+    waf_cloudfront_arn              = "arn:aws:wafv2:us-east-1:123456789012:global/webacl/mock/mock-id"
+    acm_regional_certificate_arn    = "arn:aws:acm:eu-west-2:123456789012:certificate/mock-cert"
+    acm_cloudfront_certificate_arn  = "arn:aws:acm:us-east-1:123456789012:certificate/mock-cert"
+    deployment_artifacts_bucket_id  = "mock-deployment-bucket"
+    deployment_artifacts_bucket_arn = "arn:aws:s3:::mock-deployment-bucket"
+    api_config_secret_arn           = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:mock-secret"
+    api_config_secret_name          = "mock/secret/name"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
+dependency "aurora_postgres" {
+  config_path = "${get_terragrunt_dir()}/../../core/aurora-postgres"
+
+  mock_outputs = {
+    connection_string = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# INPUTS - Shared across all hometest-app environments
+# Environment-specific terragrunt.hcl files can override any of these via deep merge.
+# To add extra lambdas, define an inputs block with a lambdas map in the child.
+# ---------------------------------------------------------------------------------------------------------------------
+
+inputs = {
+  project_name = local.project_name
+  environment  = local.environment
+
+  # Dependencies from network
+  vpc_id                    = dependency.network.outputs.vpc_id
+  lambda_subnet_ids         = dependency.network.outputs.private_subnet_ids
+  lambda_security_group_ids = [dependency.network.outputs.lambda_security_group_id]
+  route53_zone_id           = dependency.network.outputs.route53_zone_id
+
+  # Dependencies from shared_services
+  kms_key_arn          = dependency.shared_services.outputs.kms_key_arn
+  sns_alerts_topic_arn = dependency.shared_services.outputs.sns_alerts_topic_arn
+  waf_cloudfront_arn   = dependency.shared_services.outputs.waf_cloudfront_arn
+
+  # Lambda Configuration
+  enable_vpc_access  = true
+  enable_sqs_access  = true # Required for order-router-lambda SQS trigger
+  lambda_runtime     = local.lambda_runtime
+  lambda_timeout     = local.lambda_timeout
+  lambda_memory_size = local.lambda_memory_size
+  log_retention_days = local.log_retention_days
+
+  # IAM Permissions - Grant Lambda access to secrets
+  # Note: AWS Secrets Manager ARNs have a random suffix, use -* wildcard to match
+  lambda_secrets_arns = [
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/preventex-dev-client-secret-*",
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/sh24-dev-client-secret-*",
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/nhs-login-private-key-*"
+  ]
+
+  # KMS keys for secrets encrypted with different keys than shared_services KMS
+  lambda_additional_kms_key_arns = []
+
+  # Lambda code deployment
+  use_placeholder_lambda = false
+
+  # Base path for hometest-service lambdas
+  lambdas_base_path = local.lambdas_base_path
+
+  # =============================================================================
+  # LAMBDA DEFINITIONS - hometest-service lambdas
+  # Based on hometest-service/local-environment/infra/main.tf configuration
+  #
+  # CloudFront Routing (path-based):
+  # - / and /*              → S3 SPA (Next.js)
+  # - /test-order/*         → API Gateway → eligibility-test-info-lambda
+  # - /order-router/*       → API Gateway → order-router-lambda (SQS-triggered)
+  # - /order-router-sh24/*  → API Gateway → order-router-lambda-sh24 (SQS-triggered)
+  # - /login/*              → API Gateway → login-lambda
+  # - /result/*             → API Gateway → order-result-lambda
+  #
+  # To add extra lambdas (e.g., hello-world), define them in the child terragrunt.hcl:
+  #   inputs = { lambdas = { "hello-world-lambda" = { ... } } }
+  # =============================================================================
+  lambdas = {
+    # Eligibility Test Info Lambda
+    # CloudFront: /test-order/* → API Gateway → Lambda
+    # Handles: GET /test-order/info (returns test eligibility information)
+    "eligibility-test-info-lambda" = {
+      description     = "Eligibility Test Info Service - Returns test eligibility information"
+      api_path_prefix = "test-order"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = local.environment
+        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
+      }
+    }
+
+    # Order Router Lambda - SQS triggered for async order processing
+    # NOT exposed via API Gateway - processes orders from SQS queue
+    "order-router-lambda" = {
+      description     = "Order Router Service - Processes orders from SQS queue"
+      sqs_trigger     = false          # Triggered by SQS, no API Gateway endpoint
+      api_path_prefix = "order-router" # Not used for routing since this is SQS-triggered, but included for consistency
+      handler         = "index.handler"
+      timeout         = 60 # Longer timeout for external API calls to supplier
+      memory_size     = 512
+      environment = {
+        NODE_OPTIONS                = "--enable-source-maps"
+        ENVIRONMENT                 = local.environment
+        SUPPLIER_BASE_URL           = "https://func-nhshometest-dev.azurewebsites.net/"
+        SUPPLIER_OAUTH_TOKEN_PATH   = "/api/oauth"
+        SUPPLIER_CLIENT_ID          = "7e9b8f16-4686-46f4-903e-2d364774fc82"
+        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/preventex-dev-client-secret"
+        SUPPLIER_ORDER_PATH         = "/api/order"
+      }
+    }
+
+    # Order Router Lambda for SH24 supplier - SQS triggered for async order processing
+    # Separate lambda to connect to SH24 test environment without affecting other suppliers
+    "order-router-lambda-sh24" = {
+      description     = "Order Router Service - Processes orders from SQS queue for SH24 supplier"
+      sqs_trigger     = false               # Triggered by SQS, no API Gateway endpoint
+      api_path_prefix = "order-router-sh24" # Not used for routing since this is SQS-triggered, but included for consistency
+      handler         = "index.handler"
+      timeout         = 60 # Longer timeout for external API calls to supplier
+      memory_size     = 512
+      zip_path        = "${local.lambdas_base_path}/order-router-lambda/order-router-lambda.zip"
+      environment = {
+        NODE_OPTIONS                = "--enable-source-maps"
+        ENVIRONMENT                 = local.environment
+        SUPPLIER_BASE_URL           = "https://admin.qa3.sh24.org.uk/"
+        SUPPLIER_OAUTH_TOKEN_PATH   = "/oauth/token"
+        SUPPLIER_CLIENT_ID          = "zrgmf33Zdk-515BIMrds29v9Z3KzoH-tfYDgxLsYtZE"
+        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/sh24-dev-client-secret"
+        SUPPLIER_ORDER_PATH         = "/order"
+        SUPPLIER_OAUTH_SCOPE        = "order results"
+      }
+    }
+
+    # Login Lambda - NHS Login authentication
+    # CloudFront: /login/* → API Gateway → Lambda
+    "login-lambda" = {
+      description     = "Login Service - NHS Login authentication"
+      api_path_prefix = "login"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS                               = "--enable-source-maps"
+        ENVIRONMENT                                = local.environment
+        NHS_LOGIN_BASE_ENDPOINT_URL                = "https://auth.sandpit.signin.nhs.uk"
+        NHS_LOGIN_CLIENT_ID                        = "hometest"
+        NHS_LOGIN_REDIRECT_URL                     = "https://${local.env_domain}/callback"
+        NHS_LOGIN_PRIVATE_KEY_SECRET_NAME          = "nhs-hometest/dev/nhs-login-private-key"
+        AUTH_SESSION_MAX_DURATION_MINUTES          = "60"
+        AUTH_ACCESS_TOKEN_EXPIRY_DURATION_MINUTES  = "60"
+        AUTH_REFRESH_TOKEN_EXPIRY_DURATION_MINUTES = "60"
+        AUTH_COOKIE_SAME_SITE                      = "Lax"
+      }
+    }
+
+    "session-lambda" = {
+      description     = "Session Service - Ensures that the user is authenticated and has a valid session cookie for protected routes"
+      api_path_prefix = "session"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS                      = "--enable-source-maps"
+        ENVIRONMENT                       = include.envcommon.locals.environment
+        NHS_LOGIN_PRIVATE_KEY_SECRET_NAME = "nhs-hometest/dev/nhs-login-private-key"
+        NHS_LOGIN_BASE_ENDPOINT_URL       = "https://auth.sandpit.signin.nhs.uk"
+      }
+    }
+
+    # Order Result Lambda - Receives test results from suppliers
+    # CloudFront: /result/* → API Gateway → Lambda
+    "order-result-lambda" = {
+      description     = "Order Result Service - Receives test results from suppliers"
+      api_path_prefix = "result"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS     = "--enable-source-maps"
+        ENVIRONMENT      = local.environment
+        RESULT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-results"
+      }
+    }
+  }
+
+  # API Gateway Configuration
+  api_stage_name             = local.api_stage_name
+  api_endpoint_type          = local.api_endpoint_type
+  api_throttling_burst_limit = local.api_throttling_burst_limit
+  api_throttling_rate_limit  = local.api_throttling_rate_limit
+
+  # Domain configuration
+  custom_domain_name  = local.env_domain
+  acm_certificate_arn = dependency.shared_services.outputs.acm_cloudfront_certificate_arn
+
+  # CloudFront Configuration
+  cloudfront_price_class = local.cloudfront_price_class
+}

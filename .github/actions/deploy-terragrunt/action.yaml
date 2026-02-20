@@ -34,6 +34,16 @@ runs:
     - name: Install mise tools
       uses: NHSDigital/hometest-mgmt-terraform/.github/actions/install-mise@main
 
+    - name: Cache terraform providers
+      uses: actions/cache@v5
+      with:
+        path: |
+          ~/.cache/terraform
+          .terraform-plugin-cache
+        key: terraform-${{ runner.os }}-${{ hashFiles('**/providers.tf') }}
+        restore-keys: |
+          terraform-${{ runner.os }}-mgmt-
+
     - name: Terragrunt Init
       working-directory: ${{ inputs.working_directory }}
       shell: bash

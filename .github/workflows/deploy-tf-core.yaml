@@ -1,14 +1,10 @@
 ---
-name: "Deploy Terraform Module"
-run-name: "Deploy env: ${{ inputs.environment }}, module: ${{ inputs.module }}, tf: ${{ inputs.action }}"
+name: "Deploy Terraform Core"
+run-name: "Deploy env: ${{ inputs.environment || 'poc' }}, module: ${{ inputs.module || 'all' }}, tf: ${{ inputs.action || 'plan' }}"
 
 on:
   workflow_dispatch:
     inputs:
-      hometest_service_ref:
-        description: "Branch, tag, or SHA to checkout for hometest-service"
-        required: false
-        default: "main"
       environment:
         description: "Target environment"
         required: true
@@ -16,26 +12,18 @@ on:
         options:
           - poc
         default: poc
-      stack:
-        description: "Infrastructure stack"
-        required: true
-        type: choice
-        options:
-          - dev
-          - core
-        default: dev
       module:
         description: "Terraform module to deploy"
         required: true
         type: choice
+        default: bootstrap
         options:
-          - hometest-app
           - bootstrap
           - network
           - aurora-postgres
           - shared_services
+          - lambda-goose-migrator
           - all
-        default: hometest-app
       action:
         description: "Terraform action to perform"
         required: true
@@ -43,8 +31,8 @@ on:
         options:
           - plan
           - apply
-          - destroy-plan
-          - destroy
+          # - destroy-plan
+          # - destroy
         default: plan
 
 env:
@@ -66,33 +54,25 @@ jobs:
         with:
           path: hometest-mgmt-terraform
 
-      - name: "Checkout hometest-service"
-        uses: actions/checkout@v6
-        with:
-          repository: "NHSDigital/hometest-service"
-          ref: ${{ inputs.hometest_service_ref }}
-          path: hometest-service
-          ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
-
       - name: "Set modules to deploy"
         id: set-modules
         run: |
-          WORKING_DIR_BASE="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment }}/${{ inputs.stack }}"
+          WORKING_DIR_BASE="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment || 'poc' }}/core"
           echo "working_dir_base=${WORKING_DIR_BASE}" >> "$GITHUB_OUTPUT"
 
-          if [ "${{ inputs.module }}" == "all" ]; then
+          if [ "${{ inputs.module || 'all' }}" == "all" ]; then
             # Deploy in dependency order
-            echo 'modules=["bootstrap", "network", "aurora-postgres", "shared_services", "hometest-app"]' >> "$GITHUB_OUTPUT"
+            echo 'modules=["bootstrap", "network", "aurora-postgres", "shared_services", "lambda-goose-migrator"]' >> "$GITHUB_OUTPUT"
           else
-            echo 'modules=["${{ inputs.module }}"]' >> "$GITHUB_OUTPUT"
+            echo 'modules=["${{ inputs.module || 'all' }}"]' >> "$GITHUB_OUTPUT"
           fi
 
       - name: "Validate module path exists"
         run: |
-          BASE_PATH="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment }}/${{ inputs.stack }}"
-          if [ "${{ inputs.module }}" != "all" ]; then
-            if [ ! -d "${BASE_PATH}/${{ inputs.module }}" ]; then
-              echo "::error::Module path '${BASE_PATH}/${{ inputs.module }}' does not exist"
+          BASE_PATH="hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment || 'poc' }}/core"
+          if [ "${{ inputs.module || 'all' }}" != "all" ]; then
+            if [ ! -d "${BASE_PATH}/${{ inputs.module || 'all' }}" ]; then
+              echo "::error::Module path '${BASE_PATH}/${{ inputs.module || 'all' }}' does not exist"
               exit 1
             fi
           fi
@@ -103,10 +83,10 @@ jobs:
             echo "## Deployment Configuration"
             echo "| Parameter | Value |"
             echo "|-----------|---------|"
-            echo "| Environment | ${{ inputs.environment }} |"
-            echo "| Stack | ${{ inputs.stack }} |"
-            echo "| Module(s) | ${{ inputs.module }} |"
-            echo "| Action | ${{ inputs.action }} |"
+            echo "| Environment | ${{ inputs.environment || 'poc' }} |"
+            echo "| Stack | core |"
+            echo "| Module(s) | ${{ inputs.module || 'all' }} |"
+            echo "| Action | ${{ inputs.action || 'plan' }} |"
             echo "| Triggered by | ${{ github.actor }} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -129,21 +109,13 @@ jobs:
         with:
           path: hometest-mgmt-terraform
 
-      - name: "Checkout hometest-service"
-        uses: actions/checkout@v6
-        with:
-          path: hometest-service
-          repository: "NHSDigital/hometest-service"
-          ref: ${{ inputs.hometest_service_ref }}
-          ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
-
       - name: "Deploy ${{ matrix.module }}"
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region: ${{ env.AWS_REGION }}
           working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.module }}
-          action: ${{ inputs.action }}
+          action: ${{ inputs.action || 'plan' }}
 
       - name: "Post deployment summary"
         if: always()
@@ -151,7 +123,7 @@ jobs:
           {
             echo "## Module: ${{ matrix.module }}"
             echo "- **Status**: ${{ job.status }}"
-            echo "- **Action**: ${{ inputs.action }}"
+            echo "- **Action**: ${{ inputs.action || 'plan' }}"
             echo "- **Path**: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.module }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -168,10 +140,10 @@ jobs:
             echo ""
             echo "| Detail | Value |"
             echo "|--------|-------|"
-            echo "| Environment | ${{ inputs.environment }} |"
-            echo "| Stack | ${{ inputs.stack }} |"
-            echo "| Module(s) | ${{ inputs.module }} |"
-            echo "| Action | ${{ inputs.action }} |"
+            echo "| Environment | ${{ inputs.environment || 'poc' }} |"
+            echo "| Stack | core |"
+            echo "| Module(s) | ${{ inputs.module || 'all' }} |"
+            echo "| Action | ${{ inputs.action || 'plan' }} |"
             echo "| Overall Status | ${{ needs.deploy.result }} |"
             echo "| Run ID | ${{ github.run_id }} |"
             echo "| Triggered by | ${{ github.actor }} |"
