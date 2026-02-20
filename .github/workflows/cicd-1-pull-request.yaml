@@ -30,6 +30,7 @@ jobs:
   metadata:
     name: "Set CI/CD metadata"
     needs: [pr-title-check]
+    if: always() && (needs.pr-title-check.result == 'success' || needs.pr-title-check.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 1
     outputs:
