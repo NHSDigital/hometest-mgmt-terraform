@@ -11,8 +11,10 @@ locals {
   # Automatically load region-level variables
   # region_vars = read_terragrunt_config(find_in_parent_folders("region.hcl"))
 
-  # Automatically load environment-level variables
-  environment_vars = read_terragrunt_config(find_in_parent_folders("env.hcl"))
+  # Automatically load environment-level variables (optional - environments can define inline)
+  # Uses find_in_parent_folders with fallback to a non-existent path; try() catches the read error
+  _env_hcl_path = find_in_parent_folders("env.hcl", "${get_terragrunt_dir()}/__no_env_hcl__")
+  _env_locals   = try(read_terragrunt_config(local._env_hcl_path).locals, {})
 
   # Automatically load global variables
   global_vars = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
@@ -22,8 +24,32 @@ locals {
   account_name = local.account_vars.locals.aws_account_name
   account_id   = local.account_vars.locals.aws_account_id
 
-  environment = local.environment_vars.locals.environment
+  # Environment: from env.hcl if available, otherwise derived from directory name
+  environment = try(local._env_locals.environment, basename(path_relative_to_include()))
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# TERRAFORM CONFIGURATION
+# Settings applied to all terraform/tofu invocations across every module.
+# ---------------------------------------------------------------------------------------------------------------------
+
+# terragrunt --log-level debug plan
+# find . -name ".terragrunt-cache" -type d | head -10 && echo "---" && du -sh poc/core/*/.terragrunt-cache 2>/dev/null && du -sh poc/hometest-app/dev/.terragrunt-cache 2>/dev/null
+# terraform {
+#   # Share a single provider plugin cache across all modules and dependency inits.
+#   # Avoids re-downloading the AWS provider (~100MB) for each dependency resolution.
+#   # Must include "init" and "output" — these are used by Terragrunt during dependency resolution.
+#   extra_arguments "plugin_cache" {
+#     commands = concat(
+#       get_terraform_commands_that_need_vars(),
+#       ["init", "output"]
+#     )
+#     env_vars = {
+#       TF_PLUGIN_CACHE_DIR                            = "${get_repo_root()}/.terraform-plugin-cache"
+#       TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE = "true"
+#     }
+#   }
+# }
 
 remote_state {
   backend = "s3"
@@ -52,7 +78,7 @@ remote_state {
 inputs = merge(
   local.global_vars.locals,
   local.account_vars.locals,
-  local.environment_vars.locals,
+  local._env_locals,
   {
     tags = {
       Owner       = "platform-team"

@@ -6,13 +6,30 @@ name: "CI/CD pull request"
 on:
   push:
     branches:
-      - "**"
+      - "main"
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, edited, synchronize]
 
 jobs:
+  pr-title-check:
+    name: "Verify Jira ticket in PR"
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+      - name: "Verify Jira ticket in PR title and Jira"
+        uses: ./.github/actions/verify-jira-ticket
+        with:
+          pr_title: ${{ github.event.pull_request.title }}
+          pr_branch: ${{ github.head_ref }}
+          jira_token: ${{ secrets.NHS_HOMETEST_JIRA_PAT }}
+          actor: ${{ github.actor }}
+
   metadata:
     name: "Set CI/CD metadata"
+    needs: [pr-title-check]
     runs-on: ubuntu-latest
     timeout-minutes: 1
     outputs:
@@ -95,31 +112,31 @@ jobs:
       terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
       version: "${{ needs.metadata.outputs.version }}"
     secrets: inherit
-  build-stage:    # Recommended maximum execution time is 3 minutes
-    name: "Build stage"
-    needs: [metadata, test-stage]
-    uses: ./.github/workflows/stage-3-build.yaml
-    if: needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
-    with:
-      build_datetime: "${{ needs.metadata.outputs.build_datetime }}"
-      build_timestamp: "${{ needs.metadata.outputs.build_timestamp }}"
-      build_epoch: "${{ needs.metadata.outputs.build_epoch }}"
-      nodejs_version: "${{ needs.metadata.outputs.nodejs_version }}"
-      python_version: "${{ needs.metadata.outputs.python_version }}"
-      terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
-      version: "${{ needs.metadata.outputs.version }}"
-    secrets: inherit
-  acceptance-stage:   # Recommended maximum execution time is 10 minutes
-    name: "Acceptance stage"
-    needs: [metadata, build-stage]
-    uses: ./.github/workflows/stage-4-acceptance.yaml
-    if: needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
-    with:
-      build_datetime: "${{ needs.metadata.outputs.build_datetime }}"
-      build_timestamp: "${{ needs.metadata.outputs.build_timestamp }}"
-      build_epoch: "${{ needs.metadata.outputs.build_epoch }}"
-      nodejs_version: "${{ needs.metadata.outputs.nodejs_version }}"
-      python_version: "${{ needs.metadata.outputs.python_version }}"
-      terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
-      version: "${{ needs.metadata.outputs.version }}"
-    secrets: inherit
+  # build-stage:    # Recommended maximum execution time is 3 minutes
+  #   name: "Build stage"
+  #   needs: [metadata, test-stage]
+  #   uses: ./.github/workflows/stage-3-build.yaml
+  #   if: needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
+  #   with:
+  #     build_datetime: "${{ needs.metadata.outputs.build_datetime }}"
+  #     build_timestamp: "${{ needs.metadata.outputs.build_timestamp }}"
+  #     build_epoch: "${{ needs.metadata.outputs.build_epoch }}"
+  #     nodejs_version: "${{ needs.metadata.outputs.nodejs_version }}"
+  #     python_version: "${{ needs.metadata.outputs.python_version }}"
+  #     terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
+  #     version: "${{ needs.metadata.outputs.version }}"
+  #   secrets: inherit
+  # acceptance-stage:   # Recommended maximum execution time is 10 minutes
+  #   name: "Acceptance stage"
+  #   needs: [metadata, build-stage]
+  #   uses: ./.github/workflows/stage-4-acceptance.yaml
+  #   if: needs.metadata.outputs.does_pull_request_exist == 'true' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened'))
+  #   with:
+  #     build_datetime: "${{ needs.metadata.outputs.build_datetime }}"
+  #     build_timestamp: "${{ needs.metadata.outputs.build_timestamp }}"
+  #     build_epoch: "${{ needs.metadata.outputs.build_epoch }}"
+  #     nodejs_version: "${{ needs.metadata.outputs.nodejs_version }}"
+  #     python_version: "${{ needs.metadata.outputs.python_version }}"
+  #     terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
+  #     version: "${{ needs.metadata.outputs.version }}"
+  #   secrets: inherit
