@@ -29,6 +29,7 @@ locals {
   # Domain configuration
   base_domain = "hometest.service.nhs.uk"
   env_domain  = "${local.environment}.${local.base_domain}"
+  api_domain  = "${local.env_domain}"
 
   # ---------------------------------------------------------------------------
   # SOURCE PATHS - Can be overridden via env.hcl in each environment
@@ -101,8 +102,8 @@ terraform {
           npm ci --silent 2>/dev/null || npm install --silent
 
           # Set Next.js public environment variables for build
-          export NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT="https://${local.env_domain}/login"
-          echo "Setting NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT=$NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT"
+          export NEXT_PUBLIC_BACKEND_URL="https://${local.api_domain}"
+          echo "Setting NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL"
 
           npm run build --silent 2>/dev/null || true
           echo "SPA build complete!"

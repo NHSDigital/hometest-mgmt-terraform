@@ -229,6 +229,20 @@ inputs = {
       }
     }
 
+    "session-lambda" = {
+      description     = "Session Service - Ensures that the user is authenticated and has a valid session cookie for protected routes"
+      api_path_prefix = "session"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS                      = "--enable-source-maps"
+        ENVIRONMENT                       = include.envcommon.locals.environment
+        NHS_LOGIN_PRIVATE_KEY_SECRET_NAME = "nhs-hometest/dev/nhs-login-private-key
+        NHS_LOGIN_BASE_ENDPOINT_URL       = "https://auth.sandpit.signin.nhs.uk"
+      }
+    }
+
     # Order Result Lambda - Receives test results from suppliers
     # CloudFront: /result/* → API Gateway → Lambda
     # Handles: POST /result (receives test results webhook from supplier)
