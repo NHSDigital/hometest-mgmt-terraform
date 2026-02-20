@@ -109,8 +109,11 @@ terraform {
           npm ci --silent 2>/dev/null || npm install --silent
 
           # Set Next.js public environment variables for build
-          export NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT="https://${local.env_domain}/login"
-          echo "Setting NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT=$NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT"
+          # export NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT="https://${local.env_domain}/login"
+          # echo "Setting NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT=$NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT"
+
+          export NEXT_PUBLIC_BACKEND_URL="https://${local.env_domain}"
+          echo "Setting NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL"
 
           npm run build --silent 2>/dev/null || true
           echo "SPA build complete!"
@@ -398,6 +401,7 @@ inputs = {
 
     # Login Lambda - NHS Login authentication
     # CloudFront: /login/* → API Gateway → Lambda
+    # CORS: handled in-code via @middy/http-cors using COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN env var
     "login-lambda" = {
       description     = "Login Service - NHS Login authentication"
       api_path_prefix = "login"
@@ -415,6 +419,26 @@ inputs = {
         AUTH_ACCESS_TOKEN_EXPIRY_DURATION_MINUTES  = "60"
         AUTH_REFRESH_TOKEN_EXPIRY_DURATION_MINUTES = "60"
         AUTH_COOKIE_SAME_SITE                      = "Lax"
+        COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN         = "https://${local.env_domain}"
+      }
+    }
+
+    # Session Lambda - Validates auth cookie and returns NHS Login user info
+    # CloudFront: /session/* → API Gateway → Lambda
+    # CORS: handled in-code via @middy/http-cors using COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN env var
+    "session-lambda" = {
+      description     = "Session Service - Validates auth cookie and returns user info"
+      api_path_prefix = "session"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS                       = "--enable-source-maps"
+        ENVIRONMENT                        = local.environment
+        AUTH_COOKIE_KEY_ID                 = "key"
+        AUTH_COOKIE_PUBLIC_KEY_SECRET_NAME = "nhs-hometest/dev/nhs-login-private-key"
+        NHS_LOGIN_BASE_ENDPOINT_URL        = "https://auth.sandpit.signin.nhs.uk"
+        COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN = "https://${local.env_domain}"
       }
     }
 
@@ -432,6 +456,21 @@ inputs = {
         RESULT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-results"
       }
     }
+
+    # Order Service Lambda - Creates test orders and persists to database
+    # CloudFront: /order/* → API Gateway → Lambda
+    "order-service-lambda" = {
+      description     = "Order Service - Creates test orders and persists to database"
+      api_path_prefix = "order"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = local.environment
+        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
+      }
+    }
   }
 
   # API Gateway Configuration
@@ -441,7 +480,7 @@ inputs = {
   api_throttling_rate_limit  = local.api_throttling_rate_limit
 
   # Domain configuration
-  custom_domain_name  = local.env_domain
+  custom_domain_name  = local.env_domain # SPA stays at dev.hometest.service.nhs.uk (CloudFront)
   acm_certificate_arn = dependency.shared_services.outputs.acm_cloudfront_certificate_arn
 
   # CloudFront Configuration
