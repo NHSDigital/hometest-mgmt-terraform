@@ -58,6 +58,12 @@ variable "waf_cloudfront_arn" {
   default     = null
 }
 
+variable "waf_regional_arn" {
+  description = "ARN of Regional WAF Web ACL to associate with API Gateway stages (from shared_services)"
+  type        = string
+  default     = null
+}
+
 # variable "deployment_bucket_id" {
 #   description = "ID of shared deployment artifacts bucket (from shared_services)"
 #   type        = string
@@ -289,6 +295,12 @@ variable "custom_domain_name" {
 
 variable "acm_certificate_arn" {
   description = "ACM certificate ARN for CloudFront (us-east-1, from shared_services)"
+  type        = string
+  default     = null
+}
+
+variable "api_custom_domain_name" {
+  description = "Custom domain name for API Gateway (e.g., api.dev.hometest.service.nhs.uk). When set, a dedicated ACM cert is created and API traffic is served directly from this domain instead of through CloudFront."
   type        = string
   default     = null
 }

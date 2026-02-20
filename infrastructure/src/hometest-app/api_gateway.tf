@@ -286,6 +286,20 @@ resource "aws_api_gateway_deployment" "apis" {
 }
 
 ################################################################################
+# WAF Web ACL Association (one per stage)
+################################################################################
+
+resource "aws_wafv2_web_acl_association" "apis" {
+  for_each = var.waf_regional_arn != null ? local.api_prefixes : toset([])
+
+  # Stage ARN format for REST API: arn:aws:apigateway:{region}::/restapis/{id}/stages/{stage}
+  resource_arn = "arn:aws:apigateway:${var.aws_region}::/restapis/${aws_api_gateway_rest_api.apis[each.key].id}/stages/${aws_api_gateway_stage.apis[each.key].stage_name}"
+  web_acl_arn  = var.waf_regional_arn
+
+  depends_on = [aws_api_gateway_stage.apis]
+}
+
+################################################################################
 # API Gateway Method Settings (Throttling)
 ################################################################################
 
@@ -302,5 +316,95 @@ resource "aws_api_gateway_method_settings" "apis" {
     metrics_enabled        = true
     logging_level          = "INFO"
     data_trace_enabled     = false # Don't log request/response data
+  }
+}
+
+################################################################################
+# API Gateway Custom Domain (api.{env}.hometest.service.nhs.uk)
+# Note: *.hometest.service.nhs.uk does NOT cover api.dev.hometest.service.nhs.uk
+# (AWS wildcards are single-level), so a dedicated cert is created here.
+################################################################################
+
+resource "aws_acm_certificate" "api_domain" {
+  count = var.api_custom_domain_name != null ? 1 : 0
+
+  domain_name       = var.api_custom_domain_name
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-${var.environment}-api-domain-cert"
+  })
+}
+
+resource "aws_route53_record" "api_domain_cert_validation" {
+  for_each = var.api_custom_domain_name != null ? {
+    for dvo in aws_acm_certificate.api_domain[0].domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  } : {}
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = var.route53_zone_id
+}
+
+resource "aws_acm_certificate_validation" "api_domain" {
+  count = var.api_custom_domain_name != null ? 1 : 0
+
+  certificate_arn         = aws_acm_certificate.api_domain[0].arn
+  validation_record_fqdns = [for record in aws_route53_record.api_domain_cert_validation : record.fqdn]
+}
+
+# Regional custom domain — one domain, multiple base path mappings (one per API prefix)
+resource "aws_api_gateway_domain_name" "api" {
+  count = var.api_custom_domain_name != null ? 1 : 0
+
+  domain_name              = var.api_custom_domain_name
+  regional_certificate_arn = aws_acm_certificate_validation.api_domain[0].certificate_arn
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-${var.environment}-api-custom-domain"
+  })
+
+  depends_on = [aws_acm_certificate_validation.api_domain]
+}
+
+# Base path mapping: https://api.dev.hometest.service.nhs.uk/{prefix}/... → REST API {prefix} stage v1
+resource "aws_api_gateway_base_path_mapping" "api" {
+  for_each = var.api_custom_domain_name != null ? local.api_prefixes : toset([])
+
+  api_id      = aws_api_gateway_rest_api.apis[each.key].id
+  stage_name  = aws_api_gateway_stage.apis[each.key].stage_name
+  domain_name = aws_api_gateway_domain_name.api[0].domain_name
+  base_path   = each.key
+
+  depends_on = [aws_api_gateway_domain_name.api]
+}
+
+# Route53 alias record: api.dev.hometest.service.nhs.uk → API Gateway regional endpoint
+resource "aws_route53_record" "api_domain" {
+  count = var.api_custom_domain_name != null ? 1 : 0
+
+  zone_id = var.route53_zone_id
+  name    = var.api_custom_domain_name
+  type    = "A"
+
+  alias {
+    name                   = aws_api_gateway_domain_name.api[0].regional_domain_name
+    zone_id                = aws_api_gateway_domain_name.api[0].regional_zone_id
+    evaluate_target_health = false
   }
 }

@@ -149,7 +149,7 @@ resource "aws_lambda_function_url" "this" {
     }
   }
 
-  tags = local.common_tags
+  # tags = local.common_tags
 }
 
 ################################################################################
