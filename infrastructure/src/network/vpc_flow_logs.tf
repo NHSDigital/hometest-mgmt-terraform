@@ -78,7 +78,9 @@ resource "aws_iam_role" "vpc_flow_logs" {
     ]
   })
 
-  tags = local.common_tags
+  tags = merge(local.common_tags, {
+    Name = "${local.resource_prefix}-vpc-flow-logs-role"
+  })
 }
 
 resource "aws_iam_role_policy" "vpc_flow_logs" {
