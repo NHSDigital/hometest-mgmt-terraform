@@ -1,6 +1,6 @@
 ---
-name: "Verify Jira Ticket"
-description: "Checks that the PR title/branch contains a HOTE- Jira ticket ID and that the ticket exists in Jira"
+name: "Verify PR Title"
+description: "Checks that the PR title follows conventional commit format and contains a HOTE- Jira ticket ID that exists in Jira"
 
 inputs:
   pr_title:
@@ -16,50 +16,67 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: "Check PR title for HOTE- Jira ID"
+    - name: "Check branch name contains Jira ticket ID"
       shell: bash
       env:
-        PR_TITLE: ${{ inputs.pr_title }}
         PR_BRANCH: ${{ inputs.pr_branch }}
       run: |
-        JIRA_PATTERN='HOTE-[0-9]+'
+        FULL_BRANCH_PATTERN='^(main|develop|(feature|release|hotfix)/hote-[0-9]+/.+)'
 
-        echo "PR Title: $PR_TITLE"
         echo "PR Branch: $PR_BRANCH"
 
-        if [[ "$PR_TITLE" =~ $JIRA_PATTERN ]]; then
-          TICKET="${BASH_REMATCH[0]}"
-          echo "✅ Found Jira ticket '$TICKET' in PR title"
+        if [[ "${PR_BRANCH,,}" =~ $FULL_BRANCH_PATTERN ]]; then
+          echo "✅ Branch name is valid: '$PR_BRANCH'"
           exit 0
         fi
 
-        if [[ "$PR_BRANCH" =~ $JIRA_PATTERN ]]; then
-          TICKET="${BASH_REMATCH[0]}"
-          echo "⚠️  Jira ticket '$TICKET' found in branch name but NOT in PR title"
-          echo "Please include the Jira ticket ID in the PR title, e.g.: '$TICKET: <description>'"
-          exit 1
+        echo "❌ Branch name does not match required format"
+        echo ""
+        echo "Expected format: <prefix>/hote-<number>/<short-description>"
+        echo "Allowed prefixes: feature, release, hotfix"
+        echo "Examples:"
+        echo "  feature/hote-541/add-user-auth"
+        echo "  hotfix/hote-99/fix-login-crash"
+        echo "  release/hote-200/v1-2-0"
+        echo ""
+        echo "Exceptions: 'main' and 'develop' are also allowed as-is"
+        exit 1
+
+    - name: "Check PR title format"
+      shell: bash
+      env:
+        PR_TITLE: ${{ inputs.pr_title }}
+      run: |
+        FULL_PATTERN='^\[HOTE-[0-9]+\] (feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert)(\(.+\))?(!)?: .+'
+
+        echo "PR Title: $PR_TITLE"
+
+        if [[ "$PR_TITLE" =~ $FULL_PATTERN ]]; then
+          echo "✅ PR title matches required format"
+          exit 0
         fi
 
-        echo "❌ No Jira ticket ID found in PR title or branch name"
+        echo "❌ PR title does not match required format"
         echo ""
-        echo "PR title must contain a Jira ticket ID matching pattern: HOTE-<number>"
-        echo "Example: 'HOTE-123: Add user authentication'"
+        echo "Expected format: [HOTE-<number>] <type>(<optional-scope>): <description>"
+        echo "Allowed types: feat, fix, docs, style, refactor, perf, test, chore, build, ci, revert"
+        echo "Examples:"
+        echo "  [HOTE-541] feat(auth): add user authentication"
+        echo "  [HOTE-123] fix: correct token expiry calculation"
+        echo "  [HOTE-99] chore(deps)!: bump breaking dependency"
         exit 1
 
     - name: "Verify Jira ticket exists"
       shell: bash
       env:
         PR_TITLE: ${{ inputs.pr_title }}
-        PR_BRANCH: ${{ inputs.pr_branch }}
         JIRA_TOKEN: ${{ inputs.jira_token }}
       run: |
-        JIRA_PATTERN='HOTE-[0-9]+'
+        JIRA_PATTERN='\[HOTE-([0-9]+)\]'
         TICKET=""
 
         if [[ "$PR_TITLE" =~ $JIRA_PATTERN ]]; then
-          TICKET="${BASH_REMATCH[0]}"
-        elif [[ "$PR_BRANCH" =~ $JIRA_PATTERN ]]; then
-          TICKET="${BASH_REMATCH[0]}"
+          TICKET="HOTE-${BASH_REMATCH[1]}"
         fi
 
         echo "Checking Jira ticket: $TICKET"
