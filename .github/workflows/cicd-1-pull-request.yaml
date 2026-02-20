@@ -25,6 +25,7 @@ jobs:
           pr_title: ${{ github.event.pull_request.title }}
           pr_branch: ${{ github.head_ref }}
           jira_token: ${{ secrets.NHS_HOMETEST_JIRA_PAT }}
+          actor: ${{ github.actor }}
 
   metadata:
     name: "Set CI/CD metadata"
