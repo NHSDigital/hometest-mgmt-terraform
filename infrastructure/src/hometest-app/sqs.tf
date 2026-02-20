@@ -14,7 +14,7 @@ locals {
 resource "aws_sqs_queue" "order_results" {
   count = var.enable_sqs_access ? 1 : 0
 
-  name                       = "${var.project_name}-${var.environment}-order-results"
+  name                       = "${local.resource_prefix}-order-results"
   visibility_timeout_seconds = 300
   message_retention_seconds  = 1209600 # 14 days
   delay_seconds              = 0
@@ -26,7 +26,7 @@ resource "aws_sqs_queue" "order_results" {
   kms_data_key_reuse_period_seconds = 300
 
   tags = merge(local.common_tags, {
-    Name = "${var.project_name}-${var.environment}-order-results"
+    Name = "${local.resource_prefix}-order-results"
   })
 }
 
@@ -37,7 +37,7 @@ resource "aws_sqs_queue" "order_results" {
 resource "aws_sqs_queue" "main" {
   count = length(local.sqs_lambdas) > 0 ? 1 : 0
 
-  name                       = "${var.project_name}-${var.environment}-events"
+  name                       = "${local.resource_prefix}-events"
   visibility_timeout_seconds = 300     # Should be 6x the Lambda timeout
   message_retention_seconds  = 1209600 # 14 days
   delay_seconds              = 0
@@ -55,7 +55,7 @@ resource "aws_sqs_queue" "main" {
   })
 
   tags = merge(local.common_tags, {
-    Name = "${var.project_name}-${var.environment}-events"
+    Name = "${local.resource_prefix}-events"
   })
 }
 
@@ -66,7 +66,7 @@ resource "aws_sqs_queue" "main" {
 resource "aws_sqs_queue" "dlq" {
   count = length(local.sqs_lambdas) > 0 ? 1 : 0
 
-  name                       = "${var.project_name}-${var.environment}-events-dlq"
+  name                       = "${local.resource_prefix}-events-dlq"
   visibility_timeout_seconds = 300
   message_retention_seconds  = 1209600 # 14 days
 
@@ -75,7 +75,7 @@ resource "aws_sqs_queue" "dlq" {
   kms_data_key_reuse_period_seconds = 300
 
   tags = merge(local.common_tags, {
-    Name = "${var.project_name}-${var.environment}-events-dlq"
+    Name = "${local.resource_prefix}-events-dlq"
   })
 }
 
@@ -105,7 +105,7 @@ resource "aws_sqs_queue_policy" "main" {
         Resource = aws_sqs_queue.main[0].arn
         Condition = {
           ArnLike = {
-            "aws:SourceArn" = "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.project_name}-${var.environment}-*"
+            "aws:SourceArn" = "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${local.resource_prefix}-*"
           }
         }
       }

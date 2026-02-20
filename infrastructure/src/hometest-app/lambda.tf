@@ -61,10 +61,11 @@ module "lambdas" {
   source   = "../../modules/lambda"
   for_each = local.all_lambdas
 
-  project_name    = var.project_name
-  function_name   = each.key
-  environment     = var.environment
-  lambda_role_arn = module.lambda_iam.role_arn
+  project_name          = var.project_name
+  aws_account_shortname = var.aws_account_shortname
+  function_name         = each.key
+  environment           = var.environment
+  lambda_role_arn       = module.lambda_iam.role_arn
 
   # Deployment: local zip file (Terraform uploads) or placeholder
   use_placeholder = var.use_placeholder_lambda

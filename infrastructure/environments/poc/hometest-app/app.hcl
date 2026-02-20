@@ -277,6 +277,7 @@ dependency "aurora_postgres" {
     connection_string   = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
     cluster_resource_id = "cluster-MOCKRESOURCEID1234"
   }
+  mock_outputs_merge_with_state           = true
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 

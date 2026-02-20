@@ -4,7 +4,7 @@
 ################################################################################
 
 locals {
-  function_name = "${var.project_name}-${var.environment}-${var.function_name}"
+  function_name = "${var.project_name}-${var.aws_account_shortname}-${var.environment}-${var.function_name}"
 
   # Placeholder code for initial deployment
   placeholder_code = <<EOF
