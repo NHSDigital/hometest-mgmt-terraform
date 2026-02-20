@@ -18,15 +18,18 @@ regexes = [
 ]
 
 [allowlist]
+regexTarget = "line"
 paths = [
   '''.terraform.lock.hcl''',
   '''poetry.lock''',
   '''yarn.lock''',
   '''.*\.tfvars\.example''',
-  '''.*README\.md'''
+  '''.*README\.md''',
+  '''.trivy-cache''',
+  '''.terragrunt-cache''',
+  '''.external_modules''',
+  '''.pre-commit-config\.yaml''',
 ]
 regexes = [
-  '''^SUPPLIER_CLIENT_ID\s*[=:]?\s*"[^"]*"''',
-  '''^SUPPLIER_CLIENT_SECRET_NAME\s*[=:]?\s*"[^"]*"''',
-  '''^SUPPLIER_OAUTH_TOKEN_PATH\s*[=:]?\s*"[^"]*"'''
+  '''SUPPLIER_CLIENT_ID'''
 ]

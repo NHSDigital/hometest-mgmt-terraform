@@ -1,0 +1,121 @@
+---
+name: "Verify PR Title"
+description: "Checks that the PR title follows conventional commit format and contains a HOTE- Jira ticket ID that exists in Jira"
+
+inputs:
+  pr_title:
+    description: "The pull request title"
+    required: true
+  pr_branch:
+    description: "The pull request branch name"
+    required: true
+  jira_token:
+    description: "Jira Personal Access Token"
+    required: true
+  actor:
+    description: "The GitHub actor (user) that triggered the workflow"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Check branch name contains Jira ticket ID"
+      shell: bash
+      env:
+        PR_BRANCH: ${{ inputs.pr_branch }}
+        ACTOR: ${{ inputs.actor }}
+      run: |
+        if [[ "$ACTOR" == "dependabot[bot]" ]]; then
+          echo "⏭️  Skipping branch check for Dependabot PR"
+          exit 0
+        fi
+
+        FULL_BRANCH_PATTERN='^(main|develop|(feature|release|hotfix)/hote-[0-9]+/.+)'
+
+        echo "PR Branch: $PR_BRANCH"
+
+        if [[ "${PR_BRANCH,,}" =~ $FULL_BRANCH_PATTERN ]]; then
+          echo "✅ Branch name is valid: '$PR_BRANCH'"
+          exit 0
+        fi
+
+        echo "❌ Branch name does not match required format"
+        echo ""
+        echo "Expected format: <prefix>/hote-<number>/<short-description>"
+        echo "Allowed prefixes: feature, release, hotfix"
+        echo "Examples:"
+        echo "  feature/hote-541/add-user-auth"
+        echo "  hotfix/hote-99/fix-login-crash"
+        echo "  release/hote-200/v1-2-0"
+        echo ""
+        echo "Exceptions: 'main' and 'develop' are also allowed as-is"
+        exit 1
+
+    - name: "Check PR title format"
+      shell: bash
+      env:
+        PR_TITLE: ${{ inputs.pr_title }}
+        ACTOR: ${{ inputs.actor }}
+      run: |
+        if [[ "$ACTOR" == "dependabot[bot]" ]]; then
+          echo "⏭️  Skipping PR title check for Dependabot PR"
+          exit 0
+        fi
+
+        FULL_PATTERN='^\[HOTE-[0-9]+\] (feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert)(\(.+\))?(!)?: .+'
+
+        echo "PR Title: $PR_TITLE"
+
+        if [[ "$PR_TITLE" =~ $FULL_PATTERN ]]; then
+          echo "✅ PR title matches required format"
+          exit 0
+        fi
+
+        echo "❌ PR title does not match required format"
+        echo ""
+        echo "Expected format: [HOTE-<number>] <type>(<optional-scope>): <description>"
+        echo "Allowed types: feat, fix, docs, style, refactor, perf, test, chore, build, ci, revert"
+        echo "Examples:"
+        echo "  [HOTE-541] feat(auth): add user authentication"
+        echo "  [HOTE-123] fix: correct token expiry calculation"
+        echo "  [HOTE-99] chore(deps)!: bump breaking dependency"
+        exit 1
+
+    - name: "Verify Jira ticket exists"
+      shell: bash
+      env:
+        PR_TITLE: ${{ inputs.pr_title }}
+        JIRA_TOKEN: ${{ inputs.jira_token }}
+        ACTOR: ${{ inputs.actor }}
+      run: |
+        if [[ "$ACTOR" == "dependabot[bot]" ]]; then
+          echo "⏭️  Skipping Jira check for Dependabot PR"
+          exit 0
+        fi
+
+        JIRA_PATTERN='\[HOTE-([0-9]+)\]'
+        TICKET=""
+
+        if [[ "$PR_TITLE" =~ $JIRA_PATTERN ]]; then
+          TICKET="HOTE-${BASH_REMATCH[1]}"
+        fi
+
+        echo "Checking Jira ticket: $TICKET"
+
+        HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          -H "Authorization: Bearer $JIRA_TOKEN" \
+          -H "Accept: application/json" \
+          "https://nhsd-jira.digital.nhs.uk/rest/api/2/issue/${TICKET}")
+
+        if [[ "$HTTP_STATUS" == "200" ]]; then
+          echo "✅ Jira ticket $TICKET exists"
+        elif [[ "$HTTP_STATUS" == "404" ]]; then
+          echo "❌ Jira ticket $TICKET does not exist (404)"
+          exit 1
+        elif [[ "$HTTP_STATUS" == "401" ]]; then
+          echo "❌ Authentication failed (401) - check NHS_HOMETEST_JIRA_PAT secret"
+          exit 1
+        else
+          echo "❌ Unexpected response from Jira API: HTTP $HTTP_STATUS"
+          exit 1
+        fi
