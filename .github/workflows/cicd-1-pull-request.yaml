@@ -7,17 +7,8 @@ on:
   push:
     branches:
       - "main"
-  # push:
-  #   branches:
-  #     - "**"
   pull_request:
     types: [opened, reopened, edited, synchronize]
-
-# concurrency:
-#   group: "cicd-pull-request-${{ github.ref }}"
-#   cancel-in-progress: true
-
-# The workflow will only run if the pull request is opened, reopened or edited.
 
 jobs:
   pr-title-check:
