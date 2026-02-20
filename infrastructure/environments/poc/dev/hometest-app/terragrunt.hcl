@@ -238,7 +238,7 @@ inputs = {
       environment = {
         NODE_OPTIONS                      = "--enable-source-maps"
         ENVIRONMENT                       = include.envcommon.locals.environment
-        NHS_LOGIN_PRIVATE_KEY_SECRET_NAME = "nhs-hometest/dev/nhs-login-private-key
+        NHS_LOGIN_PRIVATE_KEY_SECRET_NAME = "nhs-hometest/dev/nhs-login-private-key"
         NHS_LOGIN_BASE_ENDPOINT_URL       = "https://auth.sandpit.signin.nhs.uk"
       }
     }
