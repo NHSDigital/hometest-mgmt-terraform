@@ -17,34 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
-      - name: "Check PR title for HOTE- Jira ID"
-        env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_BRANCH: ${{ github.head_ref }}
-        run: |
-          JIRA_PATTERN='HOTE-[0-9]+'
-
-          echo "PR Title: $PR_TITLE"
-          echo "PR Branch: $PR_BRANCH"
-
-          if [[ "$PR_TITLE" =~ $JIRA_PATTERN ]]; then
-            TICKET="${BASH_REMATCH[0]}"
-            echo "✅ Found Jira ticket '$TICKET' in PR title"
-            exit 0
-          fi
-
-          if [[ "$PR_BRANCH" =~ $JIRA_PATTERN ]]; then
-            TICKET="${BASH_REMATCH[0]}"
-            echo "⚠️  Jira ticket '$TICKET' found in branch name but NOT in PR title"
-            echo "Please include the Jira ticket ID in the PR title, e.g.: '$TICKET: <description>'"
-            exit 1
-          fi
-
-          echo "❌ No Jira ticket ID found in PR title or branch name"
-          echo ""
-          echo "PR title must contain a Jira ticket ID matching pattern: HOTE-<number>"
-          echo "Example: 'HOTE-123: Add user authentication'"
-          exit 1
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+      - name: "Verify Jira ticket in PR title and Jira"
+        uses: ./.github/actions/verify-jira-ticket
+        with:
+          pr_title: ${{ github.event.pull_request.title }}
+          pr_branch: ${{ github.head_ref }}
+          jira_token: ${{ secrets.NHS_HOMETEST_JIRA_PAT }}
 
   metadata:
     name: "Set CI/CD metadata"

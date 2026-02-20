@@ -1,0 +1,83 @@
+---
+name: "Verify Jira Ticket"
+description: "Checks that the PR title/branch contains a HOTE- Jira ticket ID and that the ticket exists in Jira"
+
+inputs:
+  pr_title:
+    description: "The pull request title"
+    required: true
+  pr_branch:
+    description: "The pull request branch name"
+    required: true
+  jira_token:
+    description: "Jira Personal Access Token"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Check PR title for HOTE- Jira ID"
+      shell: bash
+      env:
+        PR_TITLE: ${{ inputs.pr_title }}
+        PR_BRANCH: ${{ inputs.pr_branch }}
+      run: |
+        JIRA_PATTERN='HOTE-[0-9]+'
+
+        echo "PR Title: $PR_TITLE"
+        echo "PR Branch: $PR_BRANCH"
+
+        if [[ "$PR_TITLE" =~ $JIRA_PATTERN ]]; then
+          TICKET="${BASH_REMATCH[0]}"
+          echo "✅ Found Jira ticket '$TICKET' in PR title"
+          exit 0
+        fi
+
+        if [[ "$PR_BRANCH" =~ $JIRA_PATTERN ]]; then
+          TICKET="${BASH_REMATCH[0]}"
+          echo "⚠️  Jira ticket '$TICKET' found in branch name but NOT in PR title"
+          echo "Please include the Jira ticket ID in the PR title, e.g.: '$TICKET: <description>'"
+          exit 1
+        fi
+
+        echo "❌ No Jira ticket ID found in PR title or branch name"
+        echo ""
+        echo "PR title must contain a Jira ticket ID matching pattern: HOTE-<number>"
+        echo "Example: 'HOTE-123: Add user authentication'"
+        exit 1
+
+    - name: "Verify Jira ticket exists"
+      shell: bash
+      env:
+        PR_TITLE: ${{ inputs.pr_title }}
+        PR_BRANCH: ${{ inputs.pr_branch }}
+        JIRA_TOKEN: ${{ inputs.jira_token }}
+      run: |
+        JIRA_PATTERN='HOTE-[0-9]+'
+        TICKET=""
+
+        if [[ "$PR_TITLE" =~ $JIRA_PATTERN ]]; then
+          TICKET="${BASH_REMATCH[0]}"
+        elif [[ "$PR_BRANCH" =~ $JIRA_PATTERN ]]; then
+          TICKET="${BASH_REMATCH[0]}"
+        fi
+
+        echo "Checking Jira ticket: $TICKET"
+
+        HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          -H "Authorization: Bearer $JIRA_TOKEN" \
+          -H "Accept: application/json" \
+          "https://nhsd-jira.digital.nhs.uk/rest/api/2/issue/${TICKET}")
+
+        if [[ "$HTTP_STATUS" == "200" ]]; then
+          echo "✅ Jira ticket $TICKET exists"
+        elif [[ "$HTTP_STATUS" == "404" ]]; then
+          echo "❌ Jira ticket $TICKET does not exist (404)"
+          exit 1
+        elif [[ "$HTTP_STATUS" == "401" ]]; then
+          echo "❌ Authentication failed (401) - check NHS_HOMETEST_JIRA_PAT secret"
+          exit 1
+        else
+          echo "❌ Unexpected response from Jira API: HTTP $HTTP_STATUS"
+          exit 1
+        fi
