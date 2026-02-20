@@ -39,6 +39,11 @@ output "cluster_hosted_zone_id" {
   value       = module.aurora_postgres.cluster_hosted_zone_id
 }
 
+output "cluster_resource_id" {
+  description = "The RDS cluster resource ID, used to build IAM auth ARNs (arn:aws:rds-db:region:account:dbuser:resource-id/db_user)"
+  value       = module.aurora_postgres.cluster_resource_id
+}
+
 ################################################################################
 # Security Group Outputs
 ################################################################################

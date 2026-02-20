@@ -178,6 +178,12 @@ variable "lambda_additional_kms_key_arns" {
   default     = []
 }
 
+variable "lambda_aurora_cluster_resource_ids" {
+  description = "Aurora cluster resource IDs to grant Lambda IAM database authentication (rds-db:connect)"
+  type        = list(string)
+  default     = []
+}
+
 # Lambda Definitions Map
 variable "lambdas" {
   description = "Map of Lambda function configurations. Each key is the lambda name."

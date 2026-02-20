@@ -172,6 +172,16 @@ variable "apply_immediately" {
 }
 
 ################################################################################
+# IAM Authentication
+################################################################################
+
+variable "enable_iam_auth" {
+  description = "Enable IAM database authentication for the Aurora cluster. Allows IAM roles/users to authenticate instead of a password."
+  type        = bool
+  default     = false
+}
+
+################################################################################
 # Tags
 ################################################################################
 

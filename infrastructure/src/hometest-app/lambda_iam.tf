@@ -43,6 +43,8 @@ module "lambda_iam" {
   sqs_queue_arns      = local.sqs_queue_arns
   enable_sqs_access   = var.enable_sqs_access || length(local.sqs_lambdas) > 0 || length(var.lambda_sqs_queue_arns) > 0
 
+  aurora_cluster_resource_ids = var.lambda_aurora_cluster_resource_ids
+
   tags = local.common_tags
 
   depends_on = [aws_sqs_queue.main, aws_sqs_queue.order_results]

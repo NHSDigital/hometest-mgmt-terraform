@@ -83,6 +83,7 @@ module "aurora_postgres" {
 | <a name="input_db_name"></a> [db\_name](#input\_db\_name) | The name of the database to create when the DB instance is created | `string` | `"postgres"` | no |
 | <a name="input_db_subnet_group_name"></a> [db\_subnet\_group\_name](#input\_db\_subnet\_group\_name) | Name of the DB subnet group to use for the Aurora cluster. If not provided, the module will attempt to create one. | `string` | `null` | no |
 | <a name="input_deletion_protection"></a> [deletion\_protection](#input\_deletion\_protection) | If the DB instance should have deletion protection enabled | `bool` | `false` | no |
+| <a name="input_enable_iam_auth"></a> [enable\_iam\_auth](#input\_enable\_iam\_auth) | Enable IAM database authentication for the Aurora cluster | `bool` | `false` | no |
 | <a name="input_engine_version"></a> [engine\_version](#input\_engine\_version) | PostgreSQL engine version | `string` | `"17.7"` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., dev, staging, prod) | `string` | n/a | yes |
 | <a name="input_kms_key_id"></a> [kms\_key\_id](#input\_kms\_key\_id) | The ARN for the KMS encryption key | `string` | `""` | no |
@@ -109,6 +110,7 @@ module "aurora_postgres" {
 | <a name="output_cluster_id"></a> [cluster\_id](#output\_cluster\_id) | The Amazon RDS Aurora cluster ID |
 | <a name="output_cluster_master_username"></a> [cluster\_master\_username](#output\_cluster\_master\_username) | The master username for the Aurora cluster |
 | <a name="output_cluster_port"></a> [cluster\_port](#output\_cluster\_port) | The port the Aurora cluster listens on |
+| <a name="output_cluster_resource_id"></a> [cluster\_resource\_id](#output\_cluster\_resource\_id) | The RDS cluster resource ID, used for IAM authentication ARNs |
 | <a name="output_connection_string"></a> [connection\_string](#output\_connection\_string) | Aurora PostgreSQL connection string (without password) |
 | <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | The ID of the VPC |
 <!-- END_TF_DOCS -->

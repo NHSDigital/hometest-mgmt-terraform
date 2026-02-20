@@ -52,3 +52,8 @@ output "connection_string" {
   value       = module.aurora_postgres.connection_string
   sensitive   = true
 }
+
+output "cluster_resource_id" {
+  description = "The RDS cluster resource ID, used for IAM authentication ARNs"
+  value       = module.aurora_postgres.cluster_resource_id
+}

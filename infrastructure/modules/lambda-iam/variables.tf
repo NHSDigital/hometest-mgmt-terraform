@@ -98,6 +98,13 @@ variable "enable_sqs_access" {
   default     = false
 }
 
+# Aurora IAM Authentication
+variable "aurora_cluster_resource_ids" {
+  description = "List of Aurora cluster resource IDs to allow IAM database authentication (rds-db:connect). Used to build arn:aws:rds-db:region:account:dbuser:resource-id/* ARNs."
+  type        = list(string)
+  default     = []
+}
+
 # Custom Policies
 variable "custom_policies" {
   description = "Map of custom policy names to policy JSON documents"

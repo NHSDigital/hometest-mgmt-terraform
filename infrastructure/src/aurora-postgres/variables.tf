@@ -170,6 +170,15 @@ variable "apply_immediately" {
 }
 
 ################################################################################
+# IAM Authentication
+################################################################################
+variable "enable_iam_auth" {
+  description = "Enable IAM database authentication for the Aurora cluster"
+  type        = bool
+  default     = false
+}
+
+################################################################################
 # Tags
 ################################################################################
 variable "tags" {

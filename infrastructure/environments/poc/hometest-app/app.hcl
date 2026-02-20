@@ -274,7 +274,8 @@ dependency "aurora_postgres" {
   config_path = "${get_terragrunt_dir()}/../../core/aurora-postgres"
 
   mock_outputs = {
-    connection_string = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
+    connection_string   = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
+    cluster_resource_id = "cluster-MOCKRESOURCEID1234"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -318,6 +319,9 @@ inputs = {
 
   # KMS keys for secrets encrypted with different keys than shared_services KMS
   lambda_additional_kms_key_arns = []
+
+  # Aurora IAM authentication - allow Lambdas to connect without passwords
+  lambda_aurora_cluster_resource_ids = [dependency.aurora_postgres.outputs.cluster_resource_id]
 
   # Lambda code deployment
   use_placeholder_lambda = false
