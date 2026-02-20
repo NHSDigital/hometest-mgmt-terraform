@@ -104,19 +104,6 @@ output "spa_url" {
 }
 
 #------------------------------------------------------------------------------
-# Login Endpoint (for frontend NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT)
-#------------------------------------------------------------------------------
-
-output "login_endpoint" {
-  description = "Login Lambda endpoint URL"
-  value = (
-    var.custom_domain_name != null
-    ? "https://${var.custom_domain_name}/login"
-    : try("${module.cloudfront_spa.distribution_url}/login", null)
-  )
-}
-
-#------------------------------------------------------------------------------
 # Environment URLs Summary (Dynamic)
 # All services accessible via single domain with path-based routing
 #------------------------------------------------------------------------------
