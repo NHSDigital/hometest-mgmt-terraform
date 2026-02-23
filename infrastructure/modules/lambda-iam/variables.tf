@@ -23,6 +23,12 @@ variable "aws_region" {
   type        = string
 }
 
+variable "aws_account_shortname" {
+  description = "Short name for the AWS account (e.g. poc, prod). Used in log group ARN patterns to match the Lambda function naming convention."
+  type        = string
+  default     = "*"
+}
+
 # Role Configuration
 variable "max_session_duration" {
   description = "Maximum session duration in seconds"

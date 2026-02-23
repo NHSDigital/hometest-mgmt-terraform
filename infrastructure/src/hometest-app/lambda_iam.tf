@@ -24,10 +24,11 @@ locals {
 module "lambda_iam" {
   source = "../../modules/lambda-iam"
 
-  project_name   = var.project_name
-  environment    = var.environment
-  aws_account_id = var.aws_account_id
-  aws_region     = var.aws_region
+  project_name          = var.project_name
+  environment           = var.environment
+  aws_account_id        = var.aws_account_id
+  aws_region            = var.aws_region
+  aws_account_shortname = var.aws_account_shortname
 
   enable_xray       = true
   enable_vpc_access = var.enable_vpc_access
