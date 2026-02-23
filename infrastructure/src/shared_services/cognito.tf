@@ -390,10 +390,10 @@ resource "aws_cognito_resource_server" "orders" {
 # M2M App Clients
 ################################################################################
 
-resource "aws_cognito_user_pool_client" "test_m2m" {
+resource "aws_cognito_user_pool_client" "internal_test_client_m2m" {
   count = var.enable_cognito ? 1 : 0
 
-  name         = "${local.resource_prefix}-test-m2m"
+  name         = "${local.resource_prefix}-internal-test-client-m2m"
   user_pool_id = aws_cognito_user_pool.main[0].id
 
   # Generate client secret for M2M
