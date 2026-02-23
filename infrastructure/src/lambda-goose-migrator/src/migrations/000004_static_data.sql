@@ -1,11 +1,11 @@
 -- +goose Up
 
 /*
- =================================================================
- STATIC DATA
+    =================================================================
+    STATIC DATA
 
- This is for data that will not change between local and PoC env
- =================================================================
+    This is for data that will not change between local and PoC env
+    =================================================================
  */
 
 INSERT INTO status_type (status_code, description)
