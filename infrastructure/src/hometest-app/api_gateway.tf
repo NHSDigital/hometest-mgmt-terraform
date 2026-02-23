@@ -9,6 +9,8 @@ locals {
 
   # Map of api_prefix to lambda name (for integration)
   api_to_lambda = { for k, v in local.api_lambdas : v.api_path_prefix => k }
+
+  authorized_api_prefixes = var.authorized_api_prefixes
 }
 
 ################################################################################
@@ -48,10 +50,19 @@ resource "aws_api_gateway_resource" "proxy" {
 resource "aws_api_gateway_method" "proxy_any" {
   for_each = local.api_prefixes
 
-  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
-  resource_id   = aws_api_gateway_resource.proxy[each.key].id
-  http_method   = "ANY"
-  authorization = "NONE"
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id = aws_api_gateway_resource.proxy[each.key].id
+  http_method = "ANY"
+
+  # Apply authorization if this API prefix is in authorized list
+  authorization = contains(local.authorized_api_prefixes, each.key) ? "COGNITO_USER_POOLS" : "NONE"
+  authorizer_id = contains(local.authorized_api_prefixes, each.key) ? aws_api_gateway_authorizer.cognito_supplier[each.key].id : null
+
+  # Authorization scopes
+  authorization_scopes = (
+    contains(local.authorized_api_prefixes, each.key) &&
+    lookup(local.api_lambdas[local.api_to_lambda[each.key]], "authorization_scopes", null) != null
+  ) ? local.api_lambdas[local.api_to_lambda[each.key]].authorization_scopes : null
 }
 
 # Lambda integration for proxy
@@ -70,10 +81,18 @@ resource "aws_api_gateway_integration" "proxy" {
 resource "aws_api_gateway_method" "root" {
   for_each = local.api_prefixes
 
-  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
-  resource_id   = aws_api_gateway_rest_api.apis[each.key].root_resource_id
-  http_method   = "ANY"
-  authorization = "NONE"
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id = aws_api_gateway_rest_api.apis[each.key].root_resource_id
+  http_method = "ANY"
+
+  # Apply authorization if this API prefix is in authorized list
+  authorization = contains(local.authorized_api_prefixes, each.key) ? "COGNITO_USER_POOLS" : "NONE"
+  authorizer_id = contains(local.authorized_api_prefixes, each.key) ? aws_api_gateway_authorizer.cognito_supplier[each.key].id : null
+
+  authorization_scopes = (
+    contains(local.authorized_api_prefixes, each.key) &&
+    lookup(local.api_lambdas[local.api_to_lambda[each.key]], "authorization_scopes", null) != null
+  ) ? local.api_lambdas[local.api_to_lambda[each.key]].authorization_scopes : null
 }
 
 # Lambda integration for root
@@ -86,6 +105,20 @@ resource "aws_api_gateway_integration" "root" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = module.lambdas[local.api_to_lambda[each.key]].function_invoke_arn
+}
+
+################################################################################
+# Cognito Supplier Authorizer
+################################################################################
+
+resource "aws_api_gateway_authorizer" "cognito_supplier" {
+  for_each = toset(local.authorized_api_prefixes)
+
+  name            = "${var.project_name}-${var.environment}-${each.key}-supplier-cognito-authorizer"
+  rest_api_id     = aws_api_gateway_rest_api.apis[each.key].id
+  type            = "COGNITO_USER_POOLS"
+  provider_arns   = [var.cognito_user_pool_arn]
+  identity_source = "method.request.header.Authorization"
 }
 
 ################################################################################
@@ -268,7 +301,11 @@ resource "aws_api_gateway_deployment" "apis" {
     redeployment = sha1(jsonencode([
       aws_api_gateway_resource.proxy[each.key].id,
       aws_api_gateway_method.proxy_any[each.key].id,
+      aws_api_gateway_method.proxy_any[each.key].authorization,
+      aws_api_gateway_method.proxy_any[each.key].authorizer_id,
       aws_api_gateway_method.root[each.key].id,
+      aws_api_gateway_method.root[each.key].authorization,
+      aws_api_gateway_method.root[each.key].authorizer_id,
       aws_api_gateway_integration.proxy[each.key].id,
       aws_api_gateway_integration.root[each.key].id,
     ]))

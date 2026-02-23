@@ -3,43 +3,7 @@
 ################################################################################
 
 locals {
-  # Merge legacy lambda definitions with new map-based approach
-  # This supports both old (api1_env_vars) and new (lambdas map) configurations
-  legacy_lambdas = length(var.lambdas) == 0 ? {
-    "api1-handler" = {
-      description                    = "API 1 Handler Lambda"
-      handler                        = "index.handler"
-      runtime                        = null
-      timeout                        = null
-      memory_size                    = null
-      zip_path                       = null
-      s3_key                         = "lambdas/${var.environment}/api1-handler.zip"
-      source_hash                    = var.api1_lambda_hash
-      environment                    = var.api1_env_vars
-      api_path_prefix                = "api1"
-      reserved_concurrent_executions = -1
-      sqs_trigger                    = false
-      secrets_arn                    = null
-    }
-    "api2-handler" = {
-      description                    = "API 2 Handler Lambda"
-      handler                        = "index.handler"
-      runtime                        = null
-      timeout                        = null
-      memory_size                    = null
-      zip_path                       = null
-      s3_key                         = "lambdas/${var.environment}/api2-handler.zip"
-      source_hash                    = var.api2_lambda_hash
-      environment                    = var.api2_env_vars
-      api_path_prefix                = "api2"
-      reserved_concurrent_executions = -1
-      sqs_trigger                    = false
-      secrets_arn                    = null
-    }
-  } : {}
-
-  # Final lambda configurations - prefer new map over legacy
-  all_lambdas = length(var.lambdas) > 0 ? var.lambdas : local.legacy_lambdas
+  all_lambdas = var.lambdas
 
   # Extract lambdas that have API Gateway integration
   api_lambdas = { for k, v in local.all_lambdas : k => v if v.api_path_prefix != null }
