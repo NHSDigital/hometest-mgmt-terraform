@@ -278,7 +278,7 @@ dependency "aurora_postgres" {
     cluster_resource_id = "cluster-MOCKRESOURCEID1234"
   }
 
-  # mock_outputs_merge_with_state           = true
+  mock_outputs_merge_with_state           = true
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
@@ -305,7 +305,6 @@ inputs = {
 
   # Lambda Configuration
   enable_vpc_access  = true
-  enable_sqs_access  = true # Required for order-router-lambda SQS trigger
   lambda_runtime     = local.lambda_runtime
   lambda_timeout     = local.lambda_timeout
   lambda_memory_size = local.lambda_memory_size
@@ -321,6 +320,9 @@ inputs = {
 
   # KMS keys for secrets encrypted with different keys than shared_services KMS
   lambda_additional_kms_key_arns = []
+
+  # lambda_sqs_queue_arns is not needed here — order-placement ARN is automatically included
+  # in lambda_iam.tf via module.sqs_order_placement.queue_arn
 
   # Aurora IAM authentication - allow Lambdas to connect without passwords
   lambda_aurora_cluster_resource_ids = [dependency.aurora_postgres.outputs.cluster_resource_id]
@@ -450,9 +452,10 @@ inputs = {
       timeout         = 30
       memory_size     = 256
       environment = {
-        NODE_OPTIONS = "--enable-source-maps"
-        ENVIRONMENT  = local.environment
-        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
+        NODE_OPTIONS              = "--enable-source-maps"
+        ENVIRONMENT               = local.environment
+        DATABASE_URL              = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
+        ORDER_PLACEMENT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-placement"
       }
     }
   }
