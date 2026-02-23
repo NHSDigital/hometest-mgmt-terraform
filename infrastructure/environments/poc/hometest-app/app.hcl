@@ -391,11 +391,11 @@ inputs = {
       environment = {
         NODE_OPTIONS                = "--enable-source-maps"
         ENVIRONMENT                 = local.environment
-        SUPPLIER_BASE_URL           = "https://func-nhshometest-dev.azurewebsites.net/"
-        SUPPLIER_OAUTH_TOKEN_PATH   = "/api/oauth"
-        SUPPLIER_CLIENT_ID          = "7e9b8f16-4686-46f4-903e-2d364774fc82"
-        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/preventex-dev-client-secret"
-        SUPPLIER_ORDER_PATH         = "/api/order"
+        DB_USERNAME               = dependency.aurora_postgres.outputs.cluster_master_username
+        DB_ADDRESS                = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT                   = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME                   = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
       }
     }
 
@@ -470,13 +470,11 @@ inputs = {
       environment = {
         NODE_OPTIONS              = "--enable-source-maps"
         ENVIRONMENT               = local.environment
-        DATABASE_URL              = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
         ORDER_PLACEMENT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-placement"
         DB_USERNAME               = dependency.aurora_postgres.outputs.cluster_master_username
         DB_ADDRESS                = dependency.aurora_postgres.outputs.cluster_endpoint
         DB_PORT                   = tostring(dependency.aurora_postgres.outputs.cluster_port)
         DB_NAME                   = dependency.aurora_postgres.outputs.cluster_database_name
-        # DB_SECRET_ARN             = dependency.aurora_postgres.outputs.cluster_master_user_secret_arn
         DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
       }
     }
