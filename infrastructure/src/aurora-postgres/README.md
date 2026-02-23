@@ -108,6 +108,7 @@ module "aurora_postgres" {
 | <a name="output_cluster_endpoint"></a> [cluster\_endpoint](#output\_cluster\_endpoint) | The writer endpoint of the Aurora cluster |
 | <a name="output_cluster_hosted_zone_id"></a> [cluster\_hosted\_zone\_id](#output\_cluster\_hosted\_zone\_id) | The canonical hosted zone ID of the Aurora cluster (for Route 53 Alias) |
 | <a name="output_cluster_id"></a> [cluster\_id](#output\_cluster\_id) | The Amazon RDS Aurora cluster ID |
+| <a name="output_cluster_master_user_secret_arn"></a> [cluster\_master\_user\_secret\_arn](#output\_cluster\_master\_user\_secret\_arn) | The ARN of the Secrets Manager secret for the Aurora master user password |
 | <a name="output_cluster_master_username"></a> [cluster\_master\_username](#output\_cluster\_master\_username) | The master username for the Aurora cluster |
 | <a name="output_cluster_port"></a> [cluster\_port](#output\_cluster\_port) | The port the Aurora cluster listens on |
 | <a name="output_cluster_resource_id"></a> [cluster\_resource\_id](#output\_cluster\_resource\_id) | The RDS cluster resource ID, used for IAM authentication ARNs |

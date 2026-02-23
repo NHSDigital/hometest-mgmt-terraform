@@ -57,3 +57,9 @@ output "cluster_resource_id" {
   description = "The RDS cluster resource ID, used for IAM authentication ARNs"
   value       = module.aurora_postgres.cluster_resource_id
 }
+
+output "cluster_master_user_secret_arn" {
+  description = "The ARN of the Secrets Manager secret for the Aurora master user password"
+  value       = module.aurora_postgres.cluster_master_user_secret[0].secret_arn
+  sensitive   = true
+}

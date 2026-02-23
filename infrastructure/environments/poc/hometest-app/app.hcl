@@ -275,8 +275,13 @@ dependency "aurora_postgres" {
   config_path = "${get_terragrunt_dir()}/../../core/aurora-postgres"
 
   mock_outputs = {
-    connection_string   = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
-    cluster_resource_id = "cluster-MOCKRESOURCEID1234"
+    connection_string              = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
+    cluster_resource_id            = "cluster-MOCKRESOURCEID1234"
+    cluster_master_username        = "mock-master-user"
+    cluster_endpoint               = "mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com"
+    cluster_port                   = 5432
+    cluster_database_name          = "hometest"
+    cluster_master_user_secret_arn = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:mock-aurora-secret"
   }
 
   # mock_outputs_merge_with_state           = true
@@ -465,6 +470,11 @@ inputs = {
         ENVIRONMENT               = local.environment
         DATABASE_URL              = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
         ORDER_PLACEMENT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-placement"
+        DB_USERNAME               = dependency.aurora_postgres.outputs.cluster_master_username
+        DB_ADDRESS                = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT                   = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME                   = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SECRET_ARN             = dependency.aurora_postgres.outputs.cluster_master_user_secret_arn
       }
     }
   }
