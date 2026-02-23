@@ -478,7 +478,6 @@ inputs = {
         DB_NAME                   = dependency.aurora_postgres.outputs.cluster_database_name
         # DB_SECRET_ARN             = dependency.aurora_postgres.outputs.cluster_master_user_secret_arn
         DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
-        DB_SCHEMA      = "hometest"
       }
     }
   }
