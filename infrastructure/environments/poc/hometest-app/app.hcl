@@ -381,7 +381,7 @@ inputs = {
       environment = {
         NODE_OPTIONS     = "--enable-source-maps"
         ENVIRONMENT      = local.environment
-        RESULT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.aws_account_shortname}-${local.environment}-order-results"
+        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
       }
       authorization        = "COGNITO_USER_POOLS"
       authorization_scopes = ["results/write"]
