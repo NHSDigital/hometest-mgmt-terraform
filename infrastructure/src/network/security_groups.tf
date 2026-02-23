@@ -38,7 +38,7 @@ resource "aws_security_group" "lambda" {
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    cidr_blocks = local.data_subnets
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = merge(local.common_tags, {
