@@ -50,6 +50,12 @@ output "cluster_master_user_secret_arn" {
   sensitive   = true
 }
 
+output "cluster_master_user_secret_name" {
+  description = "The Secrets Manager secret name for the Aurora master user password (derived from ARN)"
+  value       = element(split(":", module.aurora_postgres.cluster_master_user_secret[0].secret_arn), 6)
+  sensitive   = true
+}
+
 ################################################################################
 # Security Group Outputs
 ################################################################################

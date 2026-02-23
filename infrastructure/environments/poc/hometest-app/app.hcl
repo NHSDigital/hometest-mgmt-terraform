@@ -275,13 +275,14 @@ dependency "aurora_postgres" {
   config_path = "${get_terragrunt_dir()}/../../core/aurora-postgres"
 
   mock_outputs = {
-    connection_string              = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
-    cluster_resource_id            = "cluster-MOCKRESOURCEID1234"
-    cluster_master_username        = "mock-master-user"
-    cluster_endpoint               = "mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com"
-    cluster_port                   = 5432
-    cluster_database_name          = "hometest"
-    cluster_master_user_secret_arn = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:mock-aurora-secret"
+    connection_string               = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
+    cluster_resource_id             = "cluster-MOCKRESOURCEID1234"
+    cluster_master_username         = "mock-master-user"
+    cluster_endpoint                = "mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com"
+    cluster_port                    = 5432
+    cluster_database_name           = "hometest"
+    cluster_master_user_secret_arn  = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:mock-aurora-secret"
+    cluster_master_user_secret_name = "mock-aurora-secret"
   }
 
   # mock_outputs_merge_with_state           = true
@@ -474,10 +475,9 @@ inputs = {
         DB_ADDRESS                = dependency.aurora_postgres.outputs.cluster_endpoint
         DB_PORT                   = tostring(dependency.aurora_postgres.outputs.cluster_port)
         DB_NAME                   = dependency.aurora_postgres.outputs.cluster_database_name
-        DB_SECRET_NAME            = "rds!cluster-0ab8af73-560c-42b2-b960-61dea4b0c234-m6kphk"
         # DB_SECRET_ARN             = dependency.aurora_postgres.outputs.cluster_master_user_secret_arn
+        DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
         DB_SCHEMA      = "hometest"
-        DB_SECRET_NAME = ""
       }
     }
   }
