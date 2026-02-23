@@ -243,7 +243,7 @@ resource "aws_iam_policy" "tfstate_readonly" {
         ]
         Resource = "arn:aws:kms:*:${var.aws_account_id}:key/*"
         Condition = {
-          StringLike = {
+          "ForAnyValue:StringLike" = {
             "kms:ResourceAliases" = "alias/${var.project_name}-*-kms-tfstate-key"
           }
         }
