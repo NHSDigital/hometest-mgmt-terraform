@@ -278,7 +278,7 @@ dependency "aurora_postgres" {
     cluster_resource_id = "cluster-MOCKRESOURCEID1234"
   }
 
-  mock_outputs_merge_with_state           = true
+  # mock_outputs_merge_with_state           = true
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 

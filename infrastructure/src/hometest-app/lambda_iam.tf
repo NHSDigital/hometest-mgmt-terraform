@@ -43,7 +43,7 @@ module "lambda_iam" {
   s3_bucket_arns      = concat(var.lambda_s3_bucket_arns)
   dynamodb_table_arns = var.lambda_dynamodb_table_arns
   sqs_queue_arns      = local.sqs_queue_arns
-  enable_sqs_access   = length(local.sqs_queue_arns) > 0
+  enable_sqs_access   = true # SQS queues are always created — avoids count-on-computed-value error
 
   aurora_cluster_resource_ids = var.lambda_aurora_cluster_resource_ids
 
