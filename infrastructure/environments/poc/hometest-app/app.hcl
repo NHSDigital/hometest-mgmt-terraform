@@ -302,7 +302,10 @@ inputs = {
   # Dependencies from network
   vpc_id                    = dependency.network.outputs.vpc_id
   lambda_subnet_ids         = dependency.network.outputs.private_subnet_ids
-  lambda_security_group_ids = [dependency.network.outputs.lambda_security_group_id]
+  lambda_security_group_ids = [
+    dependency.network.outputs.lambda_security_group_id,
+    dependency.network.outputs.lambda_rds_secruity_group_id
+  ]
   route53_zone_id           = dependency.network.outputs.route53_zone_id
 
   # Dependencies from shared_services
