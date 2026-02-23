@@ -263,6 +263,7 @@ dependency "shared_services" {
     deployment_artifacts_bucket_arn = "arn:aws:s3:::mock-deployment-bucket"
     api_config_secret_arn           = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:mock-secret"
     api_config_secret_name          = "mock/secret/name"
+    cognito_user_pool_arn           = "arn:aws:cognito-idp:eu-west-2:123456789012:userpool/eu-west-2_mockpool"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -315,6 +316,13 @@ inputs = {
 
   # KMS keys for secrets encrypted with different keys than shared_services KMS
   lambda_additional_kms_key_arns = []
+
+  # Cognito User Pool for API Gateway authorizer
+  enable_cognito        = true
+  cognito_user_pool_arn = dependency.shared_services.outputs.cognito_user_pool_arn
+
+  # API prefixes that require authorization
+  authorized_api_prefixes = ["result"]
 
   # Lambda code deployment
   use_placeholder_lambda = false
@@ -431,6 +439,8 @@ inputs = {
         ENVIRONMENT      = local.environment
         RESULT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-results"
       }
+      authorization        = "COGNITO_USER_POOLS"
+      authorization_scopes = ["results/write"]
     }
   }
 
