@@ -277,7 +277,8 @@ dependency "aurora_postgres" {
     connection_string   = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
     cluster_resource_id = "cluster-MOCKRESOURCEID1234"
   }
-  mock_outputs_merge_with_state           = true
+
+  # mock_outputs_merge_with_state           = true
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
@@ -365,12 +366,12 @@ inputs = {
     # Order Router Lambda - SQS triggered for async order processing
     # NOT exposed via API Gateway - processes orders from SQS queue
     "order-router-lambda" = {
-      description     = "Order Router Service - Processes orders from SQS queue"
-      sqs_trigger     = false          # Triggered by SQS, no API Gateway endpoint
-      api_path_prefix = "order-router" # Not used for routing since this is SQS-triggered, but included for consistency
-      handler         = "index.handler"
-      timeout         = 60 # Longer timeout for external API calls to supplier
-      memory_size     = 512
+      description = "Order Router Service - Processes orders from SQS queue"
+      sqs_trigger = true # Triggered by SQS, no API Gateway endpoint
+      # api_path_prefix = "order-router" # Not used for routing since this is SQS-triggered, but included for consistency
+      handler     = "index.handler"
+      timeout     = 60 # Longer timeout for external API calls to supplier
+      memory_size = 512
       environment = {
         NODE_OPTIONS                = "--enable-source-maps"
         ENVIRONMENT                 = local.environment
@@ -379,28 +380,6 @@ inputs = {
         SUPPLIER_CLIENT_ID          = "7e9b8f16-4686-46f4-903e-2d364774fc82"
         SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/preventex-dev-client-secret"
         SUPPLIER_ORDER_PATH         = "/api/order"
-      }
-    }
-
-    # Order Router Lambda for SH24 supplier - SQS triggered for async order processing
-    # Separate lambda to connect to SH24 test environment without affecting other suppliers
-    "order-router-lambda-sh24" = {
-      description     = "Order Router Service - Processes orders from SQS queue for SH24 supplier"
-      sqs_trigger     = false               # Triggered by SQS, no API Gateway endpoint
-      api_path_prefix = "order-router-sh24" # Not used for routing since this is SQS-triggered, but included for consistency
-      handler         = "index.handler"
-      timeout         = 60 # Longer timeout for external API calls to supplier
-      memory_size     = 512
-      zip_path        = "${local.lambdas_base_path}/order-router-lambda/order-router-lambda.zip"
-      environment = {
-        NODE_OPTIONS                = "--enable-source-maps"
-        ENVIRONMENT                 = local.environment
-        SUPPLIER_BASE_URL           = "https://admin.qa3.sh24.org.uk/"
-        SUPPLIER_OAUTH_TOKEN_PATH   = "/oauth/token"
-        SUPPLIER_CLIENT_ID          = "zrgmf33Zdk-515BIMrds29v9Z3KzoH-tfYDgxLsYtZE"
-        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/sh24-dev-client-secret"
-        SUPPLIER_ORDER_PATH         = "/order"
-        SUPPLIER_OAUTH_SCOPE        = "order results"
       }
     }
 
