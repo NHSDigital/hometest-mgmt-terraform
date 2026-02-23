@@ -51,7 +51,7 @@ resource "aws_kms_key" "tfstate" {
         ]
         Resource = "*"
         Condition = {
-          StringLike = {
+          ArnLike = {
             "aws:PrincipalArn" = "arn:aws:iam::${var.aws_account_id}:role/aws-reserved/sso.amazonaws.com/*"
           }
         }

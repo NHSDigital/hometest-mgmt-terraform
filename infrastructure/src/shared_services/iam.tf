@@ -496,13 +496,14 @@ resource "aws_iam_policy" "tfstate_readonly" {
           "arn:aws:s3:::${var.project_name}-*-s3-tfstate/*"
         ]
       },
-      # KMS decryption for state files
+      # KMS decryption for state files (encrypted with the shared-services KMS key)
       {
         Sid    = "KMSDecryptTerraformState"
         Effect = "Allow"
         Action = [
           "kms:Decrypt",
-          "kms:DescribeKey"
+          "kms:DescribeKey",
+          "kms:GenerateDataKey"
         ]
         Resource = "arn:aws:kms:*:${var.aws_account_id}:key/*"
         Condition = {
