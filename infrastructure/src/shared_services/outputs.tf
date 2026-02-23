@@ -103,6 +103,25 @@ output "developer_deployment_policy_arn" {
   value       = aws_iam_policy.developer_deployment.arn
 }
 
+output "developer_deployment_cdn_policy_arn" {
+  description = "ARN of the developer deployment CDN policy (for SSO permission set attachment)"
+  value       = aws_iam_policy.developer_deployment_cdn.arn
+}
+
+output "developer_deployment_infra_policy_arn" {
+  description = "ARN of the developer deployment infra policy (for SSO permission set attachment)"
+  value       = aws_iam_policy.developer_deployment_infra.arn
+}
+
+output "developer_deployment_policy_arns" {
+  description = "All developer deployment policy ARNs (attach all 3 to the SSO permission set)"
+  value = [
+    aws_iam_policy.developer_deployment.arn,
+    aws_iam_policy.developer_deployment_cdn.arn,
+    aws_iam_policy.developer_deployment_infra.arn,
+  ]
+}
+
 output "developer_deployment_policy_name" {
   description = "Name of the developer deployment policy"
   value       = aws_iam_policy.developer_deployment.name
