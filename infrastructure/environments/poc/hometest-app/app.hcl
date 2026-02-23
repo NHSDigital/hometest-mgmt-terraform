@@ -38,6 +38,7 @@ locals {
   # Domain configuration
   base_domain = "hometest.service.nhs.uk"
   env_domain  = "${local.environment}.${local.base_domain}"
+  api_domain  = "${local.env_domain}"
 
   # ---------------------------------------------------------------------------
   # SOURCE PATHS
@@ -109,8 +110,8 @@ terraform {
           npm ci --silent 2>/dev/null || npm install --silent
 
           # Set Next.js public environment variables for build
-          export NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT="https://${local.env_domain}/login"
-          echo "Setting NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT=$NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT"
+          export NEXT_PUBLIC_BACKEND_URL="https://${local.api_domain}"
+          echo "Setting NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL"
 
           npm run build --silent 2>/dev/null || true
           echo "SPA build complete!"
@@ -423,6 +424,20 @@ inputs = {
         AUTH_ACCESS_TOKEN_EXPIRY_DURATION_MINUTES  = "60"
         AUTH_REFRESH_TOKEN_EXPIRY_DURATION_MINUTES = "60"
         AUTH_COOKIE_SAME_SITE                      = "Lax"
+      }
+    }
+
+    "session-lambda" = {
+      description     = "Session Service - Ensures that the user is authenticated and has a valid session cookie for protected routes"
+      api_path_prefix = "session"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS                      = "--enable-source-maps"
+        ENVIRONMENT                       = local.environment
+        NHS_LOGIN_PRIVATE_KEY_SECRET_NAME = "nhs-hometest/dev/nhs-login-private-key"
+        NHS_LOGIN_BASE_ENDPOINT_URL       = "https://auth.sandpit.signin.nhs.uk"
       }
     }
 

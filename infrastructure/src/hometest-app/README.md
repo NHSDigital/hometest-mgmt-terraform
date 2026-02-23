@@ -331,7 +331,6 @@ After deployment, you'll have access to:
 | <a name="output_lambda_execution_role_arn"></a> [lambda\_execution\_role\_arn](#output\_lambda\_execution\_role\_arn) | ARN of the Lambda execution role |
 | <a name="output_lambda_functions"></a> [lambda\_functions](#output\_lambda\_functions) | Map of all Lambda function details |
 | <a name="output_lambda_functions_detail"></a> [lambda\_functions\_detail](#output\_lambda\_functions\_detail) | Map of Lambda function details |
-| <a name="output_login_endpoint"></a> [login\_endpoint](#output\_login\_endpoint) | Login Lambda endpoint URL |
 | <a name="output_order_results_queue_arn"></a> [order\_results\_queue\_arn](#output\_order\_results\_queue\_arn) | ARN of the order results SQS queue |
 | <a name="output_order_results_queue_url"></a> [order\_results\_queue\_url](#output\_order\_results\_queue\_url) | URL of the order results SQS queue |
 | <a name="output_spa_bucket_arn"></a> [spa\_bucket\_arn](#output\_spa\_bucket\_arn) | S3 bucket ARN for SPA static assets |
