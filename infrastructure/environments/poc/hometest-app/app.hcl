@@ -474,7 +474,10 @@ inputs = {
         DB_ADDRESS                = dependency.aurora_postgres.outputs.cluster_endpoint
         DB_PORT                   = tostring(dependency.aurora_postgres.outputs.cluster_port)
         DB_NAME                   = dependency.aurora_postgres.outputs.cluster_database_name
-        DB_SECRET_ARN             = dependency.aurora_postgres.outputs.cluster_master_user_secret_arn
+        DB_SECRET_NAME            = "rds!cluster-0ab8af73-560c-42b2-b960-61dea4b0c234-m6kphk"
+        # DB_SECRET_ARN             = dependency.aurora_postgres.outputs.cluster_master_user_secret_arn
+        DB_SCHEMA      = "hometest"
+        DB_SECRET_NAME = ""
       }
     }
   }
