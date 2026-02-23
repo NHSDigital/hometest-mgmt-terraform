@@ -27,5 +27,21 @@ ON CONFLICT DO NOTHING;
 
 
 -- +goose Down
-DELETE FROM status_type;
-DELETE FROM result_type;
+DELETE FROM status_type
+WHERE status_code = 'GENERATED';
+DELETE FROM status_type
+WHERE status_code = 'QUEUED';
+DELETE FROM status_type
+WHERE status_code = 'PLACED';
+DELETE FROM status_type
+WHERE status_code = 'ORDER_RECEIVED';
+DELETE FROM status_type
+WHERE status_code = 'DISPATCHED';
+DELETE FROM status_type
+WHERE status_code = 'RECEIVED';
+DELETE FROM status_type
+WHERE status_code = 'COMPLETE';
+DELETE FROM result_type
+WHERE result_code = 'RESULT_AVAILABLE';
+DELETE FROM result_type
+WHERE result_code = 'RESULT_WITHHELD';
