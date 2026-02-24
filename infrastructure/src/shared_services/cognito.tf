@@ -459,10 +459,6 @@ resource "aws_cognito_user_pool_client" "preventex_m2m" {
   prevent_user_existence_errors = "ENABLED"
   enable_token_revocation       = true
 
-  # tags = merge(local.common_tags, {
-  #   Name = "${local.resource_prefix}-preventex-m2m"
-  # })
-
   depends_on = [
     aws_cognito_resource_server.results,
     aws_cognito_resource_server.orders
@@ -497,49 +493,6 @@ resource "aws_cognito_user_pool_client" "sh24_m2m" {
   explicit_auth_flows = []
 
   # Security settings
-  prevent_user_existence_errors = "ENABLED"
-  enable_token_revocation       = true
-
-  # tags = merge(local.common_tags, {
-  #   Name = "${local.resource_prefix}-sh24-m2m"
-  # })
-
-  depends_on = [
-    aws_cognito_resource_server.results,
-    aws_cognito_resource_server.orders
-  ]
-}
-
-################################################################################
-# Internal Test M2M Client
-# For internal integration testing — has orders/write + results/write scopes
-################################################################################
-
-resource "aws_cognito_user_pool_client" "internal_test_client_m2m" {
-  count = var.enable_cognito ? 1 : 0
-
-  name         = "${local.resource_prefix}-internal-test-client-m2m"
-  user_pool_id = aws_cognito_user_pool.main[0].id
-
-  generate_secret = true
-
-  access_token_validity = 60 # 60 minutes
-
-  token_validity_units {
-    access_token  = "minutes"
-    id_token      = "hours"
-    refresh_token = "days"
-  }
-
-  allowed_oauth_flows                  = ["client_credentials"]
-  allowed_oauth_flows_user_pool_client = true
-  allowed_oauth_scopes = [
-    "${aws_cognito_resource_server.orders[0].identifier}/write",
-    "${aws_cognito_resource_server.results[0].identifier}/write",
-  ]
-
-  explicit_auth_flows = []
-
   prevent_user_existence_errors = "ENABLED"
   enable_token_revocation       = true
 
