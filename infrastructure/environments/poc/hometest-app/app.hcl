@@ -332,7 +332,6 @@ inputs = {
   # in lambda_iam.tf via module.sqs_order_placement.queue_arn
 
   # Aurora IAM authentication - allow Lambdas to connect without passwords
-  lambda_aurora_cluster_resource_ids = [dependency.aurora_postgres.outputs.cluster_resource_id]
   # lambda_sqs_queue_arns is not needed here — order-placement ARN is automatically included
   # in lambda_iam.tf via module.sqs_order_placement.queue_arn
 
@@ -392,12 +391,6 @@ inputs = {
       handler     = "index.handler"
       timeout     = 60 # Longer timeout for external API calls to supplier
       memory_size = 512
-      description = "Order Router Service - Processes orders from SQS queue"
-      sqs_trigger = true # Triggered by SQS, no API Gateway endpoint
-      # api_path_prefix = "order-router" # Not used for routing since this is SQS-triggered, but included for consistency
-      handler     = "index.handler"
-      timeout     = 60 # Longer timeout for external API calls to supplier
-      memory_size = 512
       environment = {
         NODE_OPTIONS                = "--enable-source-maps"
         ENVIRONMENT                 = local.environment
@@ -450,25 +443,6 @@ inputs = {
         NHS_LOGIN_BASE_ENDPOINT_URL        = "https://auth.sandpit.signin.nhs.uk"
         COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN = "https://${local.env_domain}"
         COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN         = "https://${local.env_domain}"
-      }
-    }
-
-    # Session Lambda - Validates auth cookie and returns NHS Login user info
-    # CloudFront: /session/* → API Gateway → Lambda
-    # CORS: handled in-code via @middy/http-cors using COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN env var
-    "session-lambda" = {
-      description     = "Session Service - Validates auth cookie and returns user info"
-      api_path_prefix = "session"
-      handler         = "index.handler"
-      timeout         = 30
-      memory_size     = 256
-      environment = {
-        NODE_OPTIONS                       = "--enable-source-maps"
-        ENVIRONMENT                        = local.environment
-        AUTH_COOKIE_KEY_ID                 = "key"
-        AUTH_COOKIE_PUBLIC_KEY_SECRET_NAME = "nhs-hometest/dev/nhs-login-private-key"
-        NHS_LOGIN_BASE_ENDPOINT_URL        = "https://auth.sandpit.signin.nhs.uk"
-        COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN = "https://${local.env_domain}"
       }
     }
 
