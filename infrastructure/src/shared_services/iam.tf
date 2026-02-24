@@ -285,7 +285,7 @@ resource "aws_iam_policy" "developer_deployment" {
 ################################################################################
 
 resource "aws_iam_policy" "tfstate_readonly" {
-  name        = "${local.resource_prefix}-tfstate-readonly"
+  name        = "${local.resource_prefix}-tfstate-readonly" #Change name
   description = "Read-only access to Terraform state for SSO ReadOnly users"
   path        = "/"
 
@@ -318,6 +318,24 @@ resource "aws_iam_policy" "tfstate_readonly" {
         Condition = {
           "ForAnyValue:StringLike" = {
             "kms:ResourceAliases" = "alias/${var.project_name}-*-kms-tfstate-key"
+          }
+        }
+      },
+      # KMS used for Lambda encryption
+      {
+        Sid    = "KMSSharedServicesKey"
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:Encrypt",
+          "kms:CreateGrant"
+        ]
+        Resource = "arn:aws:kms:*:${var.aws_account_id}:key/*"
+        Condition = {
+          "ForAnyValue:StringLike" = {
+            "kms:ResourceAliases" = "alias/${var.project_name}-*-kms-shared-services-key"
           }
         }
       }
