@@ -442,7 +442,6 @@ inputs = {
         AUTH_COOKIE_PUBLIC_KEY_SECRET_NAME = "nhs-hometest/dev/nhs-login-private-key"
         NHS_LOGIN_BASE_ENDPOINT_URL        = "https://auth.sandpit.signin.nhs.uk"
         COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN = "https://${local.env_domain}"
-        COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN         = "https://${local.env_domain}"
       }
     }
 
