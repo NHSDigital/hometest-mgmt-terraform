@@ -323,8 +323,6 @@ inputs = {
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/sh24-dev-client-secret-*",
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/nhs-login-private-key-*",
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:rds!cluster-*"
-    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/nhs-login-private-key-*",
-    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:rds!cluster-*"
   ]
 
   # KMS keys for secrets encrypted with different keys than shared_services KMS
