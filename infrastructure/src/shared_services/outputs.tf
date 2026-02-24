@@ -89,29 +89,6 @@ output "acm_cloudfront_certificate_validated" {
 #   value       = aws_s3_bucket.deployment_artifacts.bucket_domain_name
 # }
 
-#------------------------------------------------------------------------------
-# Developer IAM
-#------------------------------------------------------------------------------
-
-output "developer_role_arn" {
-  description = "ARN of the developer deployment role"
-  value       = aws_iam_role.developer.arn
-}
-
-output "developer_deployment_policy_arn" {
-  description = "ARN of the developer deployment policy (for SSO permission set attachment)"
-  value       = aws_iam_policy.developer_deployment.arn
-}
-
-output "developer_deployment_policy_arns" {
-  description = "Developer deployment policy ARN (consolidated policy for SSO permission set attachment)"
-  value       = [aws_iam_policy.developer_deployment.arn]
-}
-
-output "developer_deployment_policy_name" {
-  description = "Name of the developer deployment policy"
-  value       = aws_iam_policy.developer_deployment.name
-}
 
 ################################################################################
 # SNS Topics
@@ -290,4 +267,23 @@ output "developer_deployment_policy_arn" {
 output "tfstate_readonly_policy_arn" {
   description = "ARN of the Terraform state read-only IAM policy"
   value       = aws_iam_policy.tfstate_readonly.arn
+}
+
+#------------------------------------------------------------------------------
+# Developer IAM
+#------------------------------------------------------------------------------
+
+output "developer_role_arn" {
+  description = "ARN of the developer deployment role"
+  value       = aws_iam_role.developer.arn
+}
+
+output "developer_deployment_policy_arns" {
+  description = "Developer deployment policy ARN (consolidated policy for SSO permission set attachment)"
+  value       = [aws_iam_policy.developer_deployment.arn]
+}
+
+output "developer_deployment_policy_name" {
+  description = "Name of the developer deployment policy"
+  value       = aws_iam_policy.developer_deployment.name
 }
