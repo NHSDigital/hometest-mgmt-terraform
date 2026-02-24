@@ -93,18 +93,16 @@ resource "aws_iam_role_policy" "developer_lambda" {
 }
 
 ################################################################################
-# Developer Deployment Policies
-# Customer-managed policies for SSO Permission Set attachment
+# Developer Deployment Policy
+# Customer-managed policy for SSO Permission Set attachment
 # Allows developers to deploy/destroy hometest-app environments with Terragrunt
 #
-# Split into 3 policies to stay under AWS 6,144 char managed policy limit:
-#   1. developer_deployment       - IAM, Lambda, API Gateway, SQS
-#   2. developer_deployment_cdn   - CloudFront, S3, Route53
-#   3. developer_deployment_infra - CloudWatch, KMS, EC2, WAF, ACM, SNS,
-#                                   Resource Groups, TF state
+# Consolidated policy covering:
+#   - IAM, Lambda, API Gateway, SQS
+#   - CloudFront, S3, Route53
+#   - CloudWatch, KMS, EC2, WAF, ACM, SNS, Resource Groups, TF state
 ################################################################################
 
-# Policy 1: Compute & API (IAM, Lambda, API Gateway, SQS)
 resource "aws_iam_policy" "developer_deployment" {
   name        = "${local.resource_prefix}-developer-deployment"
   description = "Deployment permissions for HomeTest developers via SSO"
@@ -114,58 +112,15 @@ resource "aws_iam_policy" "developer_deployment" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "IAMRoleMgmt"
-        Effect = "Allow"
-        Action = [
-          "iam:CreateRole",
-          "iam:DeleteRole",
-          "iam:GetRole",
-          "iam:UpdateRole",
-          "iam:TagRole",
-          "iam:UntagRole",
-          "iam:ListRoleTags",
-          "iam:PutRolePolicy",
-          "iam:GetRolePolicy",
-          "iam:DeleteRolePolicy",
-          "iam:ListRolePolicies",
-          "iam:AttachRolePolicy",
-          "iam:DetachRolePolicy",
-          "iam:ListAttachedRolePolicies",
-          "iam:ListInstanceProfilesForRole",
-          "iam:PassRole"
-        ]
+        Sid      = "IAMRoleMgmt"
+        Effect   = "Allow"
+        Action   = ["iam:*Role*"]
         Resource = "arn:aws:iam::${var.aws_account_id}:role/${var.project_name}-*"
       },
       {
-        Sid    = "LambdaMgmt"
-        Effect = "Allow"
-        Action = [
-          "lambda:CreateFunction",
-          "lambda:DeleteFunction",
-          "lambda:GetFunction",
-          "lambda:GetFunctionConfiguration",
-          "lambda:GetFunctionCodeSigningConfig",
-          "lambda:GetPolicy",
-          "lambda:ListVersionsByFunction",
-          "lambda:ListTags",
-          "lambda:UpdateFunctionCode",
-          "lambda:UpdateFunctionConfiguration",
-          "lambda:PublishVersion",
-          "lambda:CreateAlias",
-          "lambda:UpdateAlias",
-          "lambda:DeleteAlias",
-          "lambda:GetAlias",
-          "lambda:AddPermission",
-          "lambda:RemovePermission",
-          "lambda:TagResource",
-          "lambda:UntagResource",
-          "lambda:PutFunctionConcurrency",
-          "lambda:DeleteFunctionConcurrency",
-          "lambda:CreateFunctionUrlConfig",
-          "lambda:UpdateFunctionUrlConfig",
-          "lambda:DeleteFunctionUrlConfig",
-          "lambda:GetFunctionUrlConfig"
-        ]
+        Sid      = "LambdaMgmt"
+        Effect   = "Allow"
+        Action   = ["lambda:*"]
         Resource = "arn:aws:lambda:*:${var.aws_account_id}:function:${var.project_name}-*"
       },
       {
@@ -176,7 +131,8 @@ resource "aws_iam_policy" "developer_deployment" {
           "lambda:UpdateEventSourceMapping",
           "lambda:DeleteEventSourceMapping",
           "lambda:GetEventSourceMapping",
-          "lambda:ListEventSourceMappings"
+          "lambda:ListEventSourceMappings",
+          "Lambda:CreateFunction"
         ]
         Resource = "*"
       },
@@ -203,126 +159,26 @@ resource "aws_iam_policy" "developer_deployment" {
         Resource = "arn:aws:apigateway:*::/account"
       },
       {
-        Sid    = "SQSMgmt"
-        Effect = "Allow"
-        Action = [
-          "sqs:CreateQueue",
-          "sqs:DeleteQueue",
-          "sqs:GetQueueAttributes",
-          "sqs:GetQueueUrl",
-          "sqs:SetQueueAttributes",
-          "sqs:TagQueue",
-          "sqs:UntagQueue",
-          "sqs:ListQueueTags",
-          "sqs:SendMessage",
-          "sqs:DeleteMessage",
-          "sqs:PurgeQueue",
-          "sqs:AddPermission",
-          "sqs:RemovePermission"
-        ]
+        Sid      = "SQSMgmt"
+        Effect   = "Allow"
+        Action   = ["sqs:*"]
         Resource = "arn:aws:sqs:*:${var.aws_account_id}:${var.project_name}-*"
-      }
-    ]
-  })
-
-  tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-developer-deployment"
-  })
-}
-
-# Policy 2: CDN & Storage (CloudFront, S3, Route53)
-resource "aws_iam_policy" "developer_deployment_cdn" {
-  name        = "${local.resource_prefix}-developer-deployment-cdn"
-  description = "Developer deploy permissions: CloudFront, S3, Route53"
-  path        = "/"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
+      },
+      # CDN & Storage (CloudFront, S3, Route53)
       {
-        Sid    = "CloudFrontMgmt"
-        Effect = "Allow"
-        Action = [
-          "cloudfront:CreateDistribution",
-          "cloudfront:UpdateDistribution",
-          "cloudfront:DeleteDistribution",
-          "cloudfront:GetDistribution",
-          "cloudfront:GetDistributionConfig",
-          "cloudfront:ListTagsForResource",
-          "cloudfront:TagResource",
-          "cloudfront:UntagResource",
-          "cloudfront:CreateInvalidation",
-          "cloudfront:GetInvalidation",
-          "cloudfront:ListInvalidations",
-          "cloudfront:CreateOriginAccessControl",
-          "cloudfront:UpdateOriginAccessControl",
-          "cloudfront:DeleteOriginAccessControl",
-          "cloudfront:GetOriginAccessControl",
-          "cloudfront:ListOriginAccessControls",
-          "cloudfront:CreateResponseHeadersPolicy",
-          "cloudfront:UpdateResponseHeadersPolicy",
-          "cloudfront:DeleteResponseHeadersPolicy",
-          "cloudfront:GetResponseHeadersPolicy",
-          "cloudfront:CreateCachePolicy",
-          "cloudfront:UpdateCachePolicy",
-          "cloudfront:DeleteCachePolicy",
-          "cloudfront:GetCachePolicy",
-          "cloudfront:CreateFunction",
-          "cloudfront:UpdateFunction",
-          "cloudfront:DeleteFunction",
-          "cloudfront:GetFunction",
-          "cloudfront:DescribeFunction",
-          "cloudfront:PublishFunction",
-          "cloudfront:ListDistributions"
-        ]
+        Sid      = "CloudFrontMgmt"
+        Effect   = "Allow"
+        Action   = ["cloudfront:*"]
         Resource = "*"
       },
       {
-        Sid    = "S3BucketMgmt"
+        Sid    = "S3Mgmt"
         Effect = "Allow"
-        Action = [
-          "s3:CreateBucket",
-          "s3:DeleteBucket",
-          "s3:ListBucket",
-          "s3:GetBucketLocation",
-          "s3:GetBucketPolicy",
-          "s3:PutBucketPolicy",
-          "s3:DeleteBucketPolicy",
-          "s3:GetBucketVersioning",
-          "s3:PutBucketVersioning",
-          "s3:GetEncryptionConfiguration",
-          "s3:PutEncryptionConfiguration",
-          "s3:GetLifecycleConfiguration",
-          "s3:PutLifecycleConfiguration",
-          "s3:GetBucketPublicAccessBlock",
-          "s3:PutBucketPublicAccessBlock",
-          "s3:GetBucketTagging",
-          "s3:PutBucketTagging",
-          "s3:GetAccelerateConfiguration",
-          "s3:GetBucketAcl",
-          "s3:GetBucketCORS",
-          "s3:GetBucketLogging",
-          "s3:GetBucketObjectLockConfiguration",
-          "s3:GetBucketRequestPayment",
-          "s3:GetBucketWebsite",
-          "s3:GetReplicationConfiguration",
-          "s3:GetBucketOwnershipControls",
-          "s3:PutBucketOwnershipControls"
+        Action = ["s3:*"]
+        Resource = [
+          "arn:aws:s3:::${var.project_name}-*",
+          "arn:aws:s3:::${var.project_name}-*/*"
         ]
-        Resource = "arn:aws:s3:::${var.project_name}-*"
-      },
-      {
-        Sid    = "S3ObjectAccess"
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:PutObjectAcl",
-          "s3:GetObjectVersion",
-          "s3:ListBucketVersions"
-        ]
-        Resource = "arn:aws:s3:::${var.project_name}-*/*"
       },
       {
         Sid    = "Route53Mgmt"
@@ -337,41 +193,12 @@ resource "aws_iam_policy" "developer_deployment_cdn" {
           "arn:aws:route53:::hostedzone/*",
           "arn:aws:route53:::change/*"
         ]
-      }
-    ]
-  })
-
-  tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-developer-deployment-cdn"
-  })
-}
-
-# Policy 3: Infra & Monitoring (CloudWatch, KMS, EC2, WAF, ACM, SNS, Resource Groups, TF state)
-resource "aws_iam_policy" "developer_deployment_infra" {
-  name        = "${local.resource_prefix}-developer-deployment-infra"
-  description = "Developer deploy permissions: CloudWatch, KMS, EC2, WAF, ACM, SNS, Resource Groups, TF state"
-  path        = "/"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
+      },
+      # Infra & Monitoring (CloudWatch, KMS, EC2, WAF, ACM, SNS, Resource Groups, TF state)
       {
         Sid    = "CWLogsMgmt"
         Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:DeleteLogGroup",
-          "logs:DescribeLogGroups",
-          "logs:PutRetentionPolicy",
-          "logs:DeleteRetentionPolicy",
-          "logs:TagResource",
-          "logs:UntagResource",
-          "logs:ListTagsForResource",
-          "logs:TagLogGroup",
-          "logs:ListTagsLogGroup",
-          "logs:PutResourcePolicy",
-          "logs:DescribeResourcePolicies"
-        ]
+        Action = ["logs:*"]
         Resource = [
           "arn:aws:logs:*:${var.aws_account_id}:log-group:/aws/lambda/${var.project_name}-*",
           "arn:aws:logs:*:${var.aws_account_id}:log-group:/aws/lambda/${var.project_name}-*:*",
@@ -380,16 +207,9 @@ resource "aws_iam_policy" "developer_deployment_infra" {
         ]
       },
       {
-        Sid    = "CWAlarmsMgmt"
-        Effect = "Allow"
-        Action = [
-          "cloudwatch:PutMetricAlarm",
-          "cloudwatch:DeleteAlarms",
-          "cloudwatch:DescribeAlarms",
-          "cloudwatch:ListTagsForResource",
-          "cloudwatch:TagResource",
-          "cloudwatch:UntagResource"
-        ]
+        Sid      = "CWAlarmsMgmt"
+        Effect   = "Allow"
+        Action   = ["cloudwatch:*Alarm*", "cloudwatch:*Tag*"]
         Resource = "arn:aws:cloudwatch:*:${var.aws_account_id}:alarm:${var.project_name}-*"
       },
       {
@@ -412,20 +232,9 @@ resource "aws_iam_policy" "developer_deployment_infra" {
         }
       },
       {
-        Sid    = "ResourceGroupMgmt"
-        Effect = "Allow"
-        Action = [
-          "resource-groups:CreateGroup",
-          "resource-groups:DeleteGroup",
-          "resource-groups:GetGroup",
-          "resource-groups:GetGroupQuery",
-          "resource-groups:UpdateGroup",
-          "resource-groups:UpdateGroupQuery",
-          "resource-groups:GetTags",
-          "resource-groups:Tag",
-          "resource-groups:Untag",
-          "resource-groups:ListGroupResources"
-        ]
+        Sid      = "ResourceGroupMgmt"
+        Effect   = "Allow"
+        Action   = ["resource-groups:*"]
         Resource = "arn:aws:resource-groups:*:${var.aws_account_id}:group/${var.project_name}-*"
       },
       {
@@ -465,7 +274,7 @@ resource "aws_iam_policy" "developer_deployment_infra" {
   })
 
   tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-developer-deployment-infra"
+    Name = "${local.resource_prefix}-developer-deployment"
   })
 }
 
