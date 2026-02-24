@@ -332,10 +332,6 @@ inputs = {
   # in lambda_iam.tf via module.sqs_order_placement.queue_arn
 
   # Aurora IAM authentication - allow Lambdas to connect without passwords
-  # lambda_sqs_queue_arns is not needed here — order-placement ARN is automatically included
-  # in lambda_iam.tf via module.sqs_order_placement.queue_arn
-
-  # Aurora IAM authentication - allow Lambdas to connect without passwords
   lambda_aurora_cluster_resource_ids = [dependency.aurora_postgres.outputs.cluster_resource_id]
   # Cognito User Pool for API Gateway authorizer
   enable_cognito        = true
