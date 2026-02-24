@@ -62,5 +62,5 @@ inputs = {
   # enable_iam_auth = true
 
   # Enable Data API for querying from AWS Console
-  enable_http_endpoint = true
+  # enable_http_endpoint = true
 }
