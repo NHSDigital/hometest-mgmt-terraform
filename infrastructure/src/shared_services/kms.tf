@@ -79,6 +79,24 @@ resource "aws_kms_key" "main" {
             "aws:SourceAccount" = var.aws_account_id
           }
         }
+      },
+      {
+        Sid    = "Allow SSO Roles to Decrypt State"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${var.aws_account_id}:root"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey",
+          "kms:Encrypt"
+        ]
+        Resource = "*"
+        Condition = {
+          ArnLike = {
+            "aws:PrincipalArn" = "arn:aws:iam::${var.aws_account_id}:role/aws-reserved/sso.amazonaws.com/*"
+          }
+        }
       }
     ]
   })
