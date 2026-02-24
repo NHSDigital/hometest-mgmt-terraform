@@ -117,6 +117,96 @@ jobs:
           working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.module }}
           action: ${{ inputs.action || 'plan' }}
 
+      - name: "Wait for Lambda migrator and print logs"
+        if: matrix.module == 'lambda-goose-migrator' && (inputs.action == 'apply')
+        run: |
+          # Find the Lambda function by name pattern
+          FUNCTION_NAME=$(aws lambda list-functions \
+            --query "Functions[?contains(FunctionName, 'lambda-goose-migrator')].FunctionName | [0]" \
+            --output text)
+
+          if [ -z "$FUNCTION_NAME" ] || [ "$FUNCTION_NAME" == "None" ]; then
+            echo "::error::Could not find Lambda function matching 'lambda-goose-migrator'"
+            exit 1
+          fi
+
+          echo "Found Lambda function: ${FUNCTION_NAME}"
+          LOG_GROUP="/aws/lambda/${FUNCTION_NAME}"
+
+          # Poll until the latest log stream contains an END marker (Lambda completed)
+          # Lambda timeout is 300s; allow up to 360s total
+          MAX_WAIT=360
+          ELAPSED=0
+          INTERVAL=15
+          LOG_STREAM="None"
+
+          echo "Waiting for Lambda execution to complete (max ${MAX_WAIT}s)..."
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            LOG_STREAM=$(aws logs describe-log-streams \
+              --log-group-name "$LOG_GROUP" \
+              --order-by LastEventTime \
+              --descending \
+              --max-items 1 \
+              --query "logStreams[0].logStreamName" \
+              --output text 2>/dev/null || echo "None")
+
+            if [ "$LOG_STREAM" != "None" ] && [ -n "$LOG_STREAM" ]; then
+              LAST_EVENT_MS=$(aws logs describe-log-streams \
+                --log-group-name "$LOG_GROUP" \
+                --order-by LastEventTime \
+                --descending \
+                --max-items 1 \
+                --query "logStreams[0].lastEventTimestamp" \
+                --output text 2>/dev/null || echo "0")
+
+              NOW_MS=$(date +%s%3N)
+              AGE_MS=$(( NOW_MS - LAST_EVENT_MS ))
+
+              # Only consider streams with events in the last 10 minutes
+              if [ "$AGE_MS" -lt 600000 ]; then
+                HAS_END=$(aws logs get-log-events \
+                  --log-group-name "$LOG_GROUP" \
+                  --log-stream-name "$LOG_STREAM" \
+                  --start-from-head \
+                  --query "events[*].message" \
+                  --output text 2>/dev/null | grep -c "END RequestId" || true)
+
+                if [ "$HAS_END" -gt 0 ]; then
+                  echo "Lambda execution completed."
+                  break
+                fi
+              fi
+            fi
+
+            echo "  Still waiting... (${ELAPSED}s elapsed)"
+            sleep "$INTERVAL"
+            ELAPSED=$(( ELAPSED + INTERVAL ))
+          done
+
+          # Print logs to the job output and the step summary
+          echo "=== Lambda Execution Logs (stream: ${LOG_STREAM}) ==="
+          if [ "$LOG_STREAM" != "None" ] && [ -n "$LOG_STREAM" ]; then
+            LOGS=$(aws logs get-log-events \
+              --log-group-name "$LOG_GROUP" \
+              --log-stream-name "$LOG_STREAM" \
+              --start-from-head \
+              --query "events[*].message" \
+              --output text)
+
+            echo "$LOGS"
+
+            {
+              echo "### Lambda Migrator Logs"
+              echo "**Function**: \`${FUNCTION_NAME}\`"
+              echo "**Log stream**: \`${LOG_STREAM}\`"
+              echo '```'
+              echo "$LOGS"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::No log streams found in ${LOG_GROUP} within the time window."
+          fi
+
       - name: "Post deployment summary"
         if: always()
         run: |

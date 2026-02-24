@@ -23,6 +23,12 @@ variable "aws_region" {
   type        = string
 }
 
+variable "aws_account_shortname" {
+  description = "Short name for the AWS account (e.g. poc, prod). Used in log group ARN patterns to match the Lambda function naming convention."
+  type        = string
+  default     = "*"
+}
+
 # Role Configuration
 variable "max_session_duration" {
   description = "Maximum session duration in seconds"
@@ -96,6 +102,13 @@ variable "enable_sqs_access" {
   description = "Whether to enable SQS access policy. Use this instead of relying on sqs_queue_arns length to avoid count unknown at plan time issues."
   type        = bool
   default     = false
+}
+
+# Aurora IAM Authentication
+variable "aurora_cluster_resource_ids" {
+  description = "List of Aurora cluster resource IDs to allow IAM database authentication (rds-db:connect). Used to build arn:aws:rds-db:region:account:dbuser:resource-id/* ARNs."
+  type        = list(string)
+  default     = []
 }
 
 # Custom Policies

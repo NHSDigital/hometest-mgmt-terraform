@@ -2,7 +2,9 @@ resource "aws_iam_role" "lambda_goose_migrator" {
   name               = "${local.resource_prefix}-goose-migrator-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 
-  tags = local.common_tags
+  tags = merge(local.common_tags, {
+    Name = "${local.resource_prefix}-goose-migrator-role"
+  })
 }
 
 resource "aws_iam_policy" "lambda_goose_migrator_policy" {
@@ -10,7 +12,9 @@ resource "aws_iam_policy" "lambda_goose_migrator_policy" {
   description = "Allow Lambda to connect to RDS and fetch secrets."
   policy      = data.aws_iam_policy_document.lambda_goose_migrator_policy.json
 
-  tags = local.common_tags
+  tags = merge(local.common_tags, {
+    Name = "${local.resource_prefix}-goose-migrator-policy"
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_goose_migrator_attach" {

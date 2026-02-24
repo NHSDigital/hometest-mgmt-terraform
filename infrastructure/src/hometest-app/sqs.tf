@@ -1,5 +1,6 @@
 ################################################################################
-# SQS Queue and Lambda Event Source Mapping
+# SQS Queues and Lambda Event Source Mapping
+# Uses terraform-aws-modules/sqs/aws (via local modules/sqs wrapper) for all queues.
 ################################################################################
 
 locals {
@@ -8,109 +9,146 @@ locals {
 }
 
 ################################################################################
-# SQS Queue for Order Results (written to by order-result-lambda)
+# Order Placement Queue
+# Written to by order-service-lambda; consumed by order-router-lambda (SQS trigger)
 ################################################################################
 
-resource "aws_sqs_queue" "order_results" {
-  count = var.enable_sqs_access ? 1 : 0
+module "sqs_order_placement" {
+  source = "../../modules/sqs"
 
-  name                       = "${var.project_name}-${var.environment}-order-results"
-  visibility_timeout_seconds = 300
+  project_name      = var.project_name
+  environment       = var.environment
+  queue_name_suffix = "order-placement"
+
+  visibility_timeout_seconds = 300     # 5 min — allow time for order-router-lambda (60 s timeout × 5)
   message_retention_seconds  = 1209600 # 14 days
-  delay_seconds              = 0
-  max_message_size           = 262144 # 256 KB
+  receive_wait_time_seconds  = 20      # Long polling
+
+  create_dlq        = true
+  max_receive_count = 3
+
+  kms_master_key_id       = var.kms_key_arn
+  sqs_managed_sse_enabled = false
+
+  create_cloudwatch_alarms = true
+  alarm_actions            = [var.sns_alerts_topic_arn]
+
+  tags = local.common_tags
+}
+
+################################################################################
+# Order Results Queue
+# Written to by order-result-lambda
+################################################################################
+
+module "sqs_order_results" {
+  source = "../../modules/sqs"
+
+  project_name      = var.project_name
+  environment       = var.environment
+  queue_name_suffix = "order-results"
+
+  visibility_timeout_seconds = 300     # 5 minutes
+  message_retention_seconds  = 1209600 # 14 days
+  receive_wait_time_seconds  = 20      # Long polling
+
+  create_dlq        = true
+  max_receive_count = 3
+
+  kms_master_key_id       = var.kms_key_arn
+  sqs_managed_sse_enabled = false
+
+  create_cloudwatch_alarms = true
+  alarm_actions            = [var.sns_alerts_topic_arn]
+
+  tags = local.common_tags
+}
+
+################################################################################
+# Notifications Queue (FIFO)
+# For reliable, ordered notification delivery
+################################################################################
+
+module "sqs_notifications" {
+  source = "../../modules/sqs"
+
+  project_name      = var.project_name
+  environment       = var.environment
+  queue_name_suffix = "notifications"
+
+  # FIFO configuration
+  fifo_queue                  = true
+  content_based_deduplication = true
+  deduplication_scope         = "messageGroup"
+  fifo_throughput_limit       = "perMessageGroupId"
+
+  visibility_timeout_seconds = 180    # 3 minutes
+  message_retention_seconds  = 345600 # 4 days
   receive_wait_time_seconds  = 20     # Long polling
 
-  # Enable server-side encryption with KMS
-  kms_master_key_id                 = var.kms_key_arn
-  kms_data_key_reuse_period_seconds = 300
+  create_dlq        = true
+  max_receive_count = 3
 
-  tags = merge(local.common_tags, {
-    Name = "${var.project_name}-${var.environment}-order-results"
-  })
+  kms_master_key_id       = var.kms_key_arn
+  sqs_managed_sse_enabled = false
+
+  create_cloudwatch_alarms = true
+  alarm_actions            = [var.sns_alerts_topic_arn]
+
+  tags = local.common_tags
 }
 
 ################################################################################
-# SQS Queue for Event Processing (triggers lambdas)
+# Events Queue
+# Triggers lambdas with sqs_trigger = true (e.g., order-router-lambda)
 ################################################################################
 
-resource "aws_sqs_queue" "main" {
-  count = length(local.sqs_lambdas) > 0 ? 1 : 0
+module "sqs_events" {
+  count  = length(local.sqs_lambdas) > 0 ? 1 : 0
+  source = "../../modules/sqs"
 
-  name                       = "${var.project_name}-${var.environment}-events"
-  visibility_timeout_seconds = 300     # Should be 6x the Lambda timeout
+  project_name      = var.project_name
+  environment       = var.environment
+  queue_name_suffix = "events"
+
+  visibility_timeout_seconds = 300     # Should be >= 6× the Lambda timeout (60 s × 6 = 360)
   message_retention_seconds  = 1209600 # 14 days
-  delay_seconds              = 0
-  max_message_size           = 262144 # 256 KB
-  receive_wait_time_seconds  = 20     # Long polling
+  receive_wait_time_seconds  = 20      # Long polling
 
-  # Enable server-side encryption with KMS
-  kms_master_key_id                 = var.kms_key_arn
-  kms_data_key_reuse_period_seconds = 300
+  create_dlq        = true
+  max_receive_count = 3
 
-  # Enable dead letter queue
-  redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.dlq[0].arn
-    maxReceiveCount     = 3
-  })
+  kms_master_key_id       = var.kms_key_arn
+  sqs_managed_sse_enabled = false
 
-  tags = merge(local.common_tags, {
-    Name = "${var.project_name}-${var.environment}-events"
-  })
-}
-
-################################################################################
-# Dead Letter Queue for Failed Messages
-################################################################################
-
-resource "aws_sqs_queue" "dlq" {
-  count = length(local.sqs_lambdas) > 0 ? 1 : 0
-
-  name                       = "${var.project_name}-${var.environment}-events-dlq"
-  visibility_timeout_seconds = 300
-  message_retention_seconds  = 1209600 # 14 days
-
-  # Enable server-side encryption with KMS
-  kms_master_key_id                 = var.kms_key_arn
-  kms_data_key_reuse_period_seconds = 300
-
-  tags = merge(local.common_tags, {
-    Name = "${var.project_name}-${var.environment}-events-dlq"
-  })
-}
-
-################################################################################
-# SQS Queue Policy - Allow Lambda to receive messages
-################################################################################
-
-resource "aws_sqs_queue_policy" "main" {
-  count = length(local.sqs_lambdas) > 0 ? 1 : 0
-
-  queue_url = aws_sqs_queue.main[0].id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "AllowLambdaToReceive"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
+  # Allow Lambda service to receive/delete messages from this queue
+  create_queue_policy = true
+  queue_policy_statements = {
+    AllowLambdaToReceive = {
+      sid    = "AllowLambdaToReceive"
+      effect = "Allow"
+      principals = [
+        { type = "Service", identifiers = ["lambda.amazonaws.com"] }
+      ]
+      actions = [
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+      ]
+      conditions = [
+        {
+          test     = "ArnLike"
+          variable = "aws:SourceArn"
+          values   = ["arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${local.resource_prefix}-*"]
         }
-        Action = [
-          "sqs:ReceiveMessage",
-          "sqs:DeleteMessage",
-          "sqs:GetQueueAttributes"
-        ]
-        Resource = aws_sqs_queue.main[0].arn
-        Condition = {
-          ArnLike = {
-            "aws:SourceArn" = "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.project_name}-${var.environment}-*"
-          }
-        }
-      }
-    ]
-  })
+      ]
+    }
+  }
+
+  create_cloudwatch_alarms = true
+  alarm_actions            = [var.sns_alerts_topic_arn]
+
+  tags = local.common_tags
 }
 
 ################################################################################
@@ -120,7 +158,7 @@ resource "aws_sqs_queue_policy" "main" {
 resource "aws_lambda_event_source_mapping" "sqs" {
   for_each = local.sqs_lambdas
 
-  event_source_arn = aws_sqs_queue.main[0].arn
+  event_source_arn = module.sqs_events[0].queue_arn
   function_name    = module.lambdas[each.key].function_arn
   enabled          = true
 
@@ -141,31 +179,61 @@ resource "aws_lambda_event_source_mapping" "sqs" {
 ################################################################################
 
 output "sqs_queue_url" {
-  description = "URL of the SQS queue"
-  value       = length(local.sqs_lambdas) > 0 ? aws_sqs_queue.main[0].url : null
+  description = "URL of the events SQS queue"
+  value       = length(local.sqs_lambdas) > 0 ? module.sqs_events[0].queue_url : null
 }
 
 output "sqs_queue_arn" {
-  description = "ARN of the SQS queue"
-  value       = length(local.sqs_lambdas) > 0 ? aws_sqs_queue.main[0].arn : null
+  description = "ARN of the events SQS queue"
+  value       = length(local.sqs_lambdas) > 0 ? module.sqs_events[0].queue_arn : null
 }
 
 output "sqs_dlq_url" {
-  description = "URL of the SQS dead letter queue"
-  value       = length(local.sqs_lambdas) > 0 ? aws_sqs_queue.dlq[0].url : null
+  description = "URL of the events dead letter queue"
+  value       = length(local.sqs_lambdas) > 0 ? module.sqs_events[0].dlq_url : null
 }
 
 output "sqs_dlq_arn" {
-  description = "ARN of the SQS dead letter queue"
-  value       = length(local.sqs_lambdas) > 0 ? aws_sqs_queue.dlq[0].arn : null
+  description = "ARN of the events dead letter queue"
+  value       = length(local.sqs_lambdas) > 0 ? module.sqs_events[0].dlq_arn : null
 }
 
 output "order_results_queue_url" {
   description = "URL of the order results SQS queue"
-  value       = var.enable_sqs_access ? aws_sqs_queue.order_results[0].url : null
+  value       = module.sqs_order_results.queue_url
 }
 
 output "order_results_queue_arn" {
   description = "ARN of the order results SQS queue"
-  value       = var.enable_sqs_access ? aws_sqs_queue.order_results[0].arn : null
+  value       = module.sqs_order_results.queue_arn
+}
+
+output "notifications_queue_url" {
+  description = "URL of the notifications SQS queue (FIFO)"
+  value       = module.sqs_notifications.queue_url
+}
+
+output "notifications_queue_arn" {
+  description = "ARN of the notifications SQS queue (FIFO)"
+  value       = module.sqs_notifications.queue_arn
+}
+
+output "notifications_dlq_url" {
+  description = "URL of the notifications dead letter queue"
+  value       = module.sqs_notifications.dlq_url
+}
+
+output "notifications_dlq_arn" {
+  description = "ARN of the notifications dead letter queue"
+  value       = module.sqs_notifications.dlq_arn
+}
+
+output "order_placement_queue_url" {
+  description = "URL of the order placement SQS queue"
+  value       = module.sqs_order_placement.queue_url
+}
+
+output "order_placement_queue_arn" {
+  description = "ARN of the order placement SQS queue"
+  value       = module.sqs_order_placement.queue_arn
 }

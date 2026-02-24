@@ -321,7 +321,9 @@ resource "aws_iam_role" "dns_query_firehose" {
     ]
   })
 
-  tags = local.common_tags
+  tags = merge(local.common_tags, {
+    Name = "${local.resource_prefix}-dns-query-firehose-role"
+  })
 }
 
 resource "aws_iam_role_policy" "dns_query_firehose" {
@@ -446,7 +448,9 @@ resource "aws_iam_role" "dns_logs_subscription" {
     ]
   })
 
-  tags = local.common_tags
+  tags = merge(local.common_tags, {
+    Name = "${local.resource_prefix}-dns-logs-subscription-role"
+  })
 }
 
 resource "aws_iam_role_policy" "dns_logs_subscription" {

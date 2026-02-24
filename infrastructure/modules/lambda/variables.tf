@@ -8,6 +8,11 @@ variable "project_name" {
   type        = string
 }
 
+variable "aws_account_shortname" {
+  description = "AWS account short name/alias used in resource naming (e.g., poc, dev, prod)"
+  type        = string
+}
+
 variable "function_name" {
   description = "Name of the Lambda function (will be prefixed with project and environment)"
   type        = string

@@ -177,14 +177,20 @@ variable "lambda_sqs_queue_arns" {
   default     = []
 }
 
-variable "enable_sqs_access" {
-  description = "Enable SQS access for Lambda functions (creates order-results queue)"
-  type        = bool
-  default     = false
-}
+# variable "enable_sqs_access" {
+#   description = "Enable SQS access for Lambda functions (creates order-results queue)"
+#   type        = bool
+#   default     = false
+# }
 
 variable "lambda_additional_kms_key_arns" {
   description = "Additional KMS key ARNs for Lambda to decrypt secrets (e.g., secrets encrypted with different keys)"
+  type        = list(string)
+  default     = []
+}
+
+variable "lambda_aurora_cluster_resource_ids" {
+  description = "Aurora cluster resource IDs to grant Lambda IAM database authentication (rds-db:connect)"
   type        = list(string)
   default     = []
 }

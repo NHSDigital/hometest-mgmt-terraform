@@ -20,7 +20,7 @@ locals {
 resource "aws_api_gateway_rest_api" "apis" {
   for_each = local.api_prefixes
 
-  name        = "${var.project_name}-${var.environment}-${each.key}"
+  name        = "${local.resource_prefix}-${each.key}"
   description = "API Gateway for ${each.key} - ${var.project_name} ${var.environment}"
 
   endpoint_configuration {
@@ -28,7 +28,7 @@ resource "aws_api_gateway_rest_api" "apis" {
   }
 
   tags = merge(local.common_tags, {
-    Name      = "${var.project_name}-${var.environment}-${each.key}"
+    Name      = "${local.resource_prefix}-${each.key}"
     ApiPrefix = each.key
   })
 }
@@ -189,7 +189,7 @@ resource "aws_api_gateway_account" "this" {
 }
 
 resource "aws_iam_role" "api_gateway_cloudwatch" {
-  name = "${var.project_name}-${var.environment}-apigw-cloudwatch"
+  name = "${local.resource_prefix}-apigw-cloudwatch"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -205,12 +205,12 @@ resource "aws_iam_role" "api_gateway_cloudwatch" {
   })
 
   tags = merge(local.common_tags, {
-    Name = "${var.project_name}-${var.environment}-apigw-cloudwatch-role"
+    Name = "${local.resource_prefix}-apigw-cloudwatch-role"
   })
 }
 
 resource "aws_iam_role_policy" "api_gateway_cloudwatch" {
-  name = "${var.project_name}-${var.environment}-apigw-cloudwatch-policy"
+  name = "${local.resource_prefix}-apigw-cloudwatch-policy"
   role = aws_iam_role.api_gateway_cloudwatch.id
 
   policy = jsonencode({
@@ -264,7 +264,7 @@ resource "aws_api_gateway_stage" "apis" {
   }
 
   tags = merge(local.common_tags, {
-    Name      = "${var.project_name}-${var.environment}-${each.key}-${var.api_stage_name}"
+    Name      = "${local.resource_prefix}-${each.key}-${var.api_stage_name}"
     ApiPrefix = each.key
   })
 
@@ -278,12 +278,12 @@ resource "aws_api_gateway_stage" "apis" {
 resource "aws_cloudwatch_log_group" "api_gateway" {
   for_each = local.api_prefixes
 
-  name              = "/aws/apigateway/${var.project_name}-${var.environment}-${each.key}"
+  name              = "/aws/apigateway/${local.resource_prefix}-${each.key}"
   retention_in_days = var.log_retention_days
   kms_key_id        = var.kms_key_arn
 
   tags = merge(local.common_tags, {
-    Name      = "${var.project_name}-${var.environment}-${each.key}-logs"
+    Name      = "${local.resource_prefix}-${each.key}-logs"
     ApiPrefix = each.key
   })
 }

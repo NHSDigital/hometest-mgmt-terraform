@@ -39,6 +39,23 @@ output "cluster_hosted_zone_id" {
   value       = module.aurora_postgres.cluster_hosted_zone_id
 }
 
+output "cluster_resource_id" {
+  description = "The RDS cluster resource ID, used to build IAM auth ARNs (arn:aws:rds-db:region:account:dbuser:resource-id/db_user)"
+  value       = module.aurora_postgres.cluster_resource_id
+}
+
+output "cluster_master_user_secret_arn" {
+  description = "The ARN of the Secrets Manager secret holding the Aurora master user password"
+  value       = module.aurora_postgres.cluster_master_user_secret[0].secret_arn
+  sensitive   = true
+}
+
+output "cluster_master_user_secret_name" {
+  description = "The Secrets Manager secret name for the Aurora master user password (derived from ARN)"
+  value       = element(split(":", module.aurora_postgres.cluster_master_user_secret[0].secret_arn), 6)
+  sensitive   = true
+}
+
 ################################################################################
 # Security Group Outputs
 ################################################################################

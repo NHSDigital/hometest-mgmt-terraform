@@ -172,6 +172,7 @@ resource "aws_cognito_user_pool_client" "main" {
   # Read/Write attributes
   read_attributes  = var.cognito_read_attributes
   write_attributes = var.cognito_write_attributes
+
 }
 
 ################################################################################

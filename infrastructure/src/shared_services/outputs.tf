@@ -107,73 +107,6 @@ output "sns_alerts_topic_arn" {
   value       = module.sns_alerts.topic_arn
 }
 
-#------------------------------------------------------------------------------
-# SQS Queues
-#------------------------------------------------------------------------------
-
-# Orders Queue
-output "sqs_orders_queue_url" {
-  description = "URL of the orders SQS queue"
-  value       = module.sqs_orders.queue_url
-}
-
-output "sqs_orders_queue_arn" {
-  description = "ARN of the orders SQS queue"
-  value       = module.sqs_orders.queue_arn
-}
-
-output "sqs_orders_dlq_url" {
-  description = "URL of the orders DLQ"
-  value       = module.sqs_orders.dlq_url
-}
-
-output "sqs_orders_dlq_arn" {
-  description = "ARN of the orders DLQ"
-  value       = module.sqs_orders.dlq_arn
-}
-
-# Notifications Queue (FIFO)
-output "sqs_notifications_queue_url" {
-  description = "URL of the notifications SQS queue"
-  value       = module.sqs_notifications.queue_url
-}
-
-output "sqs_notifications_queue_arn" {
-  description = "ARN of the notifications SQS queue"
-  value       = module.sqs_notifications.queue_arn
-}
-
-output "sqs_notifications_dlq_url" {
-  description = "URL of the notifications DLQ"
-  value       = module.sqs_notifications.dlq_url
-}
-
-output "sqs_notifications_dlq_arn" {
-  description = "ARN of the notifications DLQ"
-  value       = module.sqs_notifications.dlq_arn
-}
-
-# Events Queue
-output "sqs_events_queue_url" {
-  description = "URL of the events SQS queue"
-  value       = module.sqs_events.queue_url
-}
-
-output "sqs_events_queue_arn" {
-  description = "ARN of the events SQS queue"
-  value       = module.sqs_events.queue_arn
-}
-
-output "sqs_events_dlq_url" {
-  description = "URL of the events DLQ"
-  value       = module.sqs_events.dlq_url
-}
-
-output "sqs_events_dlq_arn" {
-  description = "ARN of the events DLQ"
-  value       = module.sqs_events.dlq_arn
-}
-
 output "developer_role_name" {
   description = "Name of the developer deployment role"
   value       = aws_iam_role.developer.name
@@ -317,4 +250,29 @@ output "cognito_sh24_m2m_client_secret" {
   description = "The client secret for SH:24 M2M application"
   value       = var.enable_cognito ? aws_cognito_user_pool_client.sh24_m2m[0].client_secret : null
   sensitive   = true
+}
+
+output "cognito_internal_test_client_m2m_id" {
+  description = "The client ID for the internal test M2M application"
+  value       = var.enable_cognito ? aws_cognito_user_pool_client.internal_test_client_m2m[0].id : null
+}
+
+output "cognito_internal_test_client_m2m_secret" {
+  description = "The client secret for the internal test M2M application"
+  value       = var.enable_cognito ? aws_cognito_user_pool_client.internal_test_client_m2m[0].client_secret : null
+  sensitive   = true
+}
+
+#------------------------------------------------------------------------------
+# IAM Policies
+#------------------------------------------------------------------------------
+
+output "developer_deployment_policy_arn" {
+  description = "ARN of the developer deployment IAM policy"
+  value       = aws_iam_policy.developer_deployment.arn
+}
+
+output "tfstate_readonly_policy_arn" {
+  description = "ARN of the Terraform state read-only IAM policy"
+  value       = aws_iam_policy.tfstate_readonly.arn
 }

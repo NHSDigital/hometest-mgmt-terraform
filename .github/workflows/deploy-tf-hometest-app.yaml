@@ -82,6 +82,8 @@ jobs:
 
       - name: "Display deployment info"
         run: |
+          HS_COMMIT=$(git -C hometest-service rev-parse HEAD)
+          HS_COMMIT_SHORT=$(git -C hometest-service rev-parse --short HEAD)
           {
             echo "## Deployment Configuration"
             echo "| Parameter | Value |"
@@ -91,6 +93,8 @@ jobs:
             echo "| Subenv(s) | ${{ inputs.subenv || 'dev' }} |"
             echo "| Action | ${{ inputs.action || 'plan' }} |"
             echo "| Triggered by | ${{ github.actor }} |"
+            echo "| hometest-service ref | \`${{ inputs.hometest_service_ref || 'main' }}\` |"
+            echo "| hometest-service commit | \`${HS_COMMIT_SHORT}\` (${HS_COMMIT}) |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
