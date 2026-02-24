@@ -296,13 +296,13 @@ inputs = {
   environment  = local.environment
 
   # Dependencies from network
-  vpc_id                    = dependency.network.outputs.vpc_id
-  lambda_subnet_ids         = dependency.network.outputs.private_subnet_ids
+  vpc_id            = dependency.network.outputs.vpc_id
+  lambda_subnet_ids = dependency.network.outputs.private_subnet_ids
   lambda_security_group_ids = [
     dependency.network.outputs.lambda_security_group_id,
     dependency.network.outputs.lambda_rds_security_group_id
   ]
-  route53_zone_id           = dependency.network.outputs.route53_zone_id
+  route53_zone_id = dependency.network.outputs.route53_zone_id
 
   # Dependencies from shared_services
   kms_key_arn          = dependency.shared_services.outputs.kms_key_arn
@@ -392,12 +392,12 @@ inputs = {
       timeout     = 60 # Longer timeout for external API calls to supplier
       memory_size = 512
       environment = {
-        NODE_OPTIONS                = "--enable-source-maps"
-        ENVIRONMENT                 = local.environment
-        DB_USERNAME               = dependency.aurora_postgres.outputs.cluster_master_username
-        DB_ADDRESS                = dependency.aurora_postgres.outputs.cluster_endpoint
-        DB_PORT                   = tostring(dependency.aurora_postgres.outputs.cluster_port)
-        DB_NAME                   = dependency.aurora_postgres.outputs.cluster_database_name
+        NODE_OPTIONS   = "--enable-source-maps"
+        ENVIRONMENT    = local.environment
+        DB_USERNAME    = dependency.aurora_postgres.outputs.cluster_master_username
+        DB_ADDRESS     = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT        = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME        = dependency.aurora_postgres.outputs.cluster_database_name
         DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
       }
     }
@@ -478,7 +478,7 @@ inputs = {
         DB_ADDRESS                = dependency.aurora_postgres.outputs.cluster_endpoint
         DB_PORT                   = tostring(dependency.aurora_postgres.outputs.cluster_port)
         DB_NAME                   = dependency.aurora_postgres.outputs.cluster_database_name
-        DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
+        DB_SECRET_NAME            = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
       }
     }
   }

@@ -60,4 +60,7 @@ inputs = {
 
   # Enable IAM database authentication so Lambda functions can connect without passwords
   # enable_iam_auth = true
+
+  # Enable Data API for querying from AWS Console
+  enable_http_endpoint = true
 }

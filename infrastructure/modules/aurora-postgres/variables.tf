@@ -182,6 +182,16 @@ variable "enable_iam_auth" {
 }
 
 ################################################################################
+# Data API
+################################################################################
+
+variable "enable_http_endpoint" {
+  description = "Enable the Data API for Aurora Serverless v2. Allows querying the database using the AWS Console, AWS CLI, or SDK without managing connections."
+  type        = bool
+  default     = false
+}
+
+################################################################################
 # Tags
 ################################################################################
 

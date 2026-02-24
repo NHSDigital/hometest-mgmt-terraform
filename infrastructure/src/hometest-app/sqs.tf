@@ -175,6 +175,23 @@ resource "aws_lambda_event_source_mapping" "sqs" {
 }
 
 ################################################################################
+# Dedicated Event Source Mapping for Order Router Lambda
+# Connects order-router-lambda to the order_placement queue
+################################################################################
+
+resource "aws_lambda_event_source_mapping" "order_router_order_placement" {
+  count = contains(keys(var.lambdas), "order-router-lambda") ? 1 : 0
+
+  event_source_arn = module.sqs_order_placement.queue_arn
+  function_name    = module.lambdas["order-router-lambda"].function_arn
+  enabled          = true
+  batch_size       = 1
+
+  # Enable partial batch failure reporting
+  function_response_types = ["ReportBatchItemFailures"]
+}
+
+################################################################################
 # Outputs
 ################################################################################
 

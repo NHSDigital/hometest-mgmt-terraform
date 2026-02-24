@@ -52,7 +52,8 @@ module "aurora_postgres" {
   # Updates
   apply_immediately = var.apply_immediately
 
-  enable_iam_auth = var.enable_iam_auth
+  enable_iam_auth      = var.enable_iam_auth
+  enable_http_endpoint = var.enable_http_endpoint
 
   tags = local.common_tags
 }

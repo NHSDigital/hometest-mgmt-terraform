@@ -29,8 +29,6 @@ jobs:
 
   metadata:
     name: "Set CI/CD metadata"
-    needs: [pr-title-check]
-    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
     timeout-minutes: 1
     outputs:
