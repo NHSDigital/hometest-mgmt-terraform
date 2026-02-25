@@ -163,14 +163,14 @@ jobs:
           fi
           echo "Request ID: ${REQUEST_ID}"
 
-          # Find the exact log stream for this invocation via RequestId
+          # Poll CloudWatch until the END marker for this invocation appears
           LOGS=""
           if [ -n "$REQUEST_ID" ]; then
             echo "Waiting for CloudWatch to ingest logs..."
             sleep 10
 
-            echo "Fetching CloudWatch logs for RequestId ${REQUEST_ID}..."
-            MAX_WAIT=60
+            echo "Polling CloudWatch for completed invocation logs (RequestId: ${REQUEST_ID})..."
+            MAX_WAIT=120
             ELAPSED=0
             INTERVAL=5
             while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
@@ -180,13 +180,21 @@ jobs:
                 --start-time "$START_TIME_MS" \
                 --query "events[*].message" \
                 --output text 2>/dev/null || true)
-              if [ -n "$LOGS" ]; then
+
+              # Only stop polling once the END marker is present — confirms all logs are flushed
+              if echo "$LOGS" | grep -q "END RequestId: ${REQUEST_ID}"; then
+                echo "Lambda execution logs complete."
                 break
               fi
-              echo "  Still waiting for logs... (${ELAPSED}s elapsed)"
+
+              echo "  Waiting for END marker... (${ELAPSED}s elapsed)"
               sleep "$INTERVAL"
               ELAPSED=$(( ELAPSED + INTERVAL ))
             done
+
+            if ! echo "$LOGS" | grep -q "END RequestId: ${REQUEST_ID}"; then
+              echo "::warning::Timed out waiting for END marker; logs may be incomplete."
+            fi
           fi
 
           # Print logs to the job output and the step summary
