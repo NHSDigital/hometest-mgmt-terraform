@@ -136,12 +136,15 @@ jobs:
           # Record start time before invocation for CloudWatch log filtering
           START_TIME_MS=$(date +%s%3N)
 
-          # Invoke the Lambda synchronously; --log-type Tail returns last 4 KB of logs
+          # Invoke the Lambda synchronously; --log-type Tail returns last 4 KB of logs.
+          # --cli-read-timeout 0 disables the default 60s socket read timeout so the CLI
+          # waits for the full Lambda execution (max 15 min) before returning.
           echo "Invoking Lambda function..."
           aws lambda invoke \
             --function-name "$FUNCTION_NAME" \
             --invocation-type RequestResponse \
             --log-type Tail \
+            --cli-read-timeout 0 \
             --payload '{}' \
             /tmp/lambda-response.json > /tmp/lambda-invoke-meta.json
 
