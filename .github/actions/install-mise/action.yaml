@@ -1,6 +1,11 @@
 ---
 name: "Install mise"
 description: "Install mise and repo dependencies"
+inputs:
+  working_directory:
+    description: "Directory containing the .tool-versions file"
+    required: false
+    default: "."
 runs:
   using: "composite"
   steps:
@@ -17,3 +22,4 @@ runs:
         cache: true
         install: true
         cache_key_prefix: mise-${{ runner.os }}-mgmt-
+        working_directory: ${{ inputs.working_directory }}
