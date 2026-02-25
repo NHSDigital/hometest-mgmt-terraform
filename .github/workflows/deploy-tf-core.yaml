@@ -164,51 +164,47 @@ jobs:
           echo "Request ID: ${REQUEST_ID}"
 
           # Find the exact log stream for this invocation via RequestId
-          LOG_STREAM=""
+          LOGS=""
           if [ -n "$REQUEST_ID" ]; then
-            echo "Looking up CloudWatch log stream for RequestId ${REQUEST_ID}..."
-            MAX_WAIT=30
+            echo "Waiting for CloudWatch to ingest logs..."
+            sleep 10
+
+            echo "Fetching CloudWatch logs for RequestId ${REQUEST_ID}..."
+            MAX_WAIT=60
             ELAPSED=0
             INTERVAL=5
             while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-              LOG_STREAM=$(aws logs filter-log-events \
+              LOGS=$(aws logs filter-log-events \
                 --log-group-name "$LOG_GROUP" \
                 --filter-pattern "\"$REQUEST_ID\"" \
                 --start-time "$START_TIME_MS" \
-                --query "events[0].logStreamName" \
-                --output text 2>/dev/null || echo "None")
-              if [ -n "$LOG_STREAM" ] && [ "$LOG_STREAM" != "None" ]; then
+                --query "events[*].message" \
+                --output text 2>/dev/null || true)
+              if [ -n "$LOGS" ]; then
                 break
               fi
+              echo "  Still waiting for logs... (${ELAPSED}s elapsed)"
               sleep "$INTERVAL"
               ELAPSED=$(( ELAPSED + INTERVAL ))
             done
           fi
 
-          # Fetch and display full logs for this specific invocation
+          # Print logs to the job output and the step summary
           echo "=== Lambda Execution Logs ==="
-          if [ -n "$LOG_STREAM" ] && [ "$LOG_STREAM" != "None" ]; then
-            LOGS=$(aws logs get-log-events \
-              --log-group-name "$LOG_GROUP" \
-              --log-stream-name "$LOG_STREAM" \
-              --start-from-head \
-              --query "events[*].message" \
-              --output text)
-
+          if [ -n "$LOGS" ]; then
             echo "$LOGS"
 
             {
               echo "### Lambda Migrator Logs"
               echo "**Function**: \`${FUNCTION_NAME}\`"
               echo "**Request ID**: \`${REQUEST_ID}\`"
-              echo "**Log stream**: \`${LOG_STREAM}\`"
               echo '```'
               echo "$LOGS"
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
           else
             # Fall back to the inline tail returned by the invoke call
-            echo "::warning::Could not locate CloudWatch log stream; printing inline log tail."
+            echo "::warning::Could not fetch CloudWatch logs; printing inline log tail."
             echo "$LOG_TAIL"
             {
               echo "### Lambda Migrator Logs (tail)"
