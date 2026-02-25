@@ -273,7 +273,7 @@ resource "aws_iam_policy" "developer_deployment" {
       {
         Sid      = "RDSQueryEditor"
         Effect   = "Allow"
-        Action   = ["dbqms:*", "rds-data:*"]
+        Action   = ["dbqms:*", "rds-data:*", "secretsmanager:GetSecretValue"]
         Resource = "*"
       }
     ]
