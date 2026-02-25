@@ -269,6 +269,12 @@ resource "aws_iam_policy" "developer_deployment" {
           "arn:aws:s3:::${var.project_name}-*-s3-tfstate",
           "arn:aws:s3:::${var.project_name}-*-s3-tfstate/*"
         ]
+      },
+      {
+        Sid      = "RDSQueryEditor"
+        Effect   = "Allow"
+        Action   = ["dbqms:*", "rds-data:*"]
+        Resource = "*"
       }
     ]
   })
