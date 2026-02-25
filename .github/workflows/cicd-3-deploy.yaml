@@ -7,11 +7,11 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      hometest_service_ref:
-        description: "Branch, tag, or SHA to checkout for hometest-service"
-        required: false
-        default: "develop"
+    # inputs:
+    #   hometest_service_ref:
+    #     description: "Branch, tag, or SHA to checkout for hometest-service"
+    #     required: false
+    #     default: "main"
 
 jobs:
   metadata:
