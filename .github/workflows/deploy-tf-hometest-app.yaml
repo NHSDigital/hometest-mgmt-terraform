@@ -63,6 +63,18 @@ jobs:
           path: hometest-service
           ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
 
+      - name: "Cache node_modules"
+        uses: actions/cache@v5
+        with:
+          path: |
+            hometest-service/node_modules
+            hometest-service/ui/node_modules
+            hometest-service/lambdas/node_modules
+            hometest-service/tests/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('hometest-service/**/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-
+
       - name: "Set subenvs to deploy"
         id: set-subenvs
         run: |
@@ -123,6 +135,18 @@ jobs:
           ref: ${{ inputs.hometest_service_ref || 'main' }}
           path: hometest-service
           ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
+
+      - name: "Cache node_modules"
+        uses: actions/cache@v5
+        with:
+          path: |
+            hometest-service/node_modules
+            hometest-service/ui/node_modules
+            hometest-service/lambdas/node_modules
+            hometest-service/tests/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('hometest-service/**/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-
 
       - name: "Deploy ${{ matrix.subenv }}"
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
