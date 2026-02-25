@@ -163,7 +163,7 @@ jobs:
           fi
           echo "Request ID: ${REQUEST_ID}"
 
-          # Poll CloudWatch until the END marker for this invocation appears
+          # Poll CloudWatch until the END marker for this invocation appears, then fetch all logs
           LOGS=""
           if [ -n "$REQUEST_ID" ]; then
             echo "Waiting for CloudWatch to ingest logs..."
@@ -173,17 +173,18 @@ jobs:
             MAX_WAIT=120
             ELAPSED=0
             INTERVAL=5
+            LOG_STREAM=""
             while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-              LOGS=$(aws logs filter-log-events \
+              FILTER_RESULT=$(aws logs filter-log-events \
                 --log-group-name "$LOG_GROUP" \
-                --filter-pattern "\"$REQUEST_ID\"" \
+                --filter-pattern "\"END RequestId: ${REQUEST_ID}\"" \
                 --start-time "$START_TIME_MS" \
-                --query "events[*].message" \
-                --output text 2>/dev/null || true)
+                --query "events[0]" \
+                --output json 2>/dev/null || echo "null")
 
-              # Only stop polling once the END marker is present — confirms all logs are flushed
-              if echo "$LOGS" | grep -q "END RequestId: ${REQUEST_ID}"; then
-                echo "Lambda execution logs complete."
+              LOG_STREAM=$(echo "$FILTER_RESULT" | jq -r '.logStreamName // empty')
+              if [ -n "$LOG_STREAM" ]; then
+                echo "Lambda execution complete. Log stream: ${LOG_STREAM}"
                 break
               fi
 
@@ -192,8 +193,17 @@ jobs:
               ELAPSED=$(( ELAPSED + INTERVAL ))
             done
 
-            if ! echo "$LOGS" | grep -q "END RequestId: ${REQUEST_ID}"; then
+            if [ -z "$LOG_STREAM" ]; then
               echo "::warning::Timed out waiting for END marker; logs may be incomplete."
+            else
+              # Fetch ALL events from the stream (no filter), scoped to the invocation window
+              LOGS=$(aws logs get-log-events \
+                --log-group-name "$LOG_GROUP" \
+                --log-stream-name "$LOG_STREAM" \
+                --start-time "$START_TIME_MS" \
+                --start-from-head \
+                --query "events[*].message" \
+                --output text 2>/dev/null || true)
             fi
           fi
 
