@@ -240,10 +240,11 @@ dependency "network" {
   config_path = "${get_terragrunt_dir()}/../../core/network"
 
   mock_outputs = {
-    route53_zone_id          = "Z0123456789ABCDEFGHIJ"
-    vpc_id                   = "vpc-mock12345"
-    private_subnet_ids       = ["subnet-mock1", "subnet-mock2", "subnet-mock3"]
-    lambda_security_group_id = "sg-mock12345"
+    route53_zone_id              = "Z0123456789ABCDEFGHIJ"
+    vpc_id                       = "vpc-mock12345"
+    private_subnet_ids           = ["subnet-mock1", "subnet-mock2", "subnet-mock3"]
+    lambda_security_group_id     = "sg-mock12345"
+    lambda_rds_security_group_id = "sg-mock67890"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
