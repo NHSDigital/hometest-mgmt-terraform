@@ -29,14 +29,7 @@ runs:
           mise-${{ runner.os }}-mgmt-
           mise-${{ runner.os }}-
 
-    # - name: Install mise
-    #   uses: jdx/mise-action@v3
-    #   with:
-    #     cache: true
-    #     cache_save: true
-    #     install: true
-    #     cache_key_prefix: mise-${{ runner.os }}-mgmt-
-    #     working_directory: ${{ inputs.working_directory }}
+
     - name: Install mise
       shell: bash
       run: |
