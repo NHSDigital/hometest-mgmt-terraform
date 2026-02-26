@@ -1,6 +1,12 @@
 ---
 name: "Install mise"
 description: "Install mise and repo dependencies"
+inputs:
+  working_directory:
+    description: "Directory containing the .tool-versions file"
+    required: false
+    default: "."
+
 runs:
   using: "composite"
   steps:
@@ -11,9 +17,31 @@ runs:
         git config --global --add safe.directory '*'
         echo "::endgroup::"
 
-    - name: Install mise
-      uses: jdx/mise-action@v3
+    - name: Cache mise
+      uses: actions/cache@v5
       with:
-        cache: true
-        install: true
-        cache_key_prefix: mise-${{ runner.os }}-mgmt-
+        path: |
+          ~/.local/share/mise
+          ${{ inputs.working_directory }}/.mise-cache
+        key: mise-${{ runner.os }}-mgmt-${{ github.event_name == 'pull_request' && 'pr' || 'push' }}-${{ hashFiles(format('{0}/.mise.toml', inputs.working_directory)) }}
+        restore-keys: |
+          mise-${{ runner.os }}-mgmt-${{ github.event_name == 'pull_request' && 'pr' || 'push' }}-
+          mise-${{ runner.os }}-mgmt-
+          mise-${{ runner.os }}-
+
+
+    - name: Install mise
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        curl https://mise.run | sh
+        echo "$HOME/.local/share/mise/bin" >> $GITHUB_PATH
+        echo "$HOME/.local/share/mise/shims" >> $GITHUB_PATH
+
+    - name: Mise install
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        mise install

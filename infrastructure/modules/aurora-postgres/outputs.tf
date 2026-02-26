@@ -51,8 +51,8 @@ output "cluster_master_user_secret_arn" {
 }
 
 output "cluster_master_user_secret_name" {
-  description = "The Secrets Manager secret name for the Aurora master user password (derived from ARN)"
-  value       = element(split(":", module.aurora_postgres.cluster_master_user_secret[0].secret_arn), 6)
+  description = "The Secrets Manager secret name for the Aurora master user password (derived from ARN, with AWS suffix removed)"
+  value       = replace(element(split(":", module.aurora_postgres.cluster_master_user_secret[0].secret_arn), 6), "/-[A-Za-z0-9]{6}$/", "")
   sensitive   = true
 }
 

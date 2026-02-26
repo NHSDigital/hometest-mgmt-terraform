@@ -240,10 +240,11 @@ dependency "network" {
   config_path = "${get_terragrunt_dir()}/../../core/network"
 
   mock_outputs = {
-    route53_zone_id          = "Z0123456789ABCDEFGHIJ"
-    vpc_id                   = "vpc-mock12345"
-    private_subnet_ids       = ["subnet-mock1", "subnet-mock2", "subnet-mock3"]
-    lambda_security_group_id = "sg-mock12345"
+    route53_zone_id              = "Z0123456789ABCDEFGHIJ"
+    vpc_id                       = "vpc-mock12345"
+    private_subnet_ids           = ["subnet-mock1", "subnet-mock2", "subnet-mock3"]
+    lambda_security_group_id     = "sg-mock12345"
+    lambda_rds_security_group_id = "sg-mock67890"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -296,10 +297,13 @@ inputs = {
   environment  = local.environment
 
   # Dependencies from network
-  vpc_id                    = dependency.network.outputs.vpc_id
-  lambda_subnet_ids         = dependency.network.outputs.private_subnet_ids
-  lambda_security_group_ids = [dependency.network.outputs.lambda_security_group_id]
-  route53_zone_id           = dependency.network.outputs.route53_zone_id
+  vpc_id            = dependency.network.outputs.vpc_id
+  lambda_subnet_ids = dependency.network.outputs.private_subnet_ids
+  lambda_security_group_ids = [
+    dependency.network.outputs.lambda_security_group_id,
+    dependency.network.outputs.lambda_rds_security_group_id
+  ]
+  route53_zone_id = dependency.network.outputs.route53_zone_id
 
   # Dependencies from shared_services
   kms_key_arn          = dependency.shared_services.outputs.kms_key_arn
@@ -385,13 +389,13 @@ inputs = {
       timeout     = 60 # Longer timeout for external API calls to supplier
       memory_size = 512
       environment = {
-        NODE_OPTIONS                = "--enable-source-maps"
-        ENVIRONMENT                 = local.environment
-        SUPPLIER_BASE_URL           = "https://func-nhshometest-dev.azurewebsites.net/"
-        SUPPLIER_OAUTH_TOKEN_PATH   = "/api/oauth"
-        SUPPLIER_CLIENT_ID          = "7e9b8f16-4686-46f4-903e-2d364774fc82"
-        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/preventex-dev-client-secret"
-        SUPPLIER_ORDER_PATH         = "/api/order"
+        NODE_OPTIONS   = "--enable-source-maps"
+        ENVIRONMENT    = local.environment
+        DB_USERNAME    = dependency.aurora_postgres.outputs.cluster_master_username
+        DB_ADDRESS     = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT        = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME        = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
       }
     }
 
@@ -466,15 +470,12 @@ inputs = {
       environment = {
         NODE_OPTIONS              = "--enable-source-maps"
         ENVIRONMENT               = local.environment
-        DATABASE_URL              = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
         ORDER_PLACEMENT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-placement"
         DB_USERNAME               = dependency.aurora_postgres.outputs.cluster_master_username
         DB_ADDRESS                = dependency.aurora_postgres.outputs.cluster_endpoint
         DB_PORT                   = tostring(dependency.aurora_postgres.outputs.cluster_port)
         DB_NAME                   = dependency.aurora_postgres.outputs.cluster_database_name
-        # DB_SECRET_ARN             = dependency.aurora_postgres.outputs.cluster_master_user_secret_arn
-        DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
-        DB_SCHEMA      = "hometest"
+        DB_SECRET_NAME            = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
       }
     }
   }
