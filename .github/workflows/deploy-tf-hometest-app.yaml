@@ -132,8 +132,10 @@ jobs:
             hometest-service/ui/node_modules
             hometest-service/lambdas/node_modules
             hometest-service/tests/node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('hometest-service/**/package-lock.json') }}
+          key: node-modules-${{ runner.os }}-mgmt-${{ github.event_name == 'pull_request' && 'pr' || 'push' }}-${{ hashFiles('hometest-service/**/package-lock.json') }}
           restore-keys: |
+            node-modules-${{ runner.os }}-mgmt-${{ github.event_name == 'pull_request' && 'pr' || 'push' }}-
+            node-modules-${{ runner.os }}-mgmt-
             node-modules-${{ runner.os }}-
 
       - name: "Deploy ${{ matrix.subenv }}"

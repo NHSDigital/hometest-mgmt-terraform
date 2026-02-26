@@ -144,8 +144,6 @@ jobs:
       #     aws-region: "eu-west-2"
       - name: Run mise
         uses: ./.github/actions/install-mise
-        with:
-          github_token: ${{ github.token }}
 
       - name: Run pre-commit checks
         uses: ./.github/actions/perform-pre-commit
