@@ -73,7 +73,7 @@ jobs:
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: infrastructure/environments/poc/core/bootstrap/
+          working_directory: ./hometest-mgmt-terraform/infrastructure/environments/poc/core/bootstrap/
 
   deploy-network:
     name: "Deploy TF Core/Network"
@@ -93,7 +93,7 @@ jobs:
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: infrastructure/environments/poc/core/network/
+          working_directory: ./hometest-mgmt-terraform/infrastructure/environments/poc/core/network/
 
   deploy-aurora:
     name: "Deploy TF Core/aurora-postgres"
@@ -113,7 +113,7 @@ jobs:
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: infrastructure/environments/poc/core/aurora-postgres/
+          working_directory: ./hometest-mgmt-terraform/infrastructure/environments/poc/core/aurora-postgres/
 
   deploy-shared-services:
     name: "Deploy TF Core/shared_services"
@@ -133,7 +133,7 @@ jobs:
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: infrastructure/environments/poc/core/shared_services/
+          working_directory: ./hometest-mgmt-terraform/infrastructure/environments/poc/core/shared_services/
 
   # deploy-dev:
   #   name: "Deploy TF dev"
