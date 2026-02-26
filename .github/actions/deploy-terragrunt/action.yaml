@@ -49,9 +49,11 @@ runs:
         path: |
           ~/.cache/terraform
           ${{ steps.repo-root.outputs.path }}/.terraform-plugin-cache
-        key: terraform-${{ runner.os }}-${{ hashFiles(format('{0}/**/providers.tf', steps.repo-root.outputs.path)) }}
+        key: terraform-${{ runner.os }}-mgmt-${{ github.event_name == 'pull_request' && 'pr' || 'push' }}-${{ hashFiles(format('{0}/**/providers.tf', steps.repo-root.outputs.path)) }}
         restore-keys: |
+          terraform-${{ runner.os }}-mgmt-${{ github.event_name == 'pull_request' && 'pr' || 'push' }}-
           terraform-${{ runner.os }}-mgmt-
+          terraform-${{ runner.os }}-
 
     - name: Terragrunt Init
       working-directory: ${{ inputs.working_directory }}

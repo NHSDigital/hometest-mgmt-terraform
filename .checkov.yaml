@@ -31,6 +31,7 @@ skip-path:
   - "**/test/**"
   - "**/tests/**"
   - "**/examples/**"
+  - "**/.external_modules"
 
 # Skip specific checks (use sparingly)
 skip-check:
