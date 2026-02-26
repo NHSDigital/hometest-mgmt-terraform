@@ -81,6 +81,8 @@ jobs:
 
       - name: "Install mise"
         uses: ./.github/actions/install-mise
+        with:
+          github_token: ${{ github.token }}
 
       - name: "Run Goose Migration Tests"
         run: mise run test-migrations

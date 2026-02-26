@@ -32,7 +32,16 @@ runs:
 
     - name: Install mise
       shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         curl https://mise.run | sh
         echo "$HOME/.local/share/mise/bin" >> $GITHUB_PATH
         echo "$HOME/.local/share/mise/shims" >> $GITHUB_PATH
+
+    - name: Mise install
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        mise install
