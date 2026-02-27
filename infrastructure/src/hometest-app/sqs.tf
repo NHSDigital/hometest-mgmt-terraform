@@ -110,9 +110,10 @@ module "sqs_events" {
   count  = length(local.sqs_lambdas) > 0 ? 1 : 0
   source = "../../modules/sqs"
 
-  project_name      = var.project_name
-  environment       = var.environment
-  queue_name_suffix = "events"
+  project_name         = var.project_name
+  aws_account_shortname = var.aws_account_shortname
+  environment          = var.environment
+  queue_name_suffix    = "events"
 
   visibility_timeout_seconds = 300     # Should be >= 6× the Lambda timeout (60 s × 6 = 360)
   message_retention_seconds  = 1209600 # 14 days
