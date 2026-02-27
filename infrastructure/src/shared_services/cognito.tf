@@ -173,12 +173,6 @@ resource "aws_cognito_user_pool_client" "main" {
   read_attributes  = var.cognito_read_attributes
   write_attributes = var.cognito_write_attributes
 
-<<<<<<< HEAD
-  tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-client"
-  })
-=======
->>>>>>> d91be13bc7c16225fea865ddb395c1eee5c5a9e2
 }
 
 ################################################################################

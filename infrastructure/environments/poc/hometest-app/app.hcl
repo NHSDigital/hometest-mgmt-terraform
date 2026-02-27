@@ -109,14 +109,8 @@ terraform {
           cd "$SPA_DIR"
           npm ci --silent 2>/dev/null || npm install --silent
 
-<<<<<<< HEAD
-          # Set Next.js public environment variables for build
-          export NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT="https://${local.api_domain}/login"
-          echo "Setting NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT=$NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT"
-=======
           export NEXT_PUBLIC_BACKEND_URL="https://${local.env_domain}"
           echo "Setting NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL"
->>>>>>> d91be13bc7c16225fea865ddb395c1eee5c5a9e2
 
           npm run build --silent 2>/dev/null || true
           echo "SPA build complete!"
