@@ -332,19 +332,23 @@ inputs = {
   #   inputs = { lambdas = { "hello-world-lambda" = { ... } } }
   # =============================================================================
   lambdas = {
-    # Eligibility Test Info Lambda
-    # CloudFront: /test-order/* → API Gateway → Lambda
-    # Handles: GET /test-order/info (returns test eligibility information)
-    "eligibility-test-info-lambda" = {
-      description     = "Eligibility Test Info Service - Returns test eligibility information"
-      api_path_prefix = "test-order"
+    # Eligibility Lookup Lambda
+    # CloudFront: /eligibility-lookup/* → API Gateway → Lambda
+    # Handles: GET /eligibility-lookup (returns eligibility information from DB)
+    "eligibility-lookup-lambda" = {
+      description     = "Eligibility Lookup Service - Returns eligibility information"
+      api_path_prefix = "eligibility-lookup"
       handler         = "index.handler"
       timeout         = 30
       memory_size     = 256
       environment = {
-        NODE_OPTIONS = "--enable-source-maps"
-        ENVIRONMENT  = local.environment
-        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
+        NODE_OPTIONS   = "--enable-source-maps"
+        ENVIRONMENT    = local.environment
+        DB_USERNAME    = dependency.aurora_postgres.outputs.cluster_master_username
+        DB_ADDRESS     = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT        = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME        = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
       }
     }
 
