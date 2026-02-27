@@ -109,9 +109,14 @@ terraform {
           cd "$SPA_DIR"
           npm ci --silent 2>/dev/null || npm install --silent
 
+<<<<<<< HEAD
           # Set Next.js public environment variables for build
           export NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT="https://${local.api_domain}/login"
           echo "Setting NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT=$NEXT_PUBLIC_LOGIN_LAMBDA_ENDPOINT"
+=======
+          export NEXT_PUBLIC_BACKEND_URL="https://${local.env_domain}"
+          echo "Setting NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL"
+>>>>>>> d91be13bc7c16225fea865ddb395c1eee5c5a9e2
 
           npm run build --silent 2>/dev/null || true
           echo "SPA build complete!"
@@ -199,37 +204,6 @@ terraform {
       EOF
     ]
   }
-
-  # Empty SPA bucket before a destroy so deletion of an environment will proceed without errors due to non-empty bucket (including versioned objects)
-  before_hook "empty_spa_bucket_on_destroy" {
-    commands     = ["destroy"]
-    run_on_error = true
-    execute = [
-      "bash", "-c",
-      <<-EOF
-        SPA_BUCKET="${local.project_name}-${local.environment}-spa"
-        if [[ -n "$SPA_BUCKET" ]]; then
-          echo "Cleaning versioned objects in s3://$SPA_BUCKET..."
-          OBJECTS_JSON=$(aws s3api list-object-versions \
-            --bucket "$SPA_BUCKET" \
-            --query '{Objects: ([Versions[], DeleteMarkers[]][] | [].{Key: Key, VersionId: VersionId})}' \
-            --output json \
-            --region eu-west-2)
-
-          if [[ -n "$OBJECTS_JSON" && "$OBJECTS_JSON" != "{\"Objects\": []}" && "$OBJECTS_JSON" != "{\"Objects\":[]}" ]]; then
-            aws s3api delete-objects \
-              --bucket "$SPA_BUCKET" \
-              --delete "$OBJECTS_JSON" \
-              --region eu-west-2 || true
-          else
-            echo "No versioned objects found in $SPA_BUCKET."
-          fi
-        else
-          echo "Could not determine SPA bucket, skipping cleanup..."
-        fi
-      EOF
-    ]
-  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -242,10 +216,11 @@ dependency "network" {
   config_path = "${get_terragrunt_dir()}/../../core/network"
 
   mock_outputs = {
-    route53_zone_id          = "Z0123456789ABCDEFGHIJ"
-    vpc_id                   = "vpc-mock12345"
-    private_subnet_ids       = ["subnet-mock1", "subnet-mock2", "subnet-mock3"]
-    lambda_security_group_id = "sg-mock12345"
+    route53_zone_id              = "Z0123456789ABCDEFGHIJ"
+    vpc_id                       = "vpc-mock12345"
+    private_subnet_ids           = ["subnet-mock1", "subnet-mock2", "subnet-mock3"]
+    lambda_security_group_id     = "sg-mock12345"
+    lambda_rds_security_group_id = "sg-mock67890"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -264,6 +239,7 @@ dependency "shared_services" {
     deployment_artifacts_bucket_arn = "arn:aws:s3:::mock-deployment-bucket"
     api_config_secret_arn           = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:mock-secret"
     api_config_secret_name          = "mock/secret/name"
+    cognito_user_pool_arn           = "arn:aws:cognito-idp:eu-west-2:123456789012:userpool/eu-west-2_mockpool"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -272,8 +248,17 @@ dependency "aurora_postgres" {
   config_path = "${get_terragrunt_dir()}/../../core/aurora-postgres"
 
   mock_outputs = {
-    connection_string = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
+    connection_string               = "postgresql://mock-user:mock-pass@mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com:5432/hometest"
+    cluster_resource_id             = "cluster-MOCKRESOURCEID1234"
+    cluster_master_username         = "mock-master-user"
+    cluster_endpoint                = "mock-aurora-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com"
+    cluster_port                    = 5432
+    cluster_database_name           = "hometest"
+    cluster_master_user_secret_arn  = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:mock-aurora-secret"
+    cluster_master_user_secret_name = "mock-aurora-secret"
   }
+
+  # mock_outputs_merge_with_state           = true
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
@@ -288,10 +273,13 @@ inputs = {
   environment  = local.environment
 
   # Dependencies from network
-  vpc_id                    = dependency.network.outputs.vpc_id
-  lambda_subnet_ids         = dependency.network.outputs.private_subnet_ids
-  lambda_security_group_ids = [dependency.network.outputs.lambda_security_group_id]
-  route53_zone_id           = dependency.network.outputs.route53_zone_id
+  vpc_id            = dependency.network.outputs.vpc_id
+  lambda_subnet_ids = dependency.network.outputs.private_subnet_ids
+  lambda_security_group_ids = [
+    dependency.network.outputs.lambda_security_group_id,
+    dependency.network.outputs.lambda_rds_security_group_id
+  ]
+  route53_zone_id = dependency.network.outputs.route53_zone_id
 
   # Dependencies from shared_services
   kms_key_arn          = dependency.shared_services.outputs.kms_key_arn
@@ -301,7 +289,6 @@ inputs = {
 
   # Lambda Configuration
   enable_vpc_access  = true
-  enable_sqs_access  = true # Required for order-router-lambda SQS trigger
   lambda_runtime     = local.lambda_runtime
   lambda_timeout     = local.lambda_timeout
   lambda_memory_size = local.lambda_memory_size
@@ -312,11 +299,24 @@ inputs = {
   lambda_secrets_arns = [
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/preventex-dev-client-secret-*",
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/sh24-dev-client-secret-*",
-    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/nhs-login-private-key-*"
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/nhs-login-private-key-*",
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:rds!cluster-*"
   ]
 
   # KMS keys for secrets encrypted with different keys than shared_services KMS
   lambda_additional_kms_key_arns = []
+
+  # lambda_sqs_queue_arns is not needed here — order-placement ARN is automatically included
+  # in lambda_iam.tf via module.sqs_order_placement.queue_arn
+
+  # Aurora IAM authentication - allow Lambdas to connect without passwords
+  lambda_aurora_cluster_resource_ids = [dependency.aurora_postgres.outputs.cluster_resource_id]
+  # Cognito User Pool for API Gateway authorizer
+  enable_cognito        = true
+  cognito_user_pool_arn = dependency.shared_services.outputs.cognito_user_pool_arn
+
+  # API prefixes that require authorization
+  authorized_api_prefixes = ["result"]
 
   # Lambda code deployment
   use_placeholder_lambda = false
@@ -340,61 +340,43 @@ inputs = {
   #   inputs = { lambdas = { "hello-world-lambda" = { ... } } }
   # =============================================================================
   lambdas = {
-    # Eligibility Test Info Lambda
-    # CloudFront: /test-order/* → API Gateway → Lambda
-    # Handles: GET /test-order/info (returns test eligibility information)
-    "eligibility-test-info-lambda" = {
-      description     = "Eligibility Test Info Service - Returns test eligibility information"
-      api_path_prefix = "test-order"
+    # Eligibility Lookup Lambda
+    # CloudFront: /eligibility-lookup/* → API Gateway → Lambda
+    # Handles: GET /eligibility-lookup (returns eligibility information from DB)
+    "eligibility-lookup-lambda" = {
+      description     = "Eligibility Lookup Service - Returns eligibility information"
+      api_path_prefix = "eligibility-lookup"
       handler         = "index.handler"
       timeout         = 30
       memory_size     = 256
       environment = {
-        NODE_OPTIONS = "--enable-source-maps"
-        ENVIRONMENT  = local.environment
-        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
+        NODE_OPTIONS   = "--enable-source-maps"
+        ENVIRONMENT    = local.environment
+        DB_USERNAME    = dependency.aurora_postgres.outputs.cluster_master_username
+        DB_ADDRESS     = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT        = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME        = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
       }
     }
 
     # Order Router Lambda - SQS triggered for async order processing
     # NOT exposed via API Gateway - processes orders from SQS queue
     "order-router-lambda" = {
-      description     = "Order Router Service - Processes orders from SQS queue"
-      sqs_trigger     = false          # Triggered by SQS, no API Gateway endpoint
-      api_path_prefix = "order-router" # Not used for routing since this is SQS-triggered, but included for consistency
-      handler         = "index.handler"
-      timeout         = 60 # Longer timeout for external API calls to supplier
-      memory_size     = 512
+      description = "Order Router Service - Processes orders from SQS queue"
+      sqs_trigger = true # Triggered by SQS, no API Gateway endpoint
+      # api_path_prefix = "order-router" # Not used for routing since this is SQS-triggered, but included for consistency
+      handler     = "index.handler"
+      timeout     = 60 # Longer timeout for external API calls to supplier
+      memory_size = 512
       environment = {
-        NODE_OPTIONS                = "--enable-source-maps"
-        ENVIRONMENT                 = local.environment
-        SUPPLIER_BASE_URL           = "https://func-nhshometest-dev.azurewebsites.net/"
-        SUPPLIER_OAUTH_TOKEN_PATH   = "/api/oauth"
-        SUPPLIER_CLIENT_ID          = "7e9b8f16-4686-46f4-903e-2d364774fc82"
-        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/preventex-dev-client-secret"
-        SUPPLIER_ORDER_PATH         = "/api/order"
-      }
-    }
-
-    # Order Router Lambda for SH24 supplier - SQS triggered for async order processing
-    # Separate lambda to connect to SH24 test environment without affecting other suppliers
-    "order-router-lambda-sh24" = {
-      description     = "Order Router Service - Processes orders from SQS queue for SH24 supplier"
-      sqs_trigger     = false               # Triggered by SQS, no API Gateway endpoint
-      api_path_prefix = "order-router-sh24" # Not used for routing since this is SQS-triggered, but included for consistency
-      handler         = "index.handler"
-      timeout         = 60 # Longer timeout for external API calls to supplier
-      memory_size     = 512
-      zip_path        = "${local.lambdas_base_path}/order-router-lambda/order-router-lambda.zip"
-      environment = {
-        NODE_OPTIONS                = "--enable-source-maps"
-        ENVIRONMENT                 = local.environment
-        SUPPLIER_BASE_URL           = "https://admin.qa3.sh24.org.uk/"
-        SUPPLIER_OAUTH_TOKEN_PATH   = "/oauth/token"
-        SUPPLIER_CLIENT_ID          = "zrgmf33Zdk-515BIMrds29v9Z3KzoH-tfYDgxLsYtZE"
-        SUPPLIER_CLIENT_SECRET_NAME = "nhs-hometest/dev/sh24-dev-client-secret"
-        SUPPLIER_ORDER_PATH         = "/order"
-        SUPPLIER_OAUTH_SCOPE        = "order results"
+        NODE_OPTIONS   = "--enable-source-maps"
+        ENVIRONMENT    = local.environment
+        DB_USERNAME    = dependency.aurora_postgres.outputs.cluster_master_username
+        DB_ADDRESS     = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT        = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME        = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
       }
     }
 
@@ -453,6 +435,28 @@ inputs = {
         NODE_OPTIONS     = "--enable-source-maps"
         ENVIRONMENT      = local.environment
         RESULT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-results"
+      }
+      authorization        = "COGNITO_USER_POOLS"
+      authorization_scopes = ["results/write"]
+    }
+
+    # Order Service Lambda - Creates test orders and persists to database
+    # CloudFront: /order/* → API Gateway → Lambda
+    "order-service-lambda" = {
+      description     = "Order Service - Creates test orders and persists to database"
+      api_path_prefix = "order"
+      handler         = "index.handler"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS              = "--enable-source-maps"
+        ENVIRONMENT               = local.environment
+        ORDER_PLACEMENT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-placement"
+        DB_USERNAME               = dependency.aurora_postgres.outputs.cluster_master_username
+        DB_ADDRESS                = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT                   = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME                   = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SECRET_NAME            = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
       }
     }
 

@@ -170,6 +170,24 @@ variable "apply_immediately" {
 }
 
 ################################################################################
+# IAM Authentication
+################################################################################
+variable "enable_iam_auth" {
+  description = "Enable IAM database authentication for the Aurora cluster"
+  type        = bool
+  default     = false
+}
+
+################################################################################
+# Data API
+################################################################################
+variable "enable_http_endpoint" {
+  description = "Enable the Data API for Aurora Serverless v2. Allows querying the database from AWS Console without managing connections."
+  type        = bool
+  default     = false
+}
+
+################################################################################
 # Tags
 ################################################################################
 variable "tags" {

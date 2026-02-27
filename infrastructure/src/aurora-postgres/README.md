@@ -83,6 +83,8 @@ module "aurora_postgres" {
 | <a name="input_db_name"></a> [db\_name](#input\_db\_name) | The name of the database to create when the DB instance is created | `string` | `"postgres"` | no |
 | <a name="input_db_subnet_group_name"></a> [db\_subnet\_group\_name](#input\_db\_subnet\_group\_name) | Name of the DB subnet group to use for the Aurora cluster. If not provided, the module will attempt to create one. | `string` | `null` | no |
 | <a name="input_deletion_protection"></a> [deletion\_protection](#input\_deletion\_protection) | If the DB instance should have deletion protection enabled | `bool` | `false` | no |
+| <a name="input_enable_http_endpoint"></a> [enable\_http\_endpoint](#input\_enable\_http\_endpoint) | Enable the Data API for Aurora Serverless v2. Allows querying the database from AWS Console without managing connections. | `bool` | `false` | no |
+| <a name="input_enable_iam_auth"></a> [enable\_iam\_auth](#input\_enable\_iam\_auth) | Enable IAM database authentication for the Aurora cluster | `bool` | `false` | no |
 | <a name="input_engine_version"></a> [engine\_version](#input\_engine\_version) | PostgreSQL engine version | `string` | `"17.7"` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., dev, staging, prod) | `string` | n/a | yes |
 | <a name="input_kms_key_id"></a> [kms\_key\_id](#input\_kms\_key\_id) | The ARN for the KMS encryption key | `string` | `""` | no |
@@ -107,8 +109,11 @@ module "aurora_postgres" {
 | <a name="output_cluster_endpoint"></a> [cluster\_endpoint](#output\_cluster\_endpoint) | The writer endpoint of the Aurora cluster |
 | <a name="output_cluster_hosted_zone_id"></a> [cluster\_hosted\_zone\_id](#output\_cluster\_hosted\_zone\_id) | The canonical hosted zone ID of the Aurora cluster (for Route 53 Alias) |
 | <a name="output_cluster_id"></a> [cluster\_id](#output\_cluster\_id) | The Amazon RDS Aurora cluster ID |
+| <a name="output_cluster_master_user_secret_arn"></a> [cluster\_master\_user\_secret\_arn](#output\_cluster\_master\_user\_secret\_arn) | The ARN of the Secrets Manager secret for the Aurora master user password |
+| <a name="output_cluster_master_user_secret_name"></a> [cluster\_master\_user\_secret\_name](#output\_cluster\_master\_user\_secret\_name) | The Secrets Manager secret name for the Aurora master user password |
 | <a name="output_cluster_master_username"></a> [cluster\_master\_username](#output\_cluster\_master\_username) | The master username for the Aurora cluster |
 | <a name="output_cluster_port"></a> [cluster\_port](#output\_cluster\_port) | The port the Aurora cluster listens on |
+| <a name="output_cluster_resource_id"></a> [cluster\_resource\_id](#output\_cluster\_resource\_id) | The RDS cluster resource ID, used for IAM authentication ARNs |
 | <a name="output_connection_string"></a> [connection\_string](#output\_connection\_string) | Aurora PostgreSQL connection string (without password) |
 | <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | The ID of the VPC |
 <!-- END_TF_DOCS -->

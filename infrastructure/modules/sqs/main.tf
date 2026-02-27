@@ -37,7 +37,7 @@ locals {
 module "dlq" {
   count   = var.create_dlq ? 1 : 0
   source  = "terraform-aws-modules/sqs/aws"
-  version = "~> 4.2.0"
+  version = "~> 5.2.1"
 
   name                        = local.dlq_name
   fifo_queue                  = var.fifo_queue
@@ -60,7 +60,7 @@ module "dlq" {
 
 module "queue" {
   source  = "terraform-aws-modules/sqs/aws"
-  version = "~> 4.2.0"
+  version = "~> 5.2.1"
 
   name                        = local.queue_name
   fifo_queue                  = var.fifo_queue

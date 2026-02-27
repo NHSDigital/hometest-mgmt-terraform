@@ -5,8 +5,8 @@
 ################################################################################
 
 locals {
-  distribution_name = "${var.project_name}-${var.environment}-spa"
-  s3_origin_id      = "S3-${var.project_name}-${var.environment}-spa"
+  distribution_name = "${var.project_name}-${var.aws_account_shortname}-${var.environment}-spa"
+  s3_origin_id      = "S3-${var.project_name}-${var.aws_account_shortname}-${var.environment}-spa"
 
   # Build map of API origins (supports both new api_origins and legacy api_gateway_domain_name)
   api_origins_map = length(var.api_origins) > 0 ? var.api_origins : (
@@ -35,7 +35,8 @@ locals {
 ################################################################################
 
 resource "aws_s3_bucket" "spa" {
-  bucket = "${var.project_name}-${var.environment}-spa"
+  bucket        = "${var.project_name}-${var.aws_account_shortname}-${var.environment}-spa"
+  force_destroy = true
 
   tags = merge(local.common_tags, {
     ResourceType = "s3-bucket"

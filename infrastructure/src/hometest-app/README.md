@@ -232,6 +232,10 @@ After deployment, you'll have access to:
 | <a name="module_cloudfront_spa"></a> [cloudfront\_spa](#module\_cloudfront\_spa) | ../../modules/cloudfront-spa | n/a |
 | <a name="module_lambda_iam"></a> [lambda\_iam](#module\_lambda\_iam) | ../../modules/lambda-iam | n/a |
 | <a name="module_lambdas"></a> [lambdas](#module\_lambdas) | ../../modules/lambda | n/a |
+| <a name="module_sqs_events"></a> [sqs\_events](#module\_sqs\_events) | ../../modules/sqs | n/a |
+| <a name="module_sqs_notifications"></a> [sqs\_notifications](#module\_sqs\_notifications) | ../../modules/sqs | n/a |
+| <a name="module_sqs_order_placement"></a> [sqs\_order\_placement](#module\_sqs\_order\_placement) | ../../modules/sqs | n/a |
+| <a name="module_sqs_order_results"></a> [sqs\_order\_results](#module\_sqs\_order\_results) | ../../modules/sqs | n/a |
 
 ## Resources
 
@@ -240,7 +244,11 @@ After deployment, you'll have access to:
 | [aws_acm_certificate.api_domain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate) | resource |
 | [aws_acm_certificate_validation.api_domain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate_validation) | resource |
 | [aws_api_gateway_account.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_account) | resource |
+<<<<<<< HEAD
 | [aws_api_gateway_base_path_mapping.api](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_base_path_mapping) | resource |
+=======
+| [aws_api_gateway_authorizer.cognito_supplier](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_authorizer) | resource |
+>>>>>>> d91be13bc7c16225fea865ddb395c1eee5c5a9e2
 | [aws_api_gateway_deployment.apis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_deployment) | resource |
 | [aws_api_gateway_domain_name.api](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_domain_name) | resource |
 | [aws_api_gateway_integration.options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
@@ -258,9 +266,11 @@ After deployment, you'll have access to:
 | [aws_cloudwatch_log_group.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_iam_role.api_gateway_cloudwatch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy.api_gateway_cloudwatch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_lambda_event_source_mapping.order_router_order_placement](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_event_source_mapping) | resource |
 | [aws_lambda_event_source_mapping.sqs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_event_source_mapping) | resource |
 | [aws_lambda_permission.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
 | [aws_resourcegroups_group.rg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/resourcegroups_group) | resource |
+<<<<<<< HEAD
 | [aws_route53_record.api_domain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_route53_record.api_domain_cert_validation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_sqs_queue.dlq](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
@@ -268,37 +278,44 @@ After deployment, you'll have access to:
 | [aws_sqs_queue.order_results](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
 | [aws_sqs_queue_policy.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue_policy) | resource |
 | [aws_wafv2_web_acl_association.apis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association) | resource |
+=======
+>>>>>>> d91be13bc7c16225fea865ddb395c1eee5c5a9e2
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_acm_certificate_arn"></a> [acm\_certificate\_arn](#input\_acm\_certificate\_arn) | ACM certificate ARN for CloudFront (us-east-1, from shared\_services) | `string` | `null` | no |
+<<<<<<< HEAD
 | <a name="input_api1_env_vars"></a> [api1\_env\_vars](#input\_api1\_env\_vars) | DEPRECATED: Use lambdas map instead | `map(string)` | `{}` | no |
 | <a name="input_api1_lambda_hash"></a> [api1\_lambda\_hash](#input\_api1\_lambda\_hash) | DEPRECATED: Use lambdas map instead | `string` | `null` | no |
 | <a name="input_api2_env_vars"></a> [api2\_env\_vars](#input\_api2\_env\_vars) | DEPRECATED: Use lambdas map instead | `map(string)` | `{}` | no |
 | <a name="input_api2_lambda_hash"></a> [api2\_lambda\_hash](#input\_api2\_lambda\_hash) | DEPRECATED: Use lambdas map instead | `string` | `null` | no |
 | <a name="input_api_custom_domain_name"></a> [api\_custom\_domain\_name](#input\_api\_custom\_domain\_name) | Custom domain name for API Gateway (e.g., api.dev.hometest.service.nhs.uk). When set, a dedicated ACM cert is created and API traffic is served directly from this domain instead of through CloudFront. | `string` | `null` | no |
+=======
+>>>>>>> d91be13bc7c16225fea865ddb395c1eee5c5a9e2
 | <a name="input_api_endpoint_type"></a> [api\_endpoint\_type](#input\_api\_endpoint\_type) | API Gateway endpoint type | `string` | `"REGIONAL"` | no |
 | <a name="input_api_stage_name"></a> [api\_stage\_name](#input\_api\_stage\_name) | API Gateway stage name | `string` | `"v1"` | no |
 | <a name="input_api_throttling_burst_limit"></a> [api\_throttling\_burst\_limit](#input\_api\_throttling\_burst\_limit) | API Gateway throttling burst limit | `number` | `1000` | no |
 | <a name="input_api_throttling_rate_limit"></a> [api\_throttling\_rate\_limit](#input\_api\_throttling\_rate\_limit) | API Gateway throttling rate limit | `number` | `2000` | no |
+| <a name="input_authorized_api_prefixes"></a> [authorized\_api\_prefixes](#input\_authorized\_api\_prefixes) | Set of API prefixes that require Cognito authorization | `set(string)` | `[]` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account ID for resources | `string` | n/a | yes |
 | <a name="input_aws_account_shortname"></a> [aws\_account\_shortname](#input\_aws\_account\_shortname) | AWS account short name/alias for resource naming | `string` | n/a | yes |
 | <a name="input_aws_allowed_regions"></a> [aws\_allowed\_regions](#input\_aws\_allowed\_regions) | List of AWS regions allowed for resource deployment | `list(string)` | <pre>[<br/>  "eu-west-2",<br/>  "us-east-1"<br/>]</pre> | no |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region for resources | `string` | n/a | yes |
 | <a name="input_cloudfront_logging_bucket_domain_name"></a> [cloudfront\_logging\_bucket\_domain\_name](#input\_cloudfront\_logging\_bucket\_domain\_name) | S3 bucket domain name for CloudFront access logs | `string` | `null` | no |
 | <a name="input_cloudfront_price_class"></a> [cloudfront\_price\_class](#input\_cloudfront\_price\_class) | CloudFront price class | `string` | `"PriceClass_100"` | no |
+| <a name="input_cognito_user_pool_arn"></a> [cognito\_user\_pool\_arn](#input\_cognito\_user\_pool\_arn) | ARN of the Cognito User Pool | `string` | n/a | yes |
 | <a name="input_content_security_policy"></a> [content\_security\_policy](#input\_content\_security\_policy) | Content Security Policy header | `string` | `"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';"` | no |
 | <a name="input_custom_domain_name"></a> [custom\_domain\_name](#input\_custom\_domain\_name) | Custom domain name for the environment (e.g., dev1.hometest.service.nhs.uk) | `string` | `null` | no |
 | <a name="input_enable_cloudfront_logging"></a> [enable\_cloudfront\_logging](#input\_enable\_cloudfront\_logging) | Enable CloudFront access logging | `bool` | `false` | no |
-| <a name="input_enable_sqs_access"></a> [enable\_sqs\_access](#input\_enable\_sqs\_access) | Enable SQS access for Lambda functions (creates order-results queue) | `bool` | `false` | no |
 | <a name="input_enable_vpc_access"></a> [enable\_vpc\_access](#input\_enable\_vpc\_access) | Enable VPC access for Lambda functions | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (dev, dev1, dev2, staging, prod) | `string` | n/a | yes |
 | <a name="input_geo_restriction_locations"></a> [geo\_restriction\_locations](#input\_geo\_restriction\_locations) | List of country codes for geo restriction | `list(string)` | `[]` | no |
 | <a name="input_geo_restriction_type"></a> [geo\_restriction\_type](#input\_geo\_restriction\_type) | Geo restriction type (whitelist, blacklist, none) | `string` | `"none"` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | ARN of shared KMS key (from shared\_services) | `string` | n/a | yes |
 | <a name="input_lambda_additional_kms_key_arns"></a> [lambda\_additional\_kms\_key\_arns](#input\_lambda\_additional\_kms\_key\_arns) | Additional KMS key ARNs for Lambda to decrypt secrets (e.g., secrets encrypted with different keys) | `list(string)` | `[]` | no |
+| <a name="input_lambda_aurora_cluster_resource_ids"></a> [lambda\_aurora\_cluster\_resource\_ids](#input\_lambda\_aurora\_cluster\_resource\_ids) | Aurora cluster resource IDs to grant Lambda IAM database authentication (rds-db:connect) | `list(string)` | `[]` | no |
 | <a name="input_lambda_dynamodb_table_arns"></a> [lambda\_dynamodb\_table\_arns](#input\_lambda\_dynamodb\_table\_arns) | DynamoDB table ARNs for Lambda access | `list(string)` | `[]` | no |
 | <a name="input_lambda_memory_size"></a> [lambda\_memory\_size](#input\_lambda\_memory\_size) | Lambda memory size in MB | `number` | `256` | no |
 | <a name="input_lambda_runtime"></a> [lambda\_runtime](#input\_lambda\_runtime) | Lambda runtime | `string` | `"nodejs20.x"` | no |
@@ -309,7 +326,7 @@ After deployment, you'll have access to:
 | <a name="input_lambda_ssm_parameter_arns"></a> [lambda\_ssm\_parameter\_arns](#input\_lambda\_ssm\_parameter\_arns) | SSM parameter ARNs for Lambda access | `list(string)` | `[]` | no |
 | <a name="input_lambda_subnet_ids"></a> [lambda\_subnet\_ids](#input\_lambda\_subnet\_ids) | Private subnet IDs for Lambda VPC configuration (from network) | `list(string)` | `[]` | no |
 | <a name="input_lambda_timeout"></a> [lambda\_timeout](#input\_lambda\_timeout) | Lambda timeout in seconds | `number` | `30` | no |
-| <a name="input_lambdas"></a> [lambdas](#input\_lambdas) | Map of Lambda function configurations. Each key is the lambda name. | <pre>map(object({<br/>    description                    = optional(string, "Lambda function")<br/>    handler                        = optional(string, "index.handler")<br/>    runtime                        = optional(string, null) # null = use var.lambda_runtime<br/>    timeout                        = optional(number, null) # null = use var.lambda_timeout<br/>    memory_size                    = optional(number, null) # null = use var.lambda_memory_size<br/>    zip_path                       = optional(string, null) # Local path to zip file (Terraform uploads directly)<br/>    s3_key                         = optional(string, null) # S3 key if already uploaded<br/>    source_hash                    = optional(string, null) # Source code hash for updates<br/>    environment                    = optional(map(string), {})<br/>    api_path_prefix                = optional(string, null) # API Gateway path prefix (e.g., "api1" -> /api1/*)<br/>    sqs_trigger                    = optional(bool, false)  # Enable SQS event source mapping<br/>    secrets_arn                    = optional(string, null) # Secrets Manager ARN for this lambda<br/>    reserved_concurrent_executions = optional(number, -1)<br/>  }))</pre> | `{}` | no |
+| <a name="input_lambdas"></a> [lambdas](#input\_lambdas) | Map of Lambda function configurations. Each key is the lambda name. | <pre>map(object({<br/>    description                    = optional(string, "Lambda function")<br/>    handler                        = optional(string, "index.handler")<br/>    runtime                        = optional(string, null) # null = use var.lambda_runtime<br/>    timeout                        = optional(number, null) # null = use var.lambda_timeout<br/>    memory_size                    = optional(number, null) # null = use var.lambda_memory_size<br/>    zip_path                       = optional(string, null) # Local path to zip file (Terraform uploads directly)<br/>    s3_key                         = optional(string, null) # S3 key if already uploaded<br/>    source_hash                    = optional(string, null) # Source code hash for updates<br/>    environment                    = optional(map(string), {})<br/>    api_path_prefix                = optional(string, null) # API Gateway path prefix (e.g., "api1" -> /api1/*)<br/>    sqs_trigger                    = optional(bool, false)  # Enable SQS event source mapping<br/>    secrets_arn                    = optional(string, null) # Secrets Manager ARN for this lambda<br/>    reserved_concurrent_executions = optional(number, -1)<br/><br/>    authorization        = optional(string, "NONE")   # "NONE" or "COGNITO_USER_POOLS"<br/>    authorization_scopes = optional(list(string), []) # e.g., ["results/write", "orders/read"]<br/>  }))</pre> | `{}` | no |
 | <a name="input_lambdas_base_path"></a> [lambdas\_base\_path](#input\_lambdas\_base\_path) | Base path where lambda zip files are located | `string` | `"../../../examples/lambdas"` | no |
 | <a name="input_log_retention_days"></a> [log\_retention\_days](#input\_log\_retention\_days) | CloudWatch log retention in days | `number` | `14` | no |
 | <a name="input_permissions_policy"></a> [permissions\_policy](#input\_permissions\_policy) | Permissions Policy header | `string` | `"accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"` | no |
@@ -342,13 +359,19 @@ After deployment, you'll have access to:
 | <a name="output_lambda_functions"></a> [lambda\_functions](#output\_lambda\_functions) | Map of all Lambda function details |
 | <a name="output_lambda_functions_detail"></a> [lambda\_functions\_detail](#output\_lambda\_functions\_detail) | Map of Lambda function details |
 | <a name="output_login_endpoint"></a> [login\_endpoint](#output\_login\_endpoint) | Login Lambda endpoint URL |
+| <a name="output_notifications_dlq_arn"></a> [notifications\_dlq\_arn](#output\_notifications\_dlq\_arn) | ARN of the notifications dead letter queue |
+| <a name="output_notifications_dlq_url"></a> [notifications\_dlq\_url](#output\_notifications\_dlq\_url) | URL of the notifications dead letter queue |
+| <a name="output_notifications_queue_arn"></a> [notifications\_queue\_arn](#output\_notifications\_queue\_arn) | ARN of the notifications SQS queue (FIFO) |
+| <a name="output_notifications_queue_url"></a> [notifications\_queue\_url](#output\_notifications\_queue\_url) | URL of the notifications SQS queue (FIFO) |
+| <a name="output_order_placement_queue_arn"></a> [order\_placement\_queue\_arn](#output\_order\_placement\_queue\_arn) | ARN of the order placement SQS queue |
+| <a name="output_order_placement_queue_url"></a> [order\_placement\_queue\_url](#output\_order\_placement\_queue\_url) | URL of the order placement SQS queue |
 | <a name="output_order_results_queue_arn"></a> [order\_results\_queue\_arn](#output\_order\_results\_queue\_arn) | ARN of the order results SQS queue |
 | <a name="output_order_results_queue_url"></a> [order\_results\_queue\_url](#output\_order\_results\_queue\_url) | URL of the order results SQS queue |
 | <a name="output_spa_bucket_arn"></a> [spa\_bucket\_arn](#output\_spa\_bucket\_arn) | S3 bucket ARN for SPA static assets |
 | <a name="output_spa_bucket_id"></a> [spa\_bucket\_id](#output\_spa\_bucket\_id) | S3 bucket ID for SPA static assets |
 | <a name="output_spa_url"></a> [spa\_url](#output\_spa\_url) | Full URL for SPA |
-| <a name="output_sqs_dlq_arn"></a> [sqs\_dlq\_arn](#output\_sqs\_dlq\_arn) | ARN of the SQS dead letter queue |
-| <a name="output_sqs_dlq_url"></a> [sqs\_dlq\_url](#output\_sqs\_dlq\_url) | URL of the SQS dead letter queue |
-| <a name="output_sqs_queue_arn"></a> [sqs\_queue\_arn](#output\_sqs\_queue\_arn) | ARN of the SQS queue |
-| <a name="output_sqs_queue_url"></a> [sqs\_queue\_url](#output\_sqs\_queue\_url) | URL of the SQS queue |
+| <a name="output_sqs_dlq_arn"></a> [sqs\_dlq\_arn](#output\_sqs\_dlq\_arn) | ARN of the events dead letter queue |
+| <a name="output_sqs_dlq_url"></a> [sqs\_dlq\_url](#output\_sqs\_dlq\_url) | URL of the events dead letter queue |
+| <a name="output_sqs_queue_arn"></a> [sqs\_queue\_arn](#output\_sqs\_queue\_arn) | ARN of the events SQS queue |
+| <a name="output_sqs_queue_url"></a> [sqs\_queue\_url](#output\_sqs\_queue\_url) | URL of the events SQS queue |
 <!-- END_TF_DOCS -->

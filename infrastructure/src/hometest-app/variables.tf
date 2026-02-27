@@ -74,6 +74,17 @@ variable "waf_regional_arn" {
 #   type        = string
 # }
 
+variable "cognito_user_pool_arn" {
+  description = "ARN of the Cognito User Pool"
+  type        = string
+}
+
+variable "authorized_api_prefixes" {
+  description = "Set of API prefixes that require Cognito authorization"
+  type        = set(string)
+  default     = []
+}
+
 #------------------------------------------------------------------------------
 # Dependencies from network
 #------------------------------------------------------------------------------
@@ -172,14 +183,20 @@ variable "lambda_sqs_queue_arns" {
   default     = []
 }
 
-variable "enable_sqs_access" {
-  description = "Enable SQS access for Lambda functions (creates order-results queue)"
-  type        = bool
-  default     = false
-}
+# variable "enable_sqs_access" {
+#   description = "Enable SQS access for Lambda functions (creates order-results queue)"
+#   type        = bool
+#   default     = false
+# }
 
 variable "lambda_additional_kms_key_arns" {
   description = "Additional KMS key ARNs for Lambda to decrypt secrets (e.g., secrets encrypted with different keys)"
+  type        = list(string)
+  default     = []
+}
+
+variable "lambda_aurora_cluster_resource_ids" {
+  description = "Aurora cluster resource IDs to grant Lambda IAM database authentication (rds-db:connect)"
   type        = list(string)
   default     = []
 }
@@ -201,6 +218,9 @@ variable "lambdas" {
     sqs_trigger                    = optional(bool, false)  # Enable SQS event source mapping
     secrets_arn                    = optional(string, null) # Secrets Manager ARN for this lambda
     reserved_concurrent_executions = optional(number, -1)
+
+    authorization        = optional(string, "NONE")   # "NONE" or "COGNITO_USER_POOLS"
+    authorization_scopes = optional(list(string), []) # e.g., ["results/write", "orders/read"]
   }))
   default = {}
 
@@ -224,31 +244,6 @@ variable "lambdas_base_path" {
   description = "Base path where lambda zip files are located"
   type        = string
   default     = "../../../examples/lambdas"
-}
-
-# Legacy variables (deprecated - use lambdas map instead)
-variable "api1_lambda_hash" {
-  description = "DEPRECATED: Use lambdas map instead"
-  type        = string
-  default     = null
-}
-
-variable "api2_lambda_hash" {
-  description = "DEPRECATED: Use lambdas map instead"
-  type        = string
-  default     = null
-}
-
-variable "api1_env_vars" {
-  description = "DEPRECATED: Use lambdas map instead"
-  type        = map(string)
-  default     = {}
-}
-
-variable "api2_env_vars" {
-  description = "DEPRECATED: Use lambdas map instead"
-  type        = map(string)
-  default     = {}
 }
 
 #------------------------------------------------------------------------------

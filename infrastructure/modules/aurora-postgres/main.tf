@@ -86,6 +86,9 @@ module "aurora_postgres" {
   storage_encrypted = var.storage_encrypted
   kms_key_id        = var.kms_key_id
 
+  iam_database_authentication_enabled = var.enable_iam_auth
+  enable_http_endpoint                = var.enable_http_endpoint
+
   backup_retention_period      = var.backup_retention_period
   preferred_backup_window      = var.backup_window
   preferred_maintenance_window = var.maintenance_window

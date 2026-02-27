@@ -8,9 +8,10 @@
 module "cloudfront_spa" {
   source = "../../modules/cloudfront-spa"
 
-  project_name   = var.project_name
-  environment    = var.environment
-  aws_account_id = var.aws_account_id
+  project_name          = var.project_name
+  environment           = var.environment
+  aws_account_id        = var.aws_account_id
+  aws_account_shortname = var.aws_account_shortname
 
   enable_spa_routing = true
   price_class        = var.cloudfront_price_class

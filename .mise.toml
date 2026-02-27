@@ -29,6 +29,8 @@ go = "1.26.0"
 # https://github.com/pressly/goose/releases
 "go:github.com/pressly/goose/v3/cmd/goose" = "latest"
 
+python = "3.14"
+
 ## Security scanning
 
 # https://github.com/aquasecurity/trivy/releases

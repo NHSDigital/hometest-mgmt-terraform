@@ -35,7 +35,7 @@ inputs = {
       memory_size     = 256
       environment = {
         NODE_OPTIONS = "--enable-source-maps"
-        ENVIRONMENT  = include.app.locals.environment
+        ENVIRONMENT  = basename(get_terragrunt_dir())
       }
     }
   }

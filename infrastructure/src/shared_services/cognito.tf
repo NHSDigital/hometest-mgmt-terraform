@@ -173,9 +173,12 @@ resource "aws_cognito_user_pool_client" "main" {
   read_attributes  = var.cognito_read_attributes
   write_attributes = var.cognito_write_attributes
 
+<<<<<<< HEAD
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-client"
   })
+=======
+>>>>>>> d91be13bc7c16225fea865ddb395c1eee5c5a9e2
 }
 
 ################################################################################
@@ -393,6 +396,43 @@ resource "aws_cognito_resource_server" "orders" {
 ################################################################################
 # M2M App Clients
 ################################################################################
+
+resource "aws_cognito_user_pool_client" "internal_test_client_m2m" {
+  count = var.enable_cognito ? 1 : 0
+
+  name         = "${local.resource_prefix}-internal-test-client-m2m"
+  user_pool_id = aws_cognito_user_pool.main[0].id
+
+  # Generate client secret for M2M
+  generate_secret = true
+
+  # Token validity
+  access_token_validity = 60 # 60 minutes
+
+  token_validity_units {
+    access_token = "minutes"
+  }
+
+  # OAuth settings for client credentials flow (M2M)
+  allowed_oauth_flows                  = ["client_credentials"]
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_scopes = [
+    "${aws_cognito_resource_server.results[0].identifier}/write",
+    "${aws_cognito_resource_server.orders[0].identifier}/write",
+  ]
+
+  # Disable user-based auth flows
+  explicit_auth_flows = []
+
+  # Security settings
+  prevent_user_existence_errors = "ENABLED"
+  enable_token_revocation       = true
+
+  depends_on = [
+    aws_cognito_resource_server.results,
+    aws_cognito_resource_server.orders
+  ]
+}
 
 resource "aws_cognito_user_pool_client" "preventex_m2m" {
   count = var.enable_cognito ? 1 : 0

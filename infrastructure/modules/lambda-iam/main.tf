@@ -75,7 +75,7 @@ resource "aws_iam_role_policy" "cloudwatch_logs" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/lambda/${var.project_name}-${var.environment}-*:*"
+        Resource = "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/lambda/${var.project_name}-${var.aws_account_shortname}-${var.environment}-*:*"
       }
     ]
   })
@@ -311,6 +311,34 @@ resource "aws_iam_role_policy" "sqs_access" {
           "sqs:GetQueueAttributes"
         ]
         Resource = var.sqs_queue_arns
+      }
+    ]
+  })
+}
+
+################################################################################
+# Aurora IAM Authentication Policy (optional)
+# Allows the Lambda to connect to Aurora clusters using IAM auth (rds-db:connect)
+# instead of a static password.
+################################################################################
+
+resource "aws_iam_role_policy" "aurora_iam_auth" {
+  count = length(var.aurora_cluster_resource_ids) > 0 ? 1 : 0
+
+  name = "${local.role_name}-aurora-iam-auth"
+  role = aws_iam_role.lambda_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AuroraIAMAuthentication"
+        Effect = "Allow"
+        Action = "rds-db:connect"
+        Resource = [
+          for resource_id in var.aurora_cluster_resource_ids :
+          "arn:aws:rds-db:${var.aws_region}:${var.aws_account_id}:dbuser:${resource_id}/*"
+        ]
       }
     ]
   })

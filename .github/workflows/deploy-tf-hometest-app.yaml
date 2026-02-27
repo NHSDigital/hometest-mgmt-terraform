@@ -82,6 +82,8 @@ jobs:
 
       - name: "Display deployment info"
         run: |
+          HS_COMMIT=$(git -C hometest-service rev-parse HEAD)
+          HS_COMMIT_SHORT=$(git -C hometest-service rev-parse --short HEAD)
           {
             echo "## Deployment Configuration"
             echo "| Parameter | Value |"
@@ -91,6 +93,8 @@ jobs:
             echo "| Subenv(s) | ${{ inputs.subenv || 'dev' }} |"
             echo "| Action | ${{ inputs.action || 'plan' }} |"
             echo "| Triggered by | ${{ github.actor }} |"
+            echo "| hometest-service ref | \`${{ inputs.hometest_service_ref || 'main' }}\` |"
+            echo "| hometest-service commit | \`${HS_COMMIT_SHORT}\` (${HS_COMMIT}) |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
@@ -119,6 +123,25 @@ jobs:
           ref: ${{ inputs.hometest_service_ref || 'main' }}
           path: hometest-service
           ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
+
+      - name: "Cache node_modules"
+        uses: actions/cache@v5
+        with:
+          path: |
+            hometest-service/node_modules
+            hometest-service/ui/node_modules
+            hometest-service/lambdas/node_modules
+            hometest-service/tests/node_modules
+          key: node-modules-${{ runner.os }}-mgmt-${{ github.event_name == 'pull_request' && 'pr' || 'push' }}-${{ hashFiles('hometest-service/**/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-mgmt-${{ github.event_name == 'pull_request' && 'pr' || 'push' }}-
+            node-modules-${{ runner.os }}-mgmt-
+            node-modules-${{ runner.os }}-
+
+      - name: Install mise tools
+        uses: ./hometest-mgmt-terraform/.github/actions/install-mise
+        with:
+          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}
 
       - name: "Deploy ${{ matrix.subenv }}"
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
