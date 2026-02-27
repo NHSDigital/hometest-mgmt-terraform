@@ -51,6 +51,13 @@ locals {
 #   }
 # }
 
+terraform {
+  extra_arguments "parallelism" {
+    commands  = ["plan", "apply", "destroy"]
+    arguments = ["-parallelism=20"]
+  }
+}
+
 remote_state {
   backend = "s3"
   config = {
