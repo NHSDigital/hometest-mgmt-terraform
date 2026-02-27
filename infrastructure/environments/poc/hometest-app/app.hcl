@@ -31,9 +31,10 @@ locals {
   environment = basename(get_terragrunt_dir())
 
   # Extract commonly used values
-  project_name = local.global_vars.locals.project_name
-  account_id   = local.account_vars.locals.aws_account_id
-  aws_region   = local.global_vars.locals.aws_region
+  project_name          = local.global_vars.locals.project_name
+  account_id            = local.account_vars.locals.aws_account_id
+  aws_account_shortname = local.account_vars.locals.aws_account_shortname
+  aws_region            = local.global_vars.locals.aws_region
 
   # Domain configuration
   base_domain = "hometest.service.nhs.uk"
@@ -426,7 +427,7 @@ inputs = {
       environment = {
         NODE_OPTIONS     = "--enable-source-maps"
         ENVIRONMENT      = local.environment
-        RESULT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-results"
+        RESULT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.aws_account_shortname}-${local.environment}-order-results"
       }
       authorization        = "COGNITO_USER_POOLS"
       authorization_scopes = ["results/write"]
@@ -443,7 +444,7 @@ inputs = {
       environment = {
         NODE_OPTIONS              = "--enable-source-maps"
         ENVIRONMENT               = local.environment
-        ORDER_PLACEMENT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-placement"
+        ORDER_PLACEMENT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.aws_account_shortname}-${local.environment}-order-placement"
         DB_USERNAME               = dependency.aurora_postgres.outputs.cluster_master_username
         DB_ADDRESS                = dependency.aurora_postgres.outputs.cluster_endpoint
         DB_PORT                   = tostring(dependency.aurora_postgres.outputs.cluster_port)
