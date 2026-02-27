@@ -74,13 +74,13 @@ jobs:
       - name: Install mise tools
         uses: ./hometest-mgmt-terraform/.github/actions/install-mise
         with:
-          working_directory: ${TG_WORKING_DIR}
+          working_directory: ${{ env.TG_WORKING_DIR }}
 
       - name: Deploy TF Core/Bootstrap
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: ${TG_WORKING_DIR}
+          working_directory: ${{ env.TG_WORKING_DIR }}
 
   deploy-network:
     name: "Deploy TF Core/Network"
@@ -101,13 +101,13 @@ jobs:
       - name: Install mise tools
         uses: ./hometest-mgmt-terraform/.github/actions/install-mise
         with:
-          working_directory: ${TG_WORKING_DIR}
+          working_directory: ${{ env.TG_WORKING_DIR }}
 
       - name: Deploy TF Core/Network
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: ${TG_WORKING_DIR}
+          working_directory: ${{ env.TG_WORKING_DIR }}
 
   deploy-aurora:
     name: "Deploy TF Core/aurora-postgres"
@@ -128,13 +128,13 @@ jobs:
       - name: Install mise tools
         uses: ./hometest-mgmt-terraform/.github/actions/install-mise
         with:
-          working_directory: ${TG_WORKING_DIR}
+          working_directory: ${{ env.TG_WORKING_DIR }}
 
       - name: Deploy TF Core/aurora-postgres
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: ${TG_WORKING_DIR}
+          working_directory: ${{ env.TG_WORKING_DIR }}
 
   deploy-shared-services:
     name: "Deploy TF Core/shared_services"
@@ -155,13 +155,13 @@ jobs:
       - name: Install mise tools
         uses: ./hometest-mgmt-terraform/.github/actions/install-mise
         with:
-          working_directory: ${TG_WORKING_DIR}
+          working_directory: ${{ env.TG_WORKING_DIR }}
 
       - name: Deploy TF Core/shared_services
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: ${TG_WORKING_DIR}
+          working_directory: ${{ env.TG_WORKING_DIR }}
 
   # deploy-dev:
   #   name: "Deploy TF dev"
