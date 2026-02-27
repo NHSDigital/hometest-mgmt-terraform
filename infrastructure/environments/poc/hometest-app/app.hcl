@@ -197,37 +197,6 @@ terraform {
       EOF
     ]
   }
-
-  # Empty SPA bucket before a destroy so deletion of an environment will proceed without errors due to non-empty bucket (including versioned objects)
-  before_hook "empty_spa_bucket_on_destroy" {
-    commands     = ["destroy"]
-    run_on_error = true
-    execute = [
-      "bash", "-c",
-      <<-EOF
-        SPA_BUCKET="${local.project_name}-${local.environment}-spa"
-        if [[ -n "$SPA_BUCKET" ]]; then
-          echo "Cleaning versioned objects in s3://$SPA_BUCKET..."
-          OBJECTS_JSON=$(aws s3api list-object-versions \
-            --bucket "$SPA_BUCKET" \
-            --query '{Objects: ([Versions[], DeleteMarkers[]][] | [].{Key: Key, VersionId: VersionId})}' \
-            --output json \
-            --region eu-west-2)
-
-          if [[ -n "$OBJECTS_JSON" && "$OBJECTS_JSON" != "{\"Objects\": []}" && "$OBJECTS_JSON" != "{\"Objects\":[]}" ]]; then
-            aws s3api delete-objects \
-              --bucket "$SPA_BUCKET" \
-              --delete "$OBJECTS_JSON" \
-              --region eu-west-2 || true
-          else
-            echo "No versioned objects found in $SPA_BUCKET."
-          fi
-        else
-          echo "Could not determine SPA bucket, skipping cleanup..."
-        fi
-      EOF
-    ]
-  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -363,19 +332,23 @@ inputs = {
   #   inputs = { lambdas = { "hello-world-lambda" = { ... } } }
   # =============================================================================
   lambdas = {
-    # Eligibility Test Info Lambda
-    # CloudFront: /test-order/* → API Gateway → Lambda
-    # Handles: GET /test-order/info (returns test eligibility information)
-    "eligibility-test-info-lambda" = {
-      description     = "Eligibility Test Info Service - Returns test eligibility information"
-      api_path_prefix = "test-order"
+    # Eligibility Lookup Lambda
+    # CloudFront: /eligibility-lookup/* → API Gateway → Lambda
+    # Handles: GET /eligibility-lookup (returns eligibility information from DB)
+    "eligibility-lookup-lambda" = {
+      description     = "Eligibility Lookup Service - Returns eligibility information"
+      api_path_prefix = "eligibility-lookup"
       handler         = "index.handler"
       timeout         = 30
       memory_size     = 256
       environment = {
-        NODE_OPTIONS = "--enable-source-maps"
-        ENVIRONMENT  = local.environment
-        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
+        NODE_OPTIONS   = "--enable-source-maps"
+        ENVIRONMENT    = local.environment
+        DB_USERNAME    = dependency.aurora_postgres.outputs.cluster_master_username
+        DB_ADDRESS     = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT        = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME        = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
       }
     }
 

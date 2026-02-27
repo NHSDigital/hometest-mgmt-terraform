@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 1
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Verify Jira ticket in PR title and Jira"
         uses: ./.github/actions/verify-jira-ticket
         with:
@@ -29,8 +29,6 @@ jobs:
 
   metadata:
     name: "Set CI/CD metadata"
-    needs: [pr-title-check]
-    if: needs.pr-title-check.result == 'success' || needs.pr-title-check.result == 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 1
     outputs:

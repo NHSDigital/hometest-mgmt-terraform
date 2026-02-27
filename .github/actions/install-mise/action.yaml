@@ -17,21 +17,28 @@ runs:
         git config --global --add safe.directory '*'
         echo "::endgroup::"
 
+    - name: "Determine repo root"
+      id: repo-root
+      shell: bash
+      run: |
+        REPO_ROOT=$(git -C "$GITHUB_ACTION_PATH" rev-parse --show-toplevel)
+        echo "path=${REPO_ROOT}" >> "$GITHUB_OUTPUT"
+
     - name: Cache mise
       uses: actions/cache@v5
       with:
         path: |
           ~/.local/share/mise
           ${{ inputs.working_directory }}/.mise-cache
-        key: mise-${{ runner.os }}-mgmt-${{ github.event_name == 'pull_request' && 'pr' || 'push' }}-${{ hashFiles(format('{0}/.mise.toml', inputs.working_directory)) }}
+        key: mise-${{ runner.os }}-mgmt-${{ github.event_name == 'pull_request' && 'pr' || 'push' }}-${{ hashFiles(format('{0}/.mise.toml', steps.repo-root.outputs.path)) }}
         restore-keys: |
           mise-${{ runner.os }}-mgmt-${{ github.event_name == 'pull_request' && 'pr' || 'push' }}-
           mise-${{ runner.os }}-mgmt-
           mise-${{ runner.os }}-
 
-
     - name: Install mise
       shell: bash
+      working-directory: ${{ inputs.working_directory }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: |
@@ -41,6 +48,7 @@ runs:
 
     - name: Mise install
       shell: bash
+      working-directory: ${{ inputs.working_directory }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: |
