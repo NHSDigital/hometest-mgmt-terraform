@@ -1,14 +1,4 @@
 ################################################################################
-# Lambda Insights Layer (latest version resolved automatically)
-# https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Lambda-Insights-extension-versionsARM.html
-# https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Lambda-Insights-extension-versionsx86-64.html
-################################################################################
-
-data "aws_lambda_layer_version" "insights" {
-  layer_name = "arn:aws:lambda:${var.aws_region}:580247275435:layer:${var.lambda_architecture == "arm64" ? "LambdaInsightsExtension-Arm64" : "LambdaInsightsExtension"}"
-}
-
-################################################################################
 # Lambda Functions - Dynamic Creation from Map
 ################################################################################
 
@@ -25,6 +15,11 @@ locals {
       "${var.lambdas_base_path}/${k}/${k}.zip"
     )
   }
+
+  # Lambda Insights layer ARN — switches between x86_64 and arm64 based on var.lambda_architecture
+  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Lambda-Insights-extension-versionsARM.html
+  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Lambda-Insights-extension-versionsx86-64.html
+  lambda_insights_layer_arn = var.lambda_architecture == "arm64" ? "arn:aws:lambda:eu-west-2:580247275435:layer:LambdaInsightsExtension-Arm64:31" : "arn:aws:lambda:eu-west-2:580247275435:layer:LambdaInsightsExtension:64"
 }
 
 ################################################################################
@@ -59,7 +54,7 @@ module "lambdas" {
   memory_size = coalesce(each.value.memory_size, var.lambda_memory_size)
 
   architectures = [var.lambda_architecture]
-  layers        = [data.aws_lambda_layer_version.insights.arn]
+  layers        = [local.lambda_insights_layer_arn]
 
   tracing_mode       = "Active"
   log_retention_days = var.log_retention_days
