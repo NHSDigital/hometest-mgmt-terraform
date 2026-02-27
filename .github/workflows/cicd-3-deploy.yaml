@@ -61,7 +61,7 @@ jobs:
     needs: [metadata]
     timeout-minutes: 30
     env:
-      TG_WORKING_DIR: ./hometest-mgmt-terraform/infrastructure/environments/poc/core/bootstrap
+      DEPLOY_PATH: ./hometest-mgmt-terraform/infrastructure/environments/poc/core/bootstrap
     permissions:
       id-token: write    # REQUIRED for OIDC token
       contents: read     # For checkout
@@ -74,13 +74,13 @@ jobs:
       - name: Install mise tools
         uses: ./hometest-mgmt-terraform/.github/actions/install-mise
         with:
-          working_directory: ${{ env.TG_WORKING_DIR }}
+          working_directory: ${{ env.DEPLOY_PATH }}
 
       - name: Deploy TF Core/Bootstrap
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: ${{ env.TG_WORKING_DIR }}
+          working_directory: ${{ env.DEPLOY_PATH }}
 
   deploy-network:
     name: "Deploy TF Core/Network"
@@ -88,7 +88,7 @@ jobs:
     needs: [deploy-bootstrap]
     timeout-minutes: 30
     env:
-      TG_WORKING_DIR: ./hometest-mgmt-terraform/infrastructure/environments/poc/core/network
+      DEPLOY_PATH: ./hometest-mgmt-terraform/infrastructure/environments/poc/core/network
     permissions:
       id-token: write    # REQUIRED for OIDC token
       contents: read     # For checkout
@@ -101,13 +101,13 @@ jobs:
       - name: Install mise tools
         uses: ./hometest-mgmt-terraform/.github/actions/install-mise
         with:
-          working_directory: ${{ env.TG_WORKING_DIR }}
+          working_directory: ${{ env.DEPLOY_PATH }}
 
       - name: Deploy TF Core/Network
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: ${{ env.TG_WORKING_DIR }}
+          working_directory: ${{ env.DEPLOY_PATH }}
 
   deploy-aurora:
     name: "Deploy TF Core/aurora-postgres"
@@ -115,7 +115,7 @@ jobs:
     needs: [deploy-network]
     timeout-minutes: 30
     env:
-      TG_WORKING_DIR: ./hometest-mgmt-terraform/infrastructure/environments/poc/core/aurora-postgres
+      DEPLOY_PATH: ./hometest-mgmt-terraform/infrastructure/environments/poc/core/aurora-postgres
     permissions:
       id-token: write    # REQUIRED for OIDC token
       contents: read     # For checkout
@@ -128,13 +128,13 @@ jobs:
       - name: Install mise tools
         uses: ./hometest-mgmt-terraform/.github/actions/install-mise
         with:
-          working_directory: ${{ env.TG_WORKING_DIR }}
+          working_directory: ${{ env.DEPLOY_PATH }}
 
       - name: Deploy TF Core/aurora-postgres
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: ${{ env.TG_WORKING_DIR }}
+          working_directory: ${{ env.DEPLOY_PATH }}
 
   deploy-shared-services:
     name: "Deploy TF Core/shared_services"
@@ -142,7 +142,7 @@ jobs:
     needs: [deploy-aurora]
     timeout-minutes: 30
     env:
-      TG_WORKING_DIR: ./hometest-mgmt-terraform/infrastructure/environments/poc/core/shared_services
+      DEPLOY_PATH: ./hometest-mgmt-terraform/infrastructure/environments/poc/core/shared_services
     permissions:
       id-token: write    # REQUIRED for OIDC token
       contents: read     # For checkout
@@ -155,13 +155,13 @@ jobs:
       - name: Install mise tools
         uses: ./hometest-mgmt-terraform/.github/actions/install-mise
         with:
-          working_directory: ${{ env.TG_WORKING_DIR }}
+          working_directory: ${{ env.DEPLOY_PATH }}
 
       - name: Deploy TF Core/shared_services
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          working_directory: ${{ env.TG_WORKING_DIR }}
+          working_directory: ${{ env.DEPLOY_PATH }}
 
   # deploy-dev:
   #   name: "Deploy TF dev"
