@@ -16,9 +16,10 @@ locals {
 module "sqs_order_placement" {
   source = "../../modules/sqs"
 
-  project_name      = var.project_name
-  environment       = var.environment
-  queue_name_suffix = "order-placement"
+  project_name          = var.project_name
+  aws_account_shortname = var.aws_account_shortname
+  environment           = var.environment
+  queue_name_suffix     = "order-placement"
 
   visibility_timeout_seconds = 300     # 5 min — allow time for order-router-lambda (60 s timeout × 5)
   message_retention_seconds  = 1209600 # 14 days
@@ -44,9 +45,10 @@ module "sqs_order_placement" {
 module "sqs_order_results" {
   source = "../../modules/sqs"
 
-  project_name      = var.project_name
-  environment       = var.environment
-  queue_name_suffix = "order-results"
+  project_name          = var.project_name
+  aws_account_shortname = var.aws_account_shortname
+  environment           = var.environment
+  queue_name_suffix     = "order-results"
 
   visibility_timeout_seconds = 300     # 5 minutes
   message_retention_seconds  = 1209600 # 14 days
@@ -72,9 +74,10 @@ module "sqs_order_results" {
 module "sqs_notifications" {
   source = "../../modules/sqs"
 
-  project_name      = var.project_name
-  environment       = var.environment
-  queue_name_suffix = "notifications"
+  project_name          = var.project_name
+  aws_account_shortname = var.aws_account_shortname
+  environment           = var.environment
+  queue_name_suffix     = "notifications"
 
   # FIFO configuration
   fifo_queue                  = true

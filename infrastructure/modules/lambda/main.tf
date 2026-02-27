@@ -69,6 +69,8 @@ resource "aws_lambda_function" "this" {
   runtime       = var.runtime
   timeout       = var.timeout
   memory_size   = var.memory_size
+  architectures = var.architectures
+  layers        = length(var.layers) > 0 ? var.layers : null
 
   # Deployment package priority:
   # 1. Placeholder (for initial deployment)
