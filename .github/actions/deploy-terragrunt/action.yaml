@@ -38,11 +38,6 @@ runs:
         REPO_ROOT=$(git -C "$GITHUB_ACTION_PATH" rev-parse --show-toplevel)
         echo "path=${REPO_ROOT}" >> "$GITHUB_OUTPUT"
 
-    - name: Install mise tools
-      uses: ./hometest-mgmt-terraform/.github/actions/install-mise
-      with:
-        working_directory: ${{ steps.repo-root.outputs.path }}
-
     - name: Cache terraform providers
       uses: actions/cache@v5
       with:

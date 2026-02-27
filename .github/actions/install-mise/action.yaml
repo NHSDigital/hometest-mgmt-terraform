@@ -29,9 +29,9 @@ runs:
           mise-${{ runner.os }}-mgmt-
           mise-${{ runner.os }}-
 
-
     - name: Install mise
       shell: bash
+      working-directory: ${{ inputs.working_directory }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: |
@@ -41,6 +41,7 @@ runs:
 
     - name: Mise install
       shell: bash
+      working-directory: ${{ inputs.working_directory }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: |
