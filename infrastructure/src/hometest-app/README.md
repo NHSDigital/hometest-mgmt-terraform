@@ -263,6 +263,7 @@ After deployment, you'll have access to:
 | [aws_lambda_event_source_mapping.sqs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_event_source_mapping) | resource |
 | [aws_lambda_permission.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
 | [aws_resourcegroups_group.rg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/resourcegroups_group) | resource |
+| [aws_lambda_layer_version.insights](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/lambda_layer_version) | data source |
 
 ## Inputs
 
@@ -290,6 +291,7 @@ After deployment, you'll have access to:
 | <a name="input_geo_restriction_type"></a> [geo\_restriction\_type](#input\_geo\_restriction\_type) | Geo restriction type (whitelist, blacklist, none) | `string` | `"none"` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | ARN of shared KMS key (from shared\_services) | `string` | n/a | yes |
 | <a name="input_lambda_additional_kms_key_arns"></a> [lambda\_additional\_kms\_key\_arns](#input\_lambda\_additional\_kms\_key\_arns) | Additional KMS key ARNs for Lambda to decrypt secrets (e.g., secrets encrypted with different keys) | `list(string)` | `[]` | no |
+| <a name="input_lambda_architecture"></a> [lambda\_architecture](#input\_lambda\_architecture) | Instruction set architecture for Lambda functions (x86\_64 or arm64) | `string` | `"arm64"` | no |
 | <a name="input_lambda_aurora_cluster_resource_ids"></a> [lambda\_aurora\_cluster\_resource\_ids](#input\_lambda\_aurora\_cluster\_resource\_ids) | Aurora cluster resource IDs to grant Lambda IAM database authentication (rds-db:connect) | `list(string)` | `[]` | no |
 | <a name="input_lambda_dynamodb_table_arns"></a> [lambda\_dynamodb\_table\_arns](#input\_lambda\_dynamodb\_table\_arns) | DynamoDB table ARNs for Lambda access | `list(string)` | `[]` | no |
 | <a name="input_lambda_memory_size"></a> [lambda\_memory\_size](#input\_lambda\_memory\_size) | Lambda memory size in MB | `number` | `256` | no |
