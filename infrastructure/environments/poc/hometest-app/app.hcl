@@ -198,38 +198,6 @@ terraform {
     ]
   }
 
-  # Empty SPA bucket before a destroy so deletion of an environment will proceed without errors due to non-empty bucket (including versioned objects)
-  before_hook "empty_spa_bucket_on_destroy" {
-    commands     = ["destroy"]
-    run_on_error = true
-    execute = [
-      "bash", "-c",
-      <<-EOF
-        SPA_BUCKET="${local.project_name}-${local.environment}-spa"
-        if [[ -n "$SPA_BUCKET" ]]; then
-          echo "Cleaning versioned objects in s3://$SPA_BUCKET..."
-          OBJECTS_JSON=$(aws s3api list-object-versions \
-            --bucket "$SPA_BUCKET" \
-            --query '{Objects: ([Versions[], DeleteMarkers[]][] | [].{Key: Key, VersionId: VersionId})}' \
-            --output json \
-            --region eu-west-2)
-
-          if [[ -n "$OBJECTS_JSON" && "$OBJECTS_JSON" != "{\"Objects\": []}" && "$OBJECTS_JSON" != "{\"Objects\":[]}" ]]; then
-            aws s3api delete-objects \
-              --bucket "$SPA_BUCKET" \
-              --delete "$OBJECTS_JSON" \
-              --region eu-west-2 || true
-          else
-            echo "No versioned objects found in $SPA_BUCKET."
-          fi
-        else
-          echo "Could not determine SPA bucket, skipping cleanup..."
-        fi
-      EOF
-    ]
-  }
-}
-
 # ---------------------------------------------------------------------------------------------------------------------
 # DEPENDENCIES
 # These are shared across all hometest-app environments.

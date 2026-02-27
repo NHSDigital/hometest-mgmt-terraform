@@ -18,6 +18,11 @@ variable "aws_account_id" {
   type        = string
 }
 
+variable "aws_account_shortname" {
+  description = "AWS account short name/alias for resource naming"
+  type        = string
+}
+
 # S3 Configuration
 variable "s3_kms_key_arn" {
   description = "ARN of KMS key for S3 bucket encryption"
