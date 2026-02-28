@@ -146,6 +146,12 @@ variable "logging_bucket_domain_name" {
   default     = null
 }
 
+variable "s3_access_log_retention_days" {
+  description = "Number of days to retain S3 server access logs before expiry"
+  type        = number
+  default     = 90
+}
+
 # Tags
 variable "tags" {
   description = "Tags to apply to resources"

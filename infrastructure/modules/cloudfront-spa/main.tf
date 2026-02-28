@@ -44,7 +44,9 @@ resource "aws_s3_bucket" "spa" {
   })
 }
 
-# Block all public access
+# Block all public access - all four settings must remain true at all times.
+# The SPA is served exclusively via CloudFront OAC; direct S3 access must be blocked.
+# trivy:ignore:AVD-AWS-0086 trivy:ignore:AVD-AWS-0087 trivy:ignore:AVD-AWS-0088 trivy:ignore:AVD-AWS-0132
 resource "aws_s3_bucket_public_access_block" "spa" {
   bucket = aws_s3_bucket.spa.id
 
@@ -52,6 +54,13 @@ resource "aws_s3_bucket_public_access_block" "spa" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+
+  lifecycle {
+    # Prevent accidental removal or loosening of the public access block.
+    # If you intentionally need to change these, remove this block temporarily,
+    # apply, reconfigure, then re-add it.
+    prevent_destroy = true
+  }
 }
 
 # Enable versioning for rollback capability
@@ -93,7 +102,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "spa" {
   }
 }
 
-# S3 bucket policy for CloudFront OAC
+# S3 bucket policy for CloudFront OAC + SSL enforcement (S3.5)
 resource "aws_s3_bucket_policy" "spa" {
   bucket = aws_s3_bucket.spa.id
   policy = jsonencode({
@@ -112,9 +121,129 @@ resource "aws_s3_bucket_policy" "spa" {
             "AWS:SourceArn" = aws_cloudfront_distribution.spa.arn
           }
         }
+      },
+      {
+        Sid       = "DenyNonSSL"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          aws_s3_bucket.spa.arn,
+          "${aws_s3_bucket.spa.arn}/*"
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
       }
     ]
   })
+
+  depends_on = [aws_s3_bucket_public_access_block.spa]
+}
+
+################################################################################
+# S3 Server Access Logging (S3.9)
+################################################################################
+
+resource "aws_s3_bucket" "spa_logs" {
+  bucket        = "${var.project_name}-${var.environment}-spa-logs"
+  force_destroy = true
+
+  tags = merge(local.common_tags, {
+    ResourceType = "s3-bucket"
+    Purpose      = "spa-access-logs"
+  })
+}
+
+resource "aws_s3_bucket_public_access_block" "spa_logs" {
+  bucket = aws_s3_bucket.spa_logs.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "spa_logs" {
+  bucket = aws_s3_bucket.spa_logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      # S3 server access log delivery only supports SSE-S3 (AES256), not SSE-KMS
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "spa_logs" {
+  bucket = aws_s3_bucket.spa_logs.id
+
+  rule {
+    id     = "expire-access-logs"
+    status = "Enabled"
+
+    expiration {
+      days = var.s3_access_log_retention_days
+    }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+
+# Grant logging.s3.amazonaws.com permission to deliver logs + enforce SSL
+resource "aws_s3_bucket_policy" "spa_logs" {
+  bucket = aws_s3_bucket.spa_logs.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowS3LogDelivery"
+        Effect = "Allow"
+        Principal = {
+          Service = "logging.s3.amazonaws.com"
+        }
+        Action   = "s3:PutObject"
+        Resource = "${aws_s3_bucket.spa_logs.arn}/s3-access-logs/*"
+        Condition = {
+          ArnLike = {
+            "aws:SourceArn" = aws_s3_bucket.spa.arn
+          }
+          StringEquals = {
+            "aws:SourceAccount" = var.aws_account_id
+          }
+        }
+      },
+      {
+        Sid       = "DenyNonSSL"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          aws_s3_bucket.spa_logs.arn,
+          "${aws_s3_bucket.spa_logs.arn}/*"
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket_public_access_block.spa_logs]
+}
+
+resource "aws_s3_bucket_logging" "spa" {
+  bucket        = aws_s3_bucket.spa.id
+  target_bucket = aws_s3_bucket.spa_logs.id
+  target_prefix = "s3-access-logs/"
+
+  depends_on = [aws_s3_bucket_policy.spa_logs]
 }
 
 ################################################################################

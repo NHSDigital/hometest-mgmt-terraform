@@ -58,6 +58,12 @@ variable "waf_cloudfront_arn" {
   default     = null
 }
 
+variable "waf_regional_arn" {
+  description = "ARN of Regional WAF Web ACL to associate with API Gateway stages (from shared_services)"
+  type        = string
+  default     = null
+}
+
 # variable "deployment_bucket_id" {
 #   description = "ID of shared deployment artifacts bucket (from shared_services)"
 #   type        = string
@@ -286,6 +292,65 @@ variable "acm_certificate_arn" {
   description = "ACM certificate ARN for CloudFront (us-east-1, from shared_services)"
   type        = string
   default     = null
+}
+
+variable "api_custom_domain_name" {
+  description = "Custom domain name for API Gateway (e.g., api-dev.poc.hometest.service.nhs.uk). API traffic is served directly from this domain instead of through CloudFront."
+  type        = string
+  default     = null
+}
+
+variable "cors_allowed_origin" {
+  description = <<-EOT
+    The exact origin allowed for CORS preflight (OPTIONS) responses on API Gateway.
+    Must match the SPA domain (e.g., https://uat.hometest.service.nhs.uk).
+    When credentials (cookies) are used, Access-Control-Allow-Origin cannot be '*'.
+    If null, defaults to '*' (only safe when credentials are not used).
+  EOT
+  type        = string
+  default     = null
+}
+
+variable "acm_regional_certificate_arn" {
+  description = "ARN of the shared regional ACM certificate (from shared_services) for API Gateway custom domain. Used when create_api_certificate = false (default for POC wildcard cert pattern)."
+  type        = string
+  default     = null
+}
+
+variable "create_cloudfront_certificate" {
+  description = <<-EOT
+    When true, create a dedicated us-east-1 ACM certificate for var.custom_domain_name.
+    Use for environments where the SPA domain is not covered by the shared wildcard cert.
+
+    POC pattern  (create_cloudfront_certificate = false):
+      Shared cert: *.poc.hometest.service.nhs.uk  (from shared_services, us-east-1)
+      SPA:         dev.poc.hometest.service.nhs.uk  ← covered
+
+    Custom pattern (create_cloudfront_certificate = true):
+      Shared cert: *.poc.hometest.service.nhs.uk  does NOT cover dev.hometest.service.nhs.uk
+      SPA:         dev.hometest.service.nhs.uk     ← dedicated cert created here in us-east-1
+  EOT
+  type        = bool
+  default     = false
+}
+
+variable "create_api_certificate" {
+  description = <<-EOT
+    When true, create a dedicated regional ACM certificate for var.api_custom_domain_name.
+    Use for environments where the API domain is not covered by the shared wildcard cert.
+
+    POC pattern  (create_api_certificate = false):
+      Shared cert: *.poc.hometest.service.nhs.uk
+      SPA:         dev.poc.hometest.service.nhs.uk      ← covered
+      API:         api-dev.poc.hometest.service.nhs.uk  ← covered (single-level)
+
+    Custom pattern (create_api_certificate = true):
+      Shared cert: *.hometest.service.nhs.uk
+      SPA:         dev.hometest.service.nhs.uk          ← covered
+      API:         api.dev.hometest.service.nhs.uk      ← NOT covered (two-level), cert created here
+  EOT
+  type        = bool
+  default     = false
 }
 
 #------------------------------------------------------------------------------

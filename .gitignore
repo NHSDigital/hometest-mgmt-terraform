@@ -142,3 +142,4 @@ dist
 **/lambda-goose-migrator/src/bootstrap
 .lambda-build-cache
 .terraform-plugin-cache/
+.spa-build-cache

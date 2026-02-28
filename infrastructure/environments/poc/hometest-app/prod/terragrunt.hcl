@@ -1,10 +1,10 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# TERRAGRUNT CONFIGURATION FOR uat ENVIRONMENT
-# Deployment with: cd poc/hometest-app/uat && terragrunt apply
+# TERRAGRUNT CONFIGURATION FOR prod ENVIRONMENT
+# Deployment with: cd poc/hometest-app/prod && terragrunt apply
 #
 # All shared configuration (dependencies, lambda definitions, hooks) comes from ../app.hcl.
-# Domain overrides (custom cert, api.uat.* pattern) are in ./domain.hcl.
-# Environment name ("uat") is derived automatically from this directory name.
+# Domain overrides (apex domain, api.hometest.* pattern) are in ./domain.hcl.
+# Environment name ("prod") is derived automatically from this directory name.
 # ---------------------------------------------------------------------------------------------------------------------
 
 include "root" {

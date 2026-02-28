@@ -3,8 +3,9 @@
 # Deployment with: cd poc/hometest-app/dev && terragrunt apply
 #
 # All shared configuration (dependencies, lambda definitions, hooks) comes from ../app.hcl.
+# Domain overrides (custom cert, api.dev.* pattern) are in ./domain.hcl.
 # Environment name ("dev") is derived automatically from this directory name.
-# Only add overrides here for what's specific to this environment.
+# Only truly env-specific overrides (e.g., extra lambdas) belong here.
 # ---------------------------------------------------------------------------------------------------------------------
 
 include "root" {
@@ -19,14 +20,13 @@ include "app" {
 
 # ---------------------------------------------------------------------------------------------------------------------
 # ENVIRONMENT-SPECIFIC OVERRIDES
-# Only define inputs that differ from ../app.hcl
-# The lambdas map below is deep-merged with the common lambdas.
+# Deep-merged with ../app.hcl inputs.
+# Domain, certs, hooks, and lambda env vars are handled by app.hcl + domain.hcl.
 # ---------------------------------------------------------------------------------------------------------------------
 
 inputs = {
+  # Hello World Lambda - simple health check (dev environment only)
   lambdas = {
-    # Hello World Lambda - simple health check (dev environment only)
-    # CloudFront: /hello-world/* → API Gateway → Lambda
     "hello-world-lambda" = {
       description     = "Hello World Lambda - Health Check"
       api_path_prefix = "hello-world"

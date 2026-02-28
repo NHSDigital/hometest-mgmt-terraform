@@ -122,8 +122,22 @@ resource "aws_api_gateway_authorizer" "cognito_supplier" {
 }
 
 ################################################################################
-# CORS OPTIONS Methods
+# CORS configuration
+#
+# Two levels need OPTIONS handlers:
+#   1. Root resource (/)       — hit when the URL matches the base_path exactly
+#   2. Proxy resource ({proxy+}) — hit for any sub-path
+#
+# Additionally, DEFAULT_4XX and DEFAULT_5XX gateway responses include CORS
+# headers so that API Gateway-generated errors (throttle, auth failure, etc.)
+# are not swallowed by the browser's Same-Origin Policy.
 ################################################################################
+
+locals {
+  cors_origin = var.cors_allowed_origin != null ? var.cors_allowed_origin : "*"
+}
+
+# --- {proxy+} OPTIONS --------------------------------------------------------
 
 resource "aws_api_gateway_method" "options" {
   for_each = local.api_prefixes
@@ -156,9 +170,10 @@ resource "aws_api_gateway_method_response" "options" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
+    "method.response.header.Access-Control-Allow-Headers"     = true
+    "method.response.header.Access-Control-Allow-Methods"     = true
+    "method.response.header.Access-Control-Allow-Origin"      = true
+    "method.response.header.Access-Control-Allow-Credentials" = true
   }
 }
 
@@ -171,9 +186,100 @@ resource "aws_api_gateway_integration_response" "options" {
   status_code = aws_api_gateway_method_response.options[each.key].status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods"     = "'GET,POST,PUT,DELETE,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"      = "'${local.cors_origin}'"
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+# --- Root (/) OPTIONS --------------------------------------------------------
+
+resource "aws_api_gateway_method" "root_options" {
+  for_each = local.api_prefixes
+
+  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id   = aws_api_gateway_rest_api.apis[each.key].root_resource_id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "root_options" {
+  for_each = local.api_prefixes
+
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id = aws_api_gateway_rest_api.apis[each.key].root_resource_id
+  http_method = aws_api_gateway_method.root_options[each.key].http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+}
+
+resource "aws_api_gateway_method_response" "root_options" {
+  for_each = local.api_prefixes
+
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id = aws_api_gateway_rest_api.apis[each.key].root_resource_id
+  http_method = aws_api_gateway_method.root_options[each.key].http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true
+    "method.response.header.Access-Control-Allow-Methods"     = true
+    "method.response.header.Access-Control-Allow-Origin"      = true
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "root_options" {
+  for_each = local.api_prefixes
+
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id = aws_api_gateway_rest_api.apis[each.key].root_resource_id
+  http_method = aws_api_gateway_method.root_options[each.key].http_method
+  status_code = aws_api_gateway_method_response.root_options[each.key].status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods"     = "'GET,POST,PUT,DELETE,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"      = "'${local.cors_origin}'"
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+################################################################################
+# Gateway Responses — CORS headers on API Gateway-generated errors
+# Without these, 4xx/5xx from API Gateway itself (auth failures, throttles,
+# missing routes) are blocked by the browser's Same-Origin Policy.
+################################################################################
+
+resource "aws_api_gateway_gateway_response" "default_4xx" {
+  for_each = local.api_prefixes
+
+  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
+  response_type = "DEFAULT_4XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"      = "'${local.cors_origin}'"
+    "gatewayresponse.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "gatewayresponse.header.Access-Control-Allow-Methods"     = "'GET,POST,PUT,DELETE,OPTIONS'"
+    "gatewayresponse.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "default_5xx" {
+  for_each = local.api_prefixes
+
+  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
+  response_type = "DEFAULT_5XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"      = "'${local.cors_origin}'"
+    "gatewayresponse.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "gatewayresponse.header.Access-Control-Allow-Methods"     = "'GET,POST,PUT,DELETE,OPTIONS'"
+    "gatewayresponse.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
 
@@ -308,6 +414,12 @@ resource "aws_api_gateway_deployment" "apis" {
       aws_api_gateway_method.root[each.key].authorizer_id,
       aws_api_gateway_integration.proxy[each.key].id,
       aws_api_gateway_integration.root[each.key].id,
+      aws_api_gateway_method.options[each.key].id,
+      aws_api_gateway_method.root_options[each.key].id,
+      aws_api_gateway_integration_response.options[each.key].id,
+      aws_api_gateway_integration_response.root_options[each.key].id,
+      aws_api_gateway_gateway_response.default_4xx[each.key].id,
+      aws_api_gateway_gateway_response.default_5xx[each.key].id,
     ]))
   }
 
@@ -319,7 +431,24 @@ resource "aws_api_gateway_deployment" "apis" {
     aws_api_gateway_integration.proxy,
     aws_api_gateway_integration.root,
     aws_api_gateway_integration.options,
+    aws_api_gateway_integration.root_options,
+    aws_api_gateway_gateway_response.default_4xx,
+    aws_api_gateway_gateway_response.default_5xx,
   ]
+}
+
+################################################################################
+# WAF Web ACL Association (one per stage)
+################################################################################
+
+resource "aws_wafv2_web_acl_association" "apis" {
+  for_each = var.waf_regional_arn != null ? local.api_prefixes : toset([])
+
+  # Stage ARN format for REST API: arn:aws:apigateway:{region}::/restapis/{id}/stages/{stage}
+  resource_arn = "arn:aws:apigateway:${var.aws_region}::/restapis/${aws_api_gateway_rest_api.apis[each.key].id}/stages/${aws_api_gateway_stage.apis[each.key].stage_name}"
+  web_acl_arn  = var.waf_regional_arn
+
+  depends_on = [aws_api_gateway_stage.apis]
 }
 
 ################################################################################
@@ -339,5 +468,113 @@ resource "aws_api_gateway_method_settings" "apis" {
     metrics_enabled        = true
     logging_level          = "INFO"
     data_trace_enabled     = false # Don't log request/response data
+  }
+}
+
+################################################################################
+# API Gateway Custom Domain
+#
+# Two supported patterns (controlled by var.create_api_certificate):
+#
+#   POC / wildcard  (create_api_certificate = false):
+#     Shared cert:  *.poc.hometest.service.nhs.uk  (from shared_services)
+#     API domain:   api-dev.poc.hometest.service.nhs.uk  ← single-level, covered
+#
+#   Custom cert     (create_api_certificate = true):
+#     Dedicated cert created here for api.dev.hometest.service.nhs.uk
+#     (*.hometest.service.nhs.uk does NOT cover two-level subdomains)
+################################################################################
+
+locals {
+  # Certificate ARN for the API Gateway custom domain.
+  # When create_api_certificate = true a dedicated cert is created and validated here;
+  # otherwise re-use the shared wildcard cert passed in from shared_services.
+  api_cert_arn = (
+    var.create_api_certificate
+    ? try(aws_acm_certificate_validation.api_domain[0].certificate_arn, null)
+    : var.acm_regional_certificate_arn
+  )
+}
+
+# Dedicated regional ACM certificate — only created when create_api_certificate = true
+resource "aws_acm_certificate" "api_domain" {
+  count = var.api_custom_domain_name != null && var.create_api_certificate ? 1 : 0
+
+  domain_name       = var.api_custom_domain_name
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-${var.environment}-api-domain-cert"
+  })
+}
+
+resource "aws_route53_record" "api_domain_cert_validation" {
+  for_each = var.api_custom_domain_name != null && var.create_api_certificate ? {
+    for dvo in aws_acm_certificate.api_domain[0].domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  } : {}
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = var.route53_zone_id
+}
+
+resource "aws_acm_certificate_validation" "api_domain" {
+  count = var.api_custom_domain_name != null && var.create_api_certificate ? 1 : 0
+
+  certificate_arn         = aws_acm_certificate.api_domain[0].arn
+  validation_record_fqdns = [for record in aws_route53_record.api_domain_cert_validation : record.fqdn]
+}
+
+# Regional custom domain — one domain, multiple base path mappings (one per API prefix)
+resource "aws_api_gateway_domain_name" "api" {
+  count = var.api_custom_domain_name != null ? 1 : 0
+
+  domain_name              = var.api_custom_domain_name
+  regional_certificate_arn = local.api_cert_arn
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-${var.environment}-api-custom-domain"
+  })
+}
+
+# Base path mapping: https://{api_custom_domain_name}/{prefix}/... → REST API {prefix} stage v1
+resource "aws_api_gateway_base_path_mapping" "api" {
+  for_each = var.api_custom_domain_name != null ? local.api_prefixes : toset([])
+
+  api_id      = aws_api_gateway_rest_api.apis[each.key].id
+  stage_name  = aws_api_gateway_stage.apis[each.key].stage_name
+  domain_name = aws_api_gateway_domain_name.api[0].domain_name
+  base_path   = each.key
+
+  depends_on = [aws_api_gateway_domain_name.api]
+}
+
+# Route53 alias record: {api_custom_domain_name} → API Gateway regional endpoint
+resource "aws_route53_record" "api_domain" {
+  count = var.api_custom_domain_name != null ? 1 : 0
+
+  zone_id = var.route53_zone_id
+  name    = var.api_custom_domain_name
+  type    = "A"
+
+  alias {
+    name                   = aws_api_gateway_domain_name.api[0].regional_domain_name
+    zone_id                = aws_api_gateway_domain_name.api[0].regional_zone_id
+    evaluate_target_health = false
   }
 }
