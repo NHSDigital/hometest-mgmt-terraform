@@ -224,6 +224,7 @@ After deployment, you'll have access to:
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.33.0 |
+| <a name="provider_aws.us_east_1"></a> [aws.us\_east\_1](#provider\_aws.us\_east\_1) | ~> 6.33.0 |
 
 ## Modules
 
@@ -242,7 +243,9 @@ After deployment, you'll have access to:
 | Name | Type |
 |------|------|
 | [aws_acm_certificate.api_domain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate) | resource |
+| [aws_acm_certificate.cloudfront](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate) | resource |
 | [aws_acm_certificate_validation.api_domain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate_validation) | resource |
+| [aws_acm_certificate_validation.cloudfront](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate_validation) | resource |
 | [aws_api_gateway_account.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_account) | resource |
 | [aws_api_gateway_authorizer.cognito_supplier](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_authorizer) | resource |
 | [aws_api_gateway_base_path_mapping.api](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_base_path_mapping) | resource |
@@ -269,6 +272,7 @@ After deployment, you'll have access to:
 | [aws_resourcegroups_group.rg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/resourcegroups_group) | resource |
 | [aws_route53_record.api_domain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_route53_record.api_domain_cert_validation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
+| [aws_route53_record.cloudfront_cert_validation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_wafv2_web_acl_association.apis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association) | resource |
 
 ## Inputs
@@ -276,7 +280,8 @@ After deployment, you'll have access to:
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_acm_certificate_arn"></a> [acm\_certificate\_arn](#input\_acm\_certificate\_arn) | ACM certificate ARN for CloudFront (us-east-1, from shared\_services) | `string` | `null` | no |
-| <a name="input_api_custom_domain_name"></a> [api\_custom\_domain\_name](#input\_api\_custom\_domain\_name) | Custom domain name for API Gateway (e.g., api.dev.hometest.service.nhs.uk). When set, a dedicated ACM cert is created and API traffic is served directly from this domain instead of through CloudFront. | `string` | `null` | no |
+| <a name="input_acm_regional_certificate_arn"></a> [acm\_regional\_certificate\_arn](#input\_acm\_regional\_certificate\_arn) | ARN of the shared regional ACM certificate (from shared\_services) for API Gateway custom domain. Used when create\_api\_certificate = false (default for POC wildcard cert pattern). | `string` | `null` | no |
+| <a name="input_api_custom_domain_name"></a> [api\_custom\_domain\_name](#input\_api\_custom\_domain\_name) | Custom domain name for API Gateway (e.g., api-dev.poc.hometest.service.nhs.uk). API traffic is served directly from this domain instead of through CloudFront. | `string` | `null` | no |
 | <a name="input_api_endpoint_type"></a> [api\_endpoint\_type](#input\_api\_endpoint\_type) | API Gateway endpoint type | `string` | `"REGIONAL"` | no |
 | <a name="input_api_stage_name"></a> [api\_stage\_name](#input\_api\_stage\_name) | API Gateway stage name | `string` | `"v1"` | no |
 | <a name="input_api_throttling_burst_limit"></a> [api\_throttling\_burst\_limit](#input\_api\_throttling\_burst\_limit) | API Gateway throttling burst limit | `number` | `1000` | no |
@@ -290,6 +295,8 @@ After deployment, you'll have access to:
 | <a name="input_cloudfront_price_class"></a> [cloudfront\_price\_class](#input\_cloudfront\_price\_class) | CloudFront price class | `string` | `"PriceClass_100"` | no |
 | <a name="input_cognito_user_pool_arn"></a> [cognito\_user\_pool\_arn](#input\_cognito\_user\_pool\_arn) | ARN of the Cognito User Pool | `string` | n/a | yes |
 | <a name="input_content_security_policy"></a> [content\_security\_policy](#input\_content\_security\_policy) | Content Security Policy header | `string` | `"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';"` | no |
+| <a name="input_create_api_certificate"></a> [create\_api\_certificate](#input\_create\_api\_certificate) | When true, create a dedicated regional ACM certificate for var.api\_custom\_domain\_name.<br/>Use for environments where the API domain is not covered by the shared wildcard cert.<br/><br/>POC pattern  (create\_api\_certificate = false):<br/>  Shared cert: *.poc.hometest.service.nhs.uk<br/>  SPA:         dev.poc.hometest.service.nhs.uk      ← covered<br/>  API:         api-dev.poc.hometest.service.nhs.uk  ← covered (single-level)<br/><br/>Custom pattern (create\_api\_certificate = true):<br/>  Shared cert: *.hometest.service.nhs.uk<br/>  SPA:         dev.hometest.service.nhs.uk          ← covered<br/>  API:         api.dev.hometest.service.nhs.uk      ← NOT covered (two-level), cert created here | `bool` | `false` | no |
+| <a name="input_create_cloudfront_certificate"></a> [create\_cloudfront\_certificate](#input\_create\_cloudfront\_certificate) | When true, create a dedicated us-east-1 ACM certificate for var.custom\_domain\_name.<br/>Use for environments where the SPA domain is not covered by the shared wildcard cert.<br/><br/>POC pattern  (create\_cloudfront\_certificate = false):<br/>  Shared cert: *.poc.hometest.service.nhs.uk  (from shared\_services, us-east-1)<br/>  SPA:         dev.poc.hometest.service.nhs.uk  ← covered<br/><br/>Custom pattern (create\_cloudfront\_certificate = true):<br/>  Shared cert: *.poc.hometest.service.nhs.uk  does NOT cover dev.hometest.service.nhs.uk<br/>  SPA:         dev.hometest.service.nhs.uk     ← dedicated cert created here in us-east-1 | `bool` | `false` | no |
 | <a name="input_custom_domain_name"></a> [custom\_domain\_name](#input\_custom\_domain\_name) | Custom domain name for the environment (e.g., dev1.hometest.service.nhs.uk) | `string` | `null` | no |
 | <a name="input_enable_cloudfront_logging"></a> [enable\_cloudfront\_logging](#input\_enable\_cloudfront\_logging) | Enable CloudFront access logging | `bool` | `false` | no |
 | <a name="input_enable_vpc_access"></a> [enable\_vpc\_access](#input\_enable\_vpc\_access) | Enable VPC access for Lambda functions | `bool` | `false` | no |
