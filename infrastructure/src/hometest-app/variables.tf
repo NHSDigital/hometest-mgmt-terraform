@@ -306,6 +306,23 @@ variable "acm_regional_certificate_arn" {
   default     = null
 }
 
+variable "create_cloudfront_certificate" {
+  description = <<-EOT
+    When true, create a dedicated us-east-1 ACM certificate for var.custom_domain_name.
+    Use for environments where the SPA domain is not covered by the shared wildcard cert.
+
+    POC pattern  (create_cloudfront_certificate = false):
+      Shared cert: *.poc.hometest.service.nhs.uk  (from shared_services, us-east-1)
+      SPA:         dev.poc.hometest.service.nhs.uk  ← covered
+
+    Custom pattern (create_cloudfront_certificate = true):
+      Shared cert: *.poc.hometest.service.nhs.uk  does NOT cover dev.hometest.service.nhs.uk
+      SPA:         dev.hometest.service.nhs.uk     ← dedicated cert created here in us-east-1
+  EOT
+  type        = bool
+  default     = false
+}
+
 variable "create_api_certificate" {
   description = <<-EOT
     When true, create a dedicated regional ACM certificate for var.api_custom_domain_name.

@@ -35,11 +35,25 @@ locals {
   account_id   = local.account_vars.locals.aws_account_id
   aws_region   = local.global_vars.locals.aws_region
 
-  # Domain configuration
-  # Shared wildcard cert *.poc.hometest.service.nhs.uk covers all subdomains
+  # ---------------------------------------------------------------------------
+  # DOMAIN CONFIGURATION
+  # Defaults produce the POC wildcard-cert pattern:
+  #   SPA: dev.poc.hometest.service.nhs.uk
+  #   API: api-dev.poc.hometest.service.nhs.uk
+  #
+  # Children that require a different pattern (e.g., dev.hometest.service.nhs.uk)
+  # create a domain.hcl file in their directory — see domain.hcl.example.
+  # ---------------------------------------------------------------------------
+  _domain_overrides = try(read_terragrunt_config("${get_terragrunt_dir()}/domain.hcl").locals, {})
+
   base_domain = "${local.account_vars.locals.aws_account_shortname}.hometest.service.nhs.uk"
-  env_domain  = "${local.environment}.${local.base_domain}"     # SPA: dev.poc.hometest.service.nhs.uk
-  api_domain  = "api-${local.environment}.${local.base_domain}" # API: api-dev.poc.hometest.service.nhs.uk
+  env_domain  = lookup(local._domain_overrides, "env_domain", "${local.environment}.${local.base_domain}")
+  api_domain  = lookup(local._domain_overrides, "api_domain", "api-${local.environment}.${local.base_domain}")
+
+  # Certificate flags — when true the hometest-app module creates per-env certs
+  # instead of relying on the shared wildcard cert from shared_services.
+  create_cloudfront_certificate = lookup(local._domain_overrides, "create_cloudfront_certificate", false)
+  create_api_certificate        = lookup(local._domain_overrides, "create_api_certificate", false)
 
   # ---------------------------------------------------------------------------
   # SOURCE PATHS
@@ -97,104 +111,41 @@ terraform {
     ]
   }
 
-  # Build SPA before apply
+  # Build SPA before apply (only rebuilds when source or backend URL changes)
+  # Uses scripts/build-spa.sh which content-hashes source + NEXT_PUBLIC_BACKEND_URL
   before_hook "build_spa" {
-    commands = ["apply"]
+    commands = ["plan", "apply"]
     execute = [
       "bash", "-c",
-      <<-EOF
-        SPA_DIR="${local.spa_source_dir}"
-        SPA_TYPE="${local.spa_type}"
-        if [[ -d "$SPA_DIR" ]] && [[ -f "$SPA_DIR/package.json" ]]; then
-          echo "Building $SPA_TYPE SPA from $SPA_DIR..."
-          cd "$SPA_DIR"
-          npm ci --silent 2>/dev/null || npm install --silent
-
-          export NEXT_PUBLIC_BACKEND_URL="https://${local.api_domain}"
-          echo "Setting NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL"
-
-          npm run build --silent 2>/dev/null || true
-          echo "SPA build complete!"
-        else
-          echo "SPA not found at $SPA_DIR, skipping..."
-        fi
-      EOF
+      "\"$(cd '${get_repo_root()}' && pwd)/scripts/build-spa.sh\" \"$(cd '${local.spa_source_dir}' && pwd)\" \"$(cd '${get_repo_root()}' && pwd)/.spa-build-cache\" \"https://${local.api_domain}\" \"${local.spa_type}\""
     ]
   }
 
-  # Upload SPA to S3 after terraform creates the bucket
+  # Upload SPA to S3 after terraform creates the bucket, then invalidate CloudFront.
+  # Uses scripts/upload-spa.sh with type-specific caching (Next.js / Vite).
+  # Bucket name and CloudFront ID are read from terraform outputs at runtime.
   after_hook "upload_spa" {
     commands     = ["apply"]
     run_on_error = false
     execute = [
       "bash", "-c",
       <<-EOF
-        SPA_TYPE="${local.spa_type}"
-        SPA_DIST="${local.spa_dist_dir}"
-
-        # Fallback paths based on SPA type
-        if [[ ! -d "$SPA_DIST" ]]; then
-          if [[ "$SPA_TYPE" == "nextjs" ]]; then
-            SPA_DIST="${local.spa_source_dir}/build"
-          else
-            SPA_DIST="${local.spa_source_dir}/dist"
+        SPA_BUCKET=$(terraform output -raw spa_bucket_id 2>/dev/null || echo "")
+        CLOUDFRONT_ID=$(terraform output -raw cloudfront_distribution_id 2>/dev/null || echo "")
+        if [[ -n "$SPA_BUCKET" ]]; then
+          SCRIPT="$(cd '${get_repo_root()}' && pwd)/scripts/upload-spa.sh"
+          DIST_DIR="$(cd '${local.spa_dist_dir}' 2>/dev/null && pwd || echo '${local.spa_dist_dir}')"
+          CF_FLAG=""
+          if [[ -n "$CLOUDFRONT_ID" ]]; then
+            CF_FLAG="--cloudfront-id $CLOUDFRONT_ID"
           fi
-        fi
-
-        if [[ -d "$SPA_DIST" ]]; then
-          SPA_BUCKET=$(terraform output -raw spa_bucket_id 2>/dev/null || echo "")
-          if [[ -n "$SPA_BUCKET" ]]; then
-            echo "Uploading $SPA_TYPE SPA from $SPA_DIST to s3://$SPA_BUCKET..."
-
-            if [[ "$SPA_TYPE" == "nextjs" ]]; then
-              # Next.js specific upload with proper caching
-              aws s3 sync "$SPA_DIST" "s3://$SPA_BUCKET" \
-                --delete \
-                --cache-control "max-age=31536000" \
-                --exclude "*.html" \
-                --exclude "_next/data/*" \
-                --region eu-west-2
-              # HTML files with no-cache
-              aws s3 cp "$SPA_DIST" "s3://$SPA_BUCKET" \
-                --recursive \
-                --exclude "*" \
-                --include "*.html" \
-                --cache-control "no-cache, no-store, must-revalidate" \
-                --region eu-west-2
-              # _next/data with short cache
-              if [[ -d "$SPA_DIST/_next/data" ]]; then
-                aws s3 sync "$SPA_DIST/_next/data" "s3://$SPA_BUCKET/_next/data" \
-                  --cache-control "max-age=60" \
-                  --region eu-west-2
-              fi
-            else
-              # Vite/standard SPA upload
-              aws s3 sync "$SPA_DIST" "s3://$SPA_BUCKET" \
-                --delete \
-                --cache-control "max-age=31536000" \
-                --exclude "index.html" \
-                --region eu-west-2
-              aws s3 cp "$SPA_DIST/index.html" "s3://$SPA_BUCKET/index.html" \
-                --cache-control "no-cache, no-store, must-revalidate" \
-                --region eu-west-2
-            fi
-            echo "SPA uploaded successfully!"
-
-            # Invalidate CloudFront cache
-            CLOUDFRONT_ID=$(terraform output -raw cloudfront_distribution_id 2>/dev/null || echo "")
-            if [[ -n "$CLOUDFRONT_ID" ]]; then
-              echo "Invalidating CloudFront cache for distribution $CLOUDFRONT_ID..."
-              aws cloudfront create-invalidation \
-                --distribution-id "$CLOUDFRONT_ID" \
-                --paths "/*" \
-                --output text
-              echo "CloudFront cache invalidation initiated!"
-            fi
-          else
-            echo "Could not determine SPA bucket, skipping upload..."
-          fi
+          "$SCRIPT" "$DIST_DIR" "$SPA_BUCKET" \
+            --spa-type "${local.spa_type}" \
+            --region "${local.aws_region}" \
+            --spa-source-dir "$(cd '${local.spa_source_dir}' && pwd)" \
+            $CF_FLAG
         else
-          echo "No SPA dist found at $SPA_DIST, skipping upload..."
+          echo "Could not determine SPA bucket from terraform outputs, skipping upload..."
         fi
       EOF
     ]
@@ -478,14 +429,15 @@ inputs = {
   api_throttling_rate_limit  = local.api_throttling_rate_limit
 
   # Domain configuration
-  # SPA: dev.poc.hometest.service.nhs.uk (CloudFront, uses global/us-east-1 cert)
   custom_domain_name  = local.env_domain
   acm_certificate_arn = dependency.shared_services.outputs.acm_cloudfront_certificate_arn
 
-  # API Gateway: api-dev.poc.hometest.service.nhs.uk (uses shared regional cert)
-  # Both are single-level subdomains of *.poc.hometest.service.nhs.uk → covered by shared wildcard cert
-  api_custom_domain_name     = local.api_domain
+  api_custom_domain_name       = local.api_domain
   acm_regional_certificate_arn = dependency.shared_services.outputs.acm_regional_certificate_arn
+
+  # Per-environment certificate creation (set via domain.hcl in child dirs)
+  create_cloudfront_certificate = local.create_cloudfront_certificate
+  create_api_certificate        = local.create_api_certificate
 
   # CloudFront Configuration
   cloudfront_price_class = local.cloudfront_price_class
