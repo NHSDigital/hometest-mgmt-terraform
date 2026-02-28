@@ -405,21 +405,6 @@ inputs = {
         DB_SECRET_NAME            = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
       }
     }
-
-    # Order Service Lambda - Creates test orders and persists to database
-    # CloudFront: /order/* → API Gateway → Lambda
-    "order-service-lambda" = {
-      description     = "Order Service - Creates test orders and persists to database"
-      api_path_prefix = "order"
-      handler         = "index.handler"
-      timeout         = 30
-      memory_size     = 256
-      environment = {
-        NODE_OPTIONS = "--enable-source-maps"
-        ENVIRONMENT  = local.environment
-        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
-      }
-    }
   }
 
   # API Gateway Configuration
