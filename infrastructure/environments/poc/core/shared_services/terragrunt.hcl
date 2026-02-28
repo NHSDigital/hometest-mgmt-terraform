@@ -37,8 +37,10 @@ inputs = {
   project_name = local.project_name
   environment  = "core"
 
-  # Domain for wildcard certificates (*.hometest.service.nhs.uk)
-  domain_name     = "hometest.service.nhs.uk"
+  # Domain for wildcard certificates (*.poc.hometest.service.nhs.uk)
+  # Single shared wildcard cert covers all environments:
+  #   dev.poc.hometest.service.nhs.uk, api-dev.poc.hometest.service.nhs.uk, etc.
+  domain_name     = "${local.account_vars.locals.aws_account_shortname}.hometest.service.nhs.uk"
   route53_zone_id = dependency.network.outputs.route53_zone_id
 
   # ACM Certificates

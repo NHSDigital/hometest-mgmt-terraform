@@ -357,13 +357,33 @@ resource "aws_api_gateway_method_settings" "apis" {
 }
 
 ################################################################################
-# API Gateway Custom Domain (api.{env}.hometest.service.nhs.uk)
-# Note: *.hometest.service.nhs.uk does NOT cover api.dev.hometest.service.nhs.uk
-# (AWS wildcards are single-level), so a dedicated cert is created here.
+# API Gateway Custom Domain
+#
+# Two supported patterns (controlled by var.create_api_certificate):
+#
+#   POC / wildcard  (create_api_certificate = false):
+#     Shared cert:  *.poc.hometest.service.nhs.uk  (from shared_services)
+#     API domain:   api-dev.poc.hometest.service.nhs.uk  ← single-level, covered
+#
+#   Custom cert     (create_api_certificate = true):
+#     Dedicated cert created here for api.dev.hometest.service.nhs.uk
+#     (*.hometest.service.nhs.uk does NOT cover two-level subdomains)
 ################################################################################
 
+locals {
+  # Certificate ARN for the API Gateway custom domain.
+  # When create_api_certificate = true a dedicated cert is created and validated here;
+  # otherwise re-use the shared wildcard cert passed in from shared_services.
+  api_cert_arn = (
+    var.create_api_certificate
+    ? try(aws_acm_certificate_validation.api_domain[0].certificate_arn, null)
+    : var.acm_regional_certificate_arn
+  )
+}
+
+# Dedicated regional ACM certificate — only created when create_api_certificate = true
 resource "aws_acm_certificate" "api_domain" {
-  count = var.api_custom_domain_name != null ? 1 : 0
+  count = var.api_custom_domain_name != null && var.create_api_certificate ? 1 : 0
 
   domain_name       = var.api_custom_domain_name
   validation_method = "DNS"
@@ -378,7 +398,7 @@ resource "aws_acm_certificate" "api_domain" {
 }
 
 resource "aws_route53_record" "api_domain_cert_validation" {
-  for_each = var.api_custom_domain_name != null ? {
+  for_each = var.api_custom_domain_name != null && var.create_api_certificate ? {
     for dvo in aws_acm_certificate.api_domain[0].domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
       record = dvo.resource_record_value
@@ -395,7 +415,7 @@ resource "aws_route53_record" "api_domain_cert_validation" {
 }
 
 resource "aws_acm_certificate_validation" "api_domain" {
-  count = var.api_custom_domain_name != null ? 1 : 0
+  count = var.api_custom_domain_name != null && var.create_api_certificate ? 1 : 0
 
   certificate_arn         = aws_acm_certificate.api_domain[0].arn
   validation_record_fqdns = [for record in aws_route53_record.api_domain_cert_validation : record.fqdn]
@@ -406,7 +426,7 @@ resource "aws_api_gateway_domain_name" "api" {
   count = var.api_custom_domain_name != null ? 1 : 0
 
   domain_name              = var.api_custom_domain_name
-  regional_certificate_arn = aws_acm_certificate_validation.api_domain[0].certificate_arn
+  regional_certificate_arn = local.api_cert_arn
 
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -415,11 +435,9 @@ resource "aws_api_gateway_domain_name" "api" {
   tags = merge(local.common_tags, {
     Name = "${var.project_name}-${var.environment}-api-custom-domain"
   })
-
-  depends_on = [aws_acm_certificate_validation.api_domain]
 }
 
-# Base path mapping: https://api.dev.hometest.service.nhs.uk/{prefix}/... → REST API {prefix} stage v1
+# Base path mapping: https://{api_custom_domain_name}/{prefix}/... → REST API {prefix} stage v1
 resource "aws_api_gateway_base_path_mapping" "api" {
   for_each = var.api_custom_domain_name != null ? local.api_prefixes : toset([])
 
@@ -431,7 +449,7 @@ resource "aws_api_gateway_base_path_mapping" "api" {
   depends_on = [aws_api_gateway_domain_name.api]
 }
 
-# Route53 alias record: api.dev.hometest.service.nhs.uk → API Gateway regional endpoint
+# Route53 alias record: {api_custom_domain_name} → API Gateway regional endpoint
 resource "aws_route53_record" "api_domain" {
   count = var.api_custom_domain_name != null ? 1 : 0
 

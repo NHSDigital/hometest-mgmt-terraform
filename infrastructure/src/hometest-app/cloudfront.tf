@@ -1,7 +1,7 @@
 ################################################################################
 # CloudFront SPA Distribution
-# Serves the Next.js SPA from S3 at dev.hometest.service.nhs.uk
-# API endpoints are served separately at api.dev.hometest.service.nhs.uk (API Gateway custom domain)
+# Serves the Next.js SPA from S3 at {env}.poc.hometest.service.nhs.uk
+# API endpoints are served separately at api-{env}.poc.hometest.service.nhs.uk (API Gateway custom domain)
 # CF function handles Next.js client-side route fallback (non-file paths → index.html)
 ################################################################################
 
@@ -19,7 +19,7 @@ module "cloudfront_spa" {
   s3_kms_key_arn                        = var.kms_key_arn
   s3_noncurrent_version_expiration_days = 30
 
-  # API traffic is now served directly via api.{env}.hometest.service.nhs.uk (API Gateway custom domain).
+  # API traffic is now served directly via api-{env}.poc.hometest.service.nhs.uk (API Gateway custom domain).
   # CloudFront serves the SPA only — no API origins or path-based API behaviours needed.
   # enable_spa_routing remains true: the CF function handles Next.js client-side route fallback (→ index.html).
   api_origins = {}

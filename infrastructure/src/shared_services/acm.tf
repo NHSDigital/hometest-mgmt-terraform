@@ -1,7 +1,7 @@
 ################################################################################
-# ACM Certificate - Regional (for API Gateway if needed)
-# Wildcard cert *.hometest.service.nhs.uk covers all environments:
-# dev.hometest.service.nhs.uk, dev1.hometest.service.nhs.uk, etc.
+# ACM Certificate - Regional (for API Gateway)
+# Wildcard cert *.{account_shortname}.hometest.service.nhs.uk covers all environments:
+# api-dev.poc.hometest.service.nhs.uk, api-uat.poc.hometest.service.nhs.uk, etc.
 ################################################################################
 
 resource "aws_acm_certificate" "regional" {
@@ -46,7 +46,8 @@ resource "aws_acm_certificate_validation" "regional" {
 
 ################################################################################
 # ACM Certificate - Global (for CloudFront - us-east-1)
-# Wildcard cert *.hometest.service.nhs.uk covers all environments
+# Wildcard cert *.{account_shortname}.hometest.service.nhs.uk covers all environments
+# dev.poc.hometest.service.nhs.uk, uat.poc.hometest.service.nhs.uk, etc.
 ################################################################################
 
 resource "aws_acm_certificate" "cloudfront" {

@@ -36,9 +36,10 @@ locals {
   aws_region   = local.global_vars.locals.aws_region
 
   # Domain configuration
-  base_domain = "hometest.service.nhs.uk"
-  env_domain  = "${local.environment}.${local.base_domain}"
-  api_domain  = "api.${local.env_domain}" # API Gateway custom domain (api.dev.hometest.service.nhs.uk)
+  # Shared wildcard cert *.poc.hometest.service.nhs.uk covers all subdomains
+  base_domain = "${local.account_vars.locals.aws_account_shortname}.hometest.service.nhs.uk"
+  env_domain  = "${local.environment}.${local.base_domain}"     # SPA: dev.poc.hometest.service.nhs.uk
+  api_domain  = "api-${local.environment}.${local.base_domain}" # API: api-dev.poc.hometest.service.nhs.uk
 
   # ---------------------------------------------------------------------------
   # SOURCE PATHS
@@ -109,7 +110,7 @@ terraform {
           cd "$SPA_DIR"
           npm ci --silent 2>/dev/null || npm install --silent
 
-          export NEXT_PUBLIC_BACKEND_URL="https://${local.env_domain}"
+          export NEXT_PUBLIC_BACKEND_URL="https://${local.api_domain}"
           echo "Setting NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL"
 
           npm run build --silent 2>/dev/null || true
@@ -477,12 +478,14 @@ inputs = {
   api_throttling_rate_limit  = local.api_throttling_rate_limit
 
   # Domain configuration
-  custom_domain_name  = local.env_domain # SPA stays at dev.hometest.service.nhs.uk (CloudFront)
+  # SPA: dev.poc.hometest.service.nhs.uk (CloudFront, uses global/us-east-1 cert)
+  custom_domain_name  = local.env_domain
   acm_certificate_arn = dependency.shared_services.outputs.acm_cloudfront_certificate_arn
 
-  # API Gateway custom domain (api.dev.hometest.service.nhs.uk)
-  # Cert is created in the hometest-app module (*.hometest.service.nhs.uk doesn't cover api.dev.*)
-  api_custom_domain_name = local.api_domain
+  # API Gateway: api-dev.poc.hometest.service.nhs.uk (uses shared regional cert)
+  # Both are single-level subdomains of *.poc.hometest.service.nhs.uk → covered by shared wildcard cert
+  api_custom_domain_name     = local.api_domain
+  acm_regional_certificate_arn = dependency.shared_services.outputs.acm_regional_certificate_arn
 
   # CloudFront Configuration
   cloudfront_price_class = local.cloudfront_price_class

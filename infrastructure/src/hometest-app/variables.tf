@@ -295,9 +295,34 @@ variable "acm_certificate_arn" {
 }
 
 variable "api_custom_domain_name" {
-  description = "Custom domain name for API Gateway (e.g., api.dev.hometest.service.nhs.uk). When set, a dedicated ACM cert is created and API traffic is served directly from this domain instead of through CloudFront."
+  description = "Custom domain name for API Gateway (e.g., api-dev.poc.hometest.service.nhs.uk). API traffic is served directly from this domain instead of through CloudFront."
   type        = string
   default     = null
+}
+
+variable "acm_regional_certificate_arn" {
+  description = "ARN of the shared regional ACM certificate (from shared_services) for API Gateway custom domain. Used when create_api_certificate = false (default for POC wildcard cert pattern)."
+  type        = string
+  default     = null
+}
+
+variable "create_api_certificate" {
+  description = <<-EOT
+    When true, create a dedicated regional ACM certificate for var.api_custom_domain_name.
+    Use for environments where the API domain is not covered by the shared wildcard cert.
+
+    POC pattern  (create_api_certificate = false):
+      Shared cert: *.poc.hometest.service.nhs.uk
+      SPA:         dev.poc.hometest.service.nhs.uk      ← covered
+      API:         api-dev.poc.hometest.service.nhs.uk  ← covered (single-level)
+
+    Custom pattern (create_api_certificate = true):
+      Shared cert: *.hometest.service.nhs.uk
+      SPA:         dev.hometest.service.nhs.uk          ← covered
+      API:         api.dev.hometest.service.nhs.uk      ← NOT covered (two-level), cert created here
+  EOT
+  type        = bool
+  default     = false
 }
 
 #------------------------------------------------------------------------------

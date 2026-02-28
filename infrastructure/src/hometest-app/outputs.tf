@@ -110,8 +110,8 @@ output "spa_url" {
 output "login_endpoint" {
   description = "Login Lambda endpoint URL"
   value = (
-    var.custom_domain_name != null
-    ? "https://${var.custom_domain_name}/login"
+    var.api_custom_domain_name != null
+    ? "https://${var.api_custom_domain_name}/login"
     : try("${module.cloudfront_spa.distribution_url}/login", null)
   )
 }
@@ -127,12 +127,17 @@ output "environment_urls" {
     {
       base_url = var.custom_domain_name != null ? "https://${var.custom_domain_name}" : module.cloudfront_spa.distribution_url
       ui       = var.custom_domain_name != null ? "https://${var.custom_domain_name}" : module.cloudfront_spa.distribution_url
+      api      = var.api_custom_domain_name != null ? "https://${var.api_custom_domain_name}" : null
     },
     {
       for prefix in local.api_prefixes : prefix => (
-        var.custom_domain_name != null
-        ? "https://${var.custom_domain_name}/${prefix}"
-        : "${module.cloudfront_spa.distribution_url}/${prefix}"
+        var.api_custom_domain_name != null
+        ? "https://${var.api_custom_domain_name}/${prefix}"
+        : (
+          var.custom_domain_name != null
+          ? "https://${var.custom_domain_name}/${prefix}"
+          : "${module.cloudfront_spa.distribution_url}/${prefix}"
+        )
       )
     }
   )
