@@ -122,8 +122,22 @@ resource "aws_api_gateway_authorizer" "cognito_supplier" {
 }
 
 ################################################################################
-# CORS OPTIONS Methods
+# CORS configuration
+#
+# Two levels need OPTIONS handlers:
+#   1. Root resource (/)       — hit when the URL matches the base_path exactly
+#   2. Proxy resource ({proxy+}) — hit for any sub-path
+#
+# Additionally, DEFAULT_4XX and DEFAULT_5XX gateway responses include CORS
+# headers so that API Gateway-generated errors (throttle, auth failure, etc.)
+# are not swallowed by the browser's Same-Origin Policy.
 ################################################################################
+
+locals {
+  cors_origin = var.cors_allowed_origin != null ? var.cors_allowed_origin : "*"
+}
+
+# --- {proxy+} OPTIONS --------------------------------------------------------
 
 resource "aws_api_gateway_method" "options" {
   for_each = local.api_prefixes
@@ -156,9 +170,10 @@ resource "aws_api_gateway_method_response" "options" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
+    "method.response.header.Access-Control-Allow-Headers"     = true
+    "method.response.header.Access-Control-Allow-Methods"     = true
+    "method.response.header.Access-Control-Allow-Origin"      = true
+    "method.response.header.Access-Control-Allow-Credentials" = true
   }
 }
 
@@ -171,9 +186,100 @@ resource "aws_api_gateway_integration_response" "options" {
   status_code = aws_api_gateway_method_response.options[each.key].status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods"     = "'GET,POST,PUT,DELETE,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"      = "'${local.cors_origin}'"
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+# --- Root (/) OPTIONS --------------------------------------------------------
+
+resource "aws_api_gateway_method" "root_options" {
+  for_each = local.api_prefixes
+
+  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id   = aws_api_gateway_rest_api.apis[each.key].root_resource_id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "root_options" {
+  for_each = local.api_prefixes
+
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id = aws_api_gateway_rest_api.apis[each.key].root_resource_id
+  http_method = aws_api_gateway_method.root_options[each.key].http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = jsonencode({ statusCode = 200 })
+  }
+}
+
+resource "aws_api_gateway_method_response" "root_options" {
+  for_each = local.api_prefixes
+
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id = aws_api_gateway_rest_api.apis[each.key].root_resource_id
+  http_method = aws_api_gateway_method.root_options[each.key].http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true
+    "method.response.header.Access-Control-Allow-Methods"     = true
+    "method.response.header.Access-Control-Allow-Origin"      = true
+    "method.response.header.Access-Control-Allow-Credentials" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "root_options" {
+  for_each = local.api_prefixes
+
+  rest_api_id = aws_api_gateway_rest_api.apis[each.key].id
+  resource_id = aws_api_gateway_rest_api.apis[each.key].root_resource_id
+  http_method = aws_api_gateway_method.root_options[each.key].http_method
+  status_code = aws_api_gateway_method_response.root_options[each.key].status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods"     = "'GET,POST,PUT,DELETE,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"      = "'${local.cors_origin}'"
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+################################################################################
+# Gateway Responses — CORS headers on API Gateway-generated errors
+# Without these, 4xx/5xx from API Gateway itself (auth failures, throttles,
+# missing routes) are blocked by the browser's Same-Origin Policy.
+################################################################################
+
+resource "aws_api_gateway_gateway_response" "default_4xx" {
+  for_each = local.api_prefixes
+
+  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
+  response_type = "DEFAULT_4XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"      = "'${local.cors_origin}'"
+    "gatewayresponse.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "gatewayresponse.header.Access-Control-Allow-Methods"     = "'GET,POST,PUT,DELETE,OPTIONS'"
+    "gatewayresponse.header.Access-Control-Allow-Credentials" = "'true'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "default_5xx" {
+  for_each = local.api_prefixes
+
+  rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
+  response_type = "DEFAULT_5XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"      = "'${local.cors_origin}'"
+    "gatewayresponse.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "gatewayresponse.header.Access-Control-Allow-Methods"     = "'GET,POST,PUT,DELETE,OPTIONS'"
+    "gatewayresponse.header.Access-Control-Allow-Credentials" = "'true'"
   }
 }
 
@@ -308,6 +414,12 @@ resource "aws_api_gateway_deployment" "apis" {
       aws_api_gateway_method.root[each.key].authorizer_id,
       aws_api_gateway_integration.proxy[each.key].id,
       aws_api_gateway_integration.root[each.key].id,
+      aws_api_gateway_method.options[each.key].id,
+      aws_api_gateway_method.root_options[each.key].id,
+      aws_api_gateway_integration_response.options[each.key].id,
+      aws_api_gateway_integration_response.root_options[each.key].id,
+      aws_api_gateway_gateway_response.default_4xx[each.key].id,
+      aws_api_gateway_gateway_response.default_5xx[each.key].id,
     ]))
   }
 
@@ -319,6 +431,9 @@ resource "aws_api_gateway_deployment" "apis" {
     aws_api_gateway_integration.proxy,
     aws_api_gateway_integration.root,
     aws_api_gateway_integration.options,
+    aws_api_gateway_integration.root_options,
+    aws_api_gateway_gateway_response.default_4xx,
+    aws_api_gateway_gateway_response.default_5xx,
   ]
 }
 

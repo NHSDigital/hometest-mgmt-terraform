@@ -300,6 +300,17 @@ variable "api_custom_domain_name" {
   default     = null
 }
 
+variable "cors_allowed_origin" {
+  description = <<-EOT
+    The exact origin allowed for CORS preflight (OPTIONS) responses on API Gateway.
+    Must match the SPA domain (e.g., https://uat.hometest.service.nhs.uk).
+    When credentials (cookies) are used, Access-Control-Allow-Origin cannot be '*'.
+    If null, defaults to '*' (only safe when credentials are not used).
+  EOT
+  type        = string
+  default     = null
+}
+
 variable "acm_regional_certificate_arn" {
   description = "ARN of the shared regional ACM certificate (from shared_services) for API Gateway custom domain. Used when create_api_certificate = false (default for POC wildcard cert pattern)."
   type        = string

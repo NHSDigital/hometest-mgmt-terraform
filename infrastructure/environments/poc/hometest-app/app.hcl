@@ -420,6 +420,10 @@ inputs = {
   api_custom_domain_name       = local.api_domain
   acm_regional_certificate_arn = dependency.shared_services.outputs.acm_regional_certificate_arn
 
+  # CORS — API Gateway OPTIONS responses and gateway error responses use this origin.
+  # Must match the SPA domain exactly (credentials require a specific origin, not '*').
+  cors_allowed_origin = "https://${local.env_domain}"
+
   # Per-environment certificate creation (set via domain.hcl in child dirs)
   create_cloudfront_certificate = local.create_cloudfront_certificate
   create_api_certificate        = local.create_api_certificate
