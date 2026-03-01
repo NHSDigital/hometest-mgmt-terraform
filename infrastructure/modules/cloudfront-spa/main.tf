@@ -55,12 +55,12 @@ resource "aws_s3_bucket_public_access_block" "spa" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 
-  lifecycle {
-    # Prevent accidental removal or loosening of the public access block.
-    # If you intentionally need to change these, remove this block temporarily,
-    # apply, reconfigure, then re-add it.
-    prevent_destroy = true
-  }
+  # lifecycle {
+  #   # Prevent accidental removal or loosening of the public access block.
+  #   # If you intentionally need to change these, remove this block temporarily,
+  #   # apply, reconfigure, then re-add it.
+  #   prevent_destroy = true
+  # }
 }
 
 # Enable versioning for rollback capability
