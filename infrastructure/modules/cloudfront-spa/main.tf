@@ -160,9 +160,14 @@ resource "aws_s3_bucket_policy" "spa" {
 
 ################################################################################
 # S3 Server Access Logging (S3.9)
+# NOSONAR: This is the log-destination bucket — it cannot log to itself
+# (infinite loop). HTTPS is enforced via DenyNonSSL + EnforceTLSVersion
+# statements in aws_s3_bucket_policy.spa_logs below. Log delivery uses the
+# modern bucket-policy grant (logging.s3.amazonaws.com principal) instead of
+# the deprecated ACL "log-delivery-write".
 ################################################################################
 
-resource "aws_s3_bucket" "spa_logs" {
+resource "aws_s3_bucket" "spa_logs" { # NOSONAR — log target bucket; policy enforces HTTPS; no self-logging
   bucket        = "${var.project_name}-${var.environment}-spa-logs"
   force_destroy = true
 

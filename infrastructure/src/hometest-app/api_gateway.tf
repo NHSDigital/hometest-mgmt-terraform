@@ -138,6 +138,10 @@ locals {
 }
 
 # --- {proxy+} OPTIONS --------------------------------------------------------
+# NOSONAR: OPTIONS methods must use authorization=NONE — browsers send
+# unauthenticated CORS preflight requests that cannot carry auth headers.
+# The API is protected by WAF (aws_wafv2_web_acl_association.apis) and
+# Cognito authorizers on all non-OPTIONS methods.
 
 resource "aws_api_gateway_method" "options" {
   for_each = local.api_prefixes
@@ -145,7 +149,7 @@ resource "aws_api_gateway_method" "options" {
   rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
   resource_id   = aws_api_gateway_resource.proxy[each.key].id
   http_method   = "OPTIONS"
-  authorization = "NONE"
+  authorization = "NONE" # NOSONAR — CORS preflight; WAF protects the stage
 }
 
 resource "aws_api_gateway_integration" "options" {
@@ -194,6 +198,7 @@ resource "aws_api_gateway_integration_response" "options" {
 }
 
 # --- Root (/) OPTIONS --------------------------------------------------------
+# NOSONAR: Same as {proxy+} OPTIONS above — CORS preflight requires no auth.
 
 resource "aws_api_gateway_method" "root_options" {
   for_each = local.api_prefixes
@@ -201,7 +206,7 @@ resource "aws_api_gateway_method" "root_options" {
   rest_api_id   = aws_api_gateway_rest_api.apis[each.key].id
   resource_id   = aws_api_gateway_rest_api.apis[each.key].root_resource_id
   http_method   = "OPTIONS"
-  authorization = "NONE"
+  authorization = "NONE" # NOSONAR — CORS preflight; WAF protects the stage
 }
 
 resource "aws_api_gateway_integration" "root_options" {
