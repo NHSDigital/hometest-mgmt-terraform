@@ -136,6 +136,21 @@ resource "aws_s3_bucket_policy" "spa" {
             "aws:SecureTransport" = "false"
           }
         }
+      },
+      {
+        Sid       = "EnforceTLSVersion"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          aws_s3_bucket.spa.arn,
+          "${aws_s3_bucket.spa.arn}/*"
+        ]
+        Condition = {
+          NumericLessThan = {
+            "s3:TlsVersion" = "1.2"
+          }
+        }
       }
     ]
   })
@@ -229,6 +244,21 @@ resource "aws_s3_bucket_policy" "spa_logs" {
         Condition = {
           Bool = {
             "aws:SecureTransport" = "false"
+          }
+        }
+      },
+      {
+        Sid       = "EnforceTLSVersion"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          aws_s3_bucket.spa_logs.arn,
+          "${aws_s3_bucket.spa_logs.arn}/*"
+        ]
+        Condition = {
+          NumericLessThan = {
+            "s3:TlsVersion" = "1.2"
           }
         }
       }

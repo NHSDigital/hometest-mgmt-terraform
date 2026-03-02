@@ -124,6 +124,21 @@ resource "aws_s3_bucket_policy" "artifacts" {
         }
       },
       {
+        Sid       = "EnforceTLSVersion"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          aws_s3_bucket.artifacts.arn,
+          "${aws_s3_bucket.artifacts.arn}/*"
+        ]
+        Condition = {
+          NumericLessThan = {
+            "s3:TlsVersion" = "1.2"
+          }
+        }
+      },
+      {
         Sid    = "AllowLambdaServiceRead"
         Effect = "Allow"
         Principal = {
