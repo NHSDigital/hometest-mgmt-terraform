@@ -150,6 +150,8 @@ resource "aws_lambda_function_url" "this" {
       max_age           = cors.value.max_age
     }
   }
+
+  # tags = local.common_tags
 }
 
 ################################################################################

@@ -89,6 +89,19 @@ module "aurora_postgres" {
   iam_database_authentication_enabled = var.enable_iam_auth
   enable_http_endpoint                = var.enable_http_endpoint
 
+  cluster_parameter_group = {
+    name        = "${var.identifier}-cluster-pg"
+    family      = "aurora-postgresql${split(".", var.engine_version)[0]}"
+    description = "Cluster parameter group for ${var.identifier} – enforces TLS 1.2"
+    parameters = [
+      {
+        name         = "rds.force_ssl"
+        value        = "1"
+        apply_method = "pending-reboot"
+      }
+    ]
+  }
+
   backup_retention_period      = var.backup_retention_period
   preferred_backup_window      = var.backup_window
   preferred_maintenance_window = var.maintenance_window
