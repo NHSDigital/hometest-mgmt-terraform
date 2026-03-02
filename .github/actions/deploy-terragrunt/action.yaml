@@ -62,7 +62,7 @@ runs:
       run: mise exec -- terragrunt plan -out=tfplan ${{ inputs.lock_enabled == 'false' && '-lock=false' || '' }}
 
     - name: Terragrunt Destroy Plan
-      if: inputs.action == 'destroy-plan' || inputs.action == 'destroy'
+      if: inputs.action == 'destroy-plan'
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: mise exec -- terragrunt plan -destroy -out=tfplan
@@ -77,4 +77,4 @@ runs:
       if: inputs.action == 'destroy'
       working-directory: ${{ inputs.working_directory }}
       shell: bash
-      run: mise exec -- terragrunt destroy -auto-approve tfplan
+      run: mise exec -- terragrunt destroy -auto-approve
