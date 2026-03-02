@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"crypto/rand"
 	"database/sql"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -52,59 +50,6 @@ func getDBPassword(secretArn string) (string, error) {
 	return password, nil
 }
 
-// generatePassword generates a cryptographically random password
-func generatePassword(length int) (string, error) {
-	bytes := make([]byte, length)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", fmt.Errorf("failed to generate random password: %w", err)
-	}
-	return hex.EncodeToString(bytes)[:length], nil
-}
-
-// upsertSecret creates or updates a Secrets Manager secret with the app_user credentials
-func upsertSecret(secretName, username, password, host, port, dbname string) error {
-	sess, err := session.NewSession()
-	if err != nil {
-		return fmt.Errorf("failed to create AWS session: %w", err)
-	}
-	client := secretsmanager.New(sess)
-
-	secretValue := map[string]string{
-		"username": username,
-		"password": password,
-		"host":     host,
-		"port":     port,
-		"dbname":   dbname,
-		"engine":   "postgres",
-	}
-	secretJSON, err := json.Marshal(secretValue)
-	if err != nil {
-		return fmt.Errorf("failed to marshal secret JSON: %w", err)
-	}
-
-	// Try to update first
-	_, err = client.PutSecretValue(&secretsmanager.PutSecretValueInput{
-		SecretId:     aws.String(secretName),
-		SecretString: aws.String(string(secretJSON)),
-	})
-	if err != nil {
-		// If secret doesn't exist, create it
-		_, createErr := client.CreateSecret(&secretsmanager.CreateSecretInput{
-			Name:         aws.String(secretName),
-			SecretString: aws.String(string(secretJSON)),
-			Description:  aws.String(fmt.Sprintf("Database credentials for app_user with access to schema-scoped environment")),
-		})
-		if createErr != nil {
-			return fmt.Errorf("failed to create secret %s: %w", secretName, createErr)
-		}
-		log.Printf("Created new secret: %s", secretName)
-	} else {
-		log.Printf("Updated existing secret: %s", secretName)
-	}
-
-	return nil
-}
-
 // buildPostgresURL constructs the PostgreSQL connection URL from environment variables and Secrets Manager
 func buildPostgresURL() (string, error) {
 	user := os.Getenv("DB_USERNAME")
@@ -130,14 +75,18 @@ func buildPostgresURL() (string, error) {
 }
 
 // setupSchemaAndUser creates the schema if it doesn't exist and ensures app_user role
-// has appropriate access scoped to that schema only
+// has appropriate access scoped to that schema only.
+// The password is read from the Terraform-managed Secrets Manager secret.
 func setupSchemaAndUser(db *sql.DB, schema, appUserSecretName string) error {
-	host := os.Getenv("DB_ADDRESS")
-	port := os.Getenv("DB_PORT")
-	dbname := os.Getenv("DB_NAME")
 	appUsername := fmt.Sprintf("app_user_%s", schema)
 
 	log.Printf("Setting up schema '%s' and user '%s'...", schema, appUsername)
+
+	// Read the password from the Terraform-managed Secrets Manager secret
+	password, err := getDBPassword(appUserSecretName)
+	if err != nil {
+		return fmt.Errorf("failed to read app user password from secret %s: %w", appUserSecretName, err)
+	}
 
 	// Create schema if not exists
 	if _, err := db.Exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", schema)); err != nil {
@@ -147,51 +96,23 @@ func setupSchemaAndUser(db *sql.DB, schema, appUserSecretName string) error {
 
 	// Check if role exists
 	var roleExists bool
-	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = $1)", appUsername).Scan(&roleExists)
+	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = $1)", appUsername).Scan(&roleExists)
 	if err != nil {
 		return fmt.Errorf("failed to check if role %s exists: %w", appUsername, err)
 	}
 
 	if !roleExists {
-		// Generate a strong random password
-		password, err := generatePassword(32)
-		if err != nil {
-			return fmt.Errorf("failed to generate password: %w", err)
-		}
-
-		// Create the role
+		// Create the role with the password from Secrets Manager
 		if _, err := db.Exec(fmt.Sprintf("CREATE ROLE %s LOGIN PASSWORD '%s'", appUsername, password)); err != nil {
 			return fmt.Errorf("failed to create role %s: %w", appUsername, err)
 		}
 		log.Printf("Created role '%s'", appUsername)
-
-		// Store credentials in Secrets Manager
-		if err := upsertSecret(appUserSecretName, appUsername, password, host, port, dbname); err != nil {
-			return fmt.Errorf("failed to store credentials in Secrets Manager: %w", err)
-		}
 	} else {
-		log.Printf("Role '%s' already exists, checking secret...", appUsername)
-
-		// Check if secret exists; if not, rotate the password and create it
-		sess, _ := session.NewSession()
-		smClient := secretsmanager.New(sess)
-		_, err := smClient.DescribeSecret(&secretsmanager.DescribeSecretInput{
-			SecretId: aws.String(appUserSecretName),
-		})
-		if err != nil {
-			// Secret doesn't exist — generate new password, update role, store secret
-			password, genErr := generatePassword(32)
-			if genErr != nil {
-				return fmt.Errorf("failed to generate password: %w", genErr)
-			}
-			if _, execErr := db.Exec(fmt.Sprintf("ALTER ROLE %s PASSWORD '%s'", appUsername, password)); execErr != nil {
-				return fmt.Errorf("failed to update password for role %s: %w", appUsername, execErr)
-			}
-			if storeErr := upsertSecret(appUserSecretName, appUsername, password, host, port, dbname); storeErr != nil {
-				return fmt.Errorf("failed to store credentials in Secrets Manager: %w", storeErr)
-			}
-			log.Printf("Rotated password and created secret for existing role '%s'", appUsername)
+		// Sync password with the Terraform-managed secret (supports rotation)
+		if _, err := db.Exec(fmt.Sprintf("ALTER ROLE %s PASSWORD '%s'", appUsername, password)); err != nil {
+			return fmt.Errorf("failed to update password for role %s: %w", appUsername, err)
 		}
+		log.Printf("Synced password for existing role '%s' from Secrets Manager", appUsername)
 	}
 
 	// Set default search_path for the role so it always uses the correct schema

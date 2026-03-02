@@ -136,12 +136,14 @@ The module uses the `terraform-aws-modules/lambda/aws` module with a custom buil
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 6.33.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.33.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | ~> 3.6 |
 
 ## Modules
 
@@ -157,6 +159,9 @@ The module uses the `terraform-aws-modules/lambda/aws` module with a custom buil
 | [aws_iam_role.lambda_goose_migrator](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.lambda_goose_migrator_attach](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_resourcegroups_group.rg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/resourcegroups_group) | resource |
+| [aws_secretsmanager_secret.app_user](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
+| [aws_secretsmanager_secret_version.app_user](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
+| [random_password.app_user_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [aws_iam_policy_document.lambda_assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.lambda_goose_migrator_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_rds_cluster.db](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/rds_cluster) | data source |
@@ -184,5 +189,9 @@ The module uses the `terraform-aws-modules/lambda/aws` module with a custom buil
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_app_user_secret_arn"></a> [app\_user\_secret\_arn](#output\_app\_user\_secret\_arn) | ARN of the Secrets Manager secret containing app\_user credentials |
+| <a name="output_app_user_secret_name"></a> [app\_user\_secret\_name](#output\_app\_user\_secret\_name) | Name of the Secrets Manager secret containing app\_user credentials |
+| <a name="output_app_username"></a> [app\_username](#output\_app\_username) | The database username for the schema-scoped app\_user |
 <!-- END_TF_DOCS -->

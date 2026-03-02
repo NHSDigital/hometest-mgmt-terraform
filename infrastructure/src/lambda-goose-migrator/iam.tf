@@ -46,10 +46,7 @@ data "aws_iam_policy_document" "lambda_goose_migrator_policy" {
   statement {
     effect = "Allow"
     actions = [
-      "secretsmanager:GetSecretValue",
-      "secretsmanager:PutSecretValue",
-      "secretsmanager:CreateSecret",
-      "secretsmanager:DescribeSecret"
+      "secretsmanager:GetSecretValue"
     ]
     resources = ["*"]
   }
