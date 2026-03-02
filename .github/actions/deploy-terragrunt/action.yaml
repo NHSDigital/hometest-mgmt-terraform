@@ -68,7 +68,13 @@ runs:
       run: mise exec -- terragrunt plan -destroy -out=tfplan
 
     - name: Terragrunt Apply
-      if: inputs.action == 'apply' || inputs.action == 'destroy'
+      if: inputs.action == 'apply'
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       run: mise exec -- terragrunt apply -auto-approve tfplan
+
+    - name: Terragrunt Destroy
+      if: inputs.action == 'destroy'
+      working-directory: ${{ inputs.working_directory }}
+      shell: bash
+      run: mise exec -- terragrunt destroy -auto-approve tfplan
