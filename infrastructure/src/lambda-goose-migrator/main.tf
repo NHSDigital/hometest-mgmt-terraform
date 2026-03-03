@@ -30,12 +30,13 @@ module "goose_migrator_lambda" {
     DB_ADDRESS           = var.db_address
     DB_PORT              = var.db_port
     DB_NAME              = var.db_name
-    DB_SECRET_ARN        = var.use_iam_auth ? "" : data.aws_rds_cluster.db.master_user_secret[0].secret_arn
     DB_SCHEMA            = var.db_schema
+    DB_REGION            = var.aws_region
+    USE_IAM_AUTH         = tostring(var.use_iam_auth)
+    DB_SECRET_ARN        = var.use_iam_auth ? "" : data.aws_rds_cluster.db.master_user_secret[0].secret_arn
     APP_USER_SECRET_NAME = var.db_schema != "public" ? aws_secretsmanager_secret.app_user[0].name : ""
-    # USE_IAM_AUTH         = tostring(var.use_iam_auth)
-    DB_REGION     = var.aws_region
-    GRANT_RDS_IAM = tostring(var.use_iam_auth)
+    # GRANT_RDS_IAM        = tostring(var.use_iam_auth)
+    GRANT_RDS_IAM = "true"
   }
 
   architectures = ["arm64"]
