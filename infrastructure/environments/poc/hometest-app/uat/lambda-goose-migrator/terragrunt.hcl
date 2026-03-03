@@ -62,4 +62,6 @@ inputs = {
     dependency.network.outputs.lambda_rds_security_group_id,
     dependency.network.outputs.lambda_security_group_id
   ]
+
+  use_iam_auth = true
 }

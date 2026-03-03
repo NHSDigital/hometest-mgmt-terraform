@@ -405,12 +405,13 @@ inputs = {
       description     = "Order Service - Creates test orders and persists to database"
       api_path_prefix = "order"
       handler         = "index.handler"
+      http_method     = "POST"
       timeout         = 30
       memory_size     = 256
       environment = {
         NODE_OPTIONS              = "--enable-source-maps"
         ENVIRONMENT               = local.environment
-        ORDER_PLACEMENT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.environment}-order-placement"
+        ORDER_PLACEMENT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.aws_account_shortname}-${local.environment}-order-placement"
         DB_USERNAME               = "app_user_${local.db_schema}"
         DB_ADDRESS                = dependency.aurora_postgres.outputs.cluster_endpoint
         DB_PORT                   = tostring(dependency.aurora_postgres.outputs.cluster_port)
@@ -419,6 +420,56 @@ inputs = {
         DB_SCHEMA                 = local.db_schema
         USE_IAM_AUTH              = "true"
         DB_REGION                 = local.aws_region
+      }
+    }
+
+    # Get Order Lambda - Returns order status from DB
+    # CloudFront: /order/* → API Gateway → Lambda (GET)
+    "get-order-lambda" = {
+      description     = "Get Order Service - Returns order status information"
+      api_path_prefix = "order"
+      handler         = "index.handler"
+      http_method     = "GET"
+      timeout         = 30
+      memory_size     = 256
+      enable_cors     = true
+      environment = {
+        NODE_OPTIONS   = "--enable-source-maps"
+        ENVIRONMENT    = local.environment
+        ALLOW_ORIGIN   = "https://${local.env_domain}"
+        DB_USERNAME    = "app_user_${local.db_schema}"
+        DB_ADDRESS     = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT        = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME        = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SECRET_NAME = local.app_user_secret_name
+        DB_SCHEMA      = local.db_schema
+        USE_IAM_AUTH   = "true"
+        DB_REGION      = local.aws_region
+      }
+    }
+
+    # Get Results Lambda - Returns test results from DB
+    # CloudFront: /results/* → API Gateway → Lambda (GET)
+    "get-results-lambda" = {
+      description     = "Get Results Service - Returns test results"
+      api_path_prefix = "results"
+      handler         = "index.handler"
+      http_method     = "GET"
+      timeout         = 30
+      memory_size     = 256
+      enable_cors     = true
+      environment = {
+        NODE_OPTIONS   = "--enable-source-maps"
+        ENVIRONMENT    = local.environment
+        ALLOW_ORIGIN   = "https://${local.env_domain}"
+        DB_USERNAME    = "app_user_${local.db_schema}"
+        DB_ADDRESS     = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT        = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME        = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SECRET_NAME = local.app_user_secret_name
+        DB_SCHEMA      = local.db_schema
+        USE_IAM_AUTH   = "true"
+        DB_REGION      = local.aws_region
       }
     }
   }
