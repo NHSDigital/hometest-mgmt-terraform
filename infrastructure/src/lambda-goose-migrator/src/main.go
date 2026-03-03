@@ -110,7 +110,17 @@ func buildPostgresURL() (string, error) {
 	encodedUser := url.QueryEscape(user)
 	encodedPassword := url.QueryEscape(password)
 
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=require", encodedUser, encodedPassword, host, port, dbname), nil
+	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=require", encodedUser, encodedPassword, host, port, dbname)
+
+	// When DB_SCHEMA is set, include search_path in the connection URL so that
+	// every connection obtained from the *sql.DB pool uses the correct schema.
+	// lib/pq treats unknown DSN parameters as SET key=value session variables.
+	schema := os.Getenv("DB_SCHEMA")
+	if schema != "" && schema != "public" {
+		dbURL += "&search_path=" + url.QueryEscape(schema)
+	}
+
+	return dbURL, nil
 }
 
 // setupSchemaAndUser creates the schema if it doesn't exist and ensures app_user role
@@ -234,20 +244,32 @@ func HandleRequest(ctx context.Context) (Response, error) {
 		}
 	}
 
-	// Step 2: Set search_path to target schema for goose migrations
-	if schema != "public" {
-		log.Printf("Setting search_path to '%s' for migrations...", schema)
-		if _, err := db.Exec(fmt.Sprintf("SET search_path TO %s", schema)); err != nil {
-			log.Printf("Failed to set search_path: %s", err.Error())
-			return Response{"Failed to set search_path"}, err
-		}
-	}
-
-	// Step 3: Run goose migrations
+	// Step 2: Run goose migrations.
+	// search_path is set via the connection URL (see buildPostgresURL), so every
+	// connection from the pool automatically targets the correct schema.
 	log.Println("Running goose.Up migrations...")
 	if err := goose.Up(db, "migrations"); err != nil {
 		log.Printf("Migration failed: %s", redactPassword(err.Error()))
 		return Response{"Migration failed"}, err
+	}
+
+	// Step 3: Re-grant DML privileges on tables/sequences created by the migrations.
+	// ALTER DEFAULT PRIVILEGES (set in setupSchemaAndUser) covers future objects,
+	// but an explicit re-grant ensures privileges are correct even if the default
+	// privileges were modified or if migrations ran before they were set.
+	if schema != "public" {
+		appUsername := fmt.Sprintf("app_user_%s", schema)
+		log.Printf("Re-granting privileges on migrated objects to '%s'...", appUsername)
+		regrants := []string{
+			fmt.Sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA %s TO %s", schema, appUsername),
+			fmt.Sprintf("GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA %s TO %s", schema, appUsername),
+		}
+		for _, g := range regrants {
+			if _, err := db.Exec(g); err != nil {
+				log.Printf("Failed to execute re-grant '%s': %s", g, err.Error())
+				return Response{"Failed to re-grant privileges after migration"}, err
+			}
+		}
 	}
 
 	log.Printf("Migration successful (schema: %s)", schema)

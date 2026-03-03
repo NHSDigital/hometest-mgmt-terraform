@@ -41,7 +41,7 @@ POSTGRES_IMAGE="${POSTGRES_IMAGE:-postgres:16}"
 POSTGRES_USER="${POSTGRES_USER:-testuser}"
 POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-testpassword}"
 POSTGRES_DB="${POSTGRES_DB:-testdb}"
-POSTGRES_PORT="${POSTGRES_PORT:-5432}"
+POSTGRES_PORT="${POSTGRES_PORT:-15432}"
 POSTGRES_SCHEMA="${POSTGRES_SCHEMA:-hometest}"
 APP_USER_PASSWORD="${APP_USER_PASSWORD:-appuserpassword}"
 KEEP_CONTAINER="${KEEP_CONTAINER:-false}"
@@ -86,10 +86,25 @@ wait_for_postgres() {
   local max_attempts=30
   local attempt=1
 
-  log_info "Waiting for PostgreSQL to be ready..."
+  log_info "Waiting for PostgreSQL to be ready (in-container check)..."
   until docker exec "${CONTAINER_NAME}" pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" >/dev/null 2>&1; do
     if [[ ${attempt} -ge ${max_attempts} ]]; then
       log_error "PostgreSQL failed to become ready after ${max_attempts} attempts"
+      return 1
+    fi
+    echo -n "."
+    sleep 1
+    ((attempt++))
+  done
+  echo ""
+
+  # Also verify the host-side port mapping is reachable (important on macOS Docker Desktop)
+  attempt=1
+  log_info "Verifying host-side connectivity on port ${POSTGRES_PORT}..."
+  until PGPASSWORD="${POSTGRES_PASSWORD}" psql -h localhost -p "${POSTGRES_PORT}" -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -c "SELECT 1" >/dev/null 2>&1 \
+     || nc -z localhost "${POSTGRES_PORT}" 2>/dev/null; do
+    if [[ ${attempt} -ge ${max_attempts} ]]; then
+      log_error "Host-side connection to localhost:${POSTGRES_PORT} failed after ${max_attempts} attempts"
       return 1
     fi
     echo -n "."
@@ -122,13 +137,13 @@ ensure_goose() {
 
 # psql as master user.
 psql_master() {
-  docker exec -e PGPASSWORD="${POSTGRES_PASSWORD}" "${CONTAINER_NAME}" \
+  docker exec -i -e PGPASSWORD="${POSTGRES_PASSWORD}" "${CONTAINER_NAME}" \
     psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" "$@"
 }
 
 # psql as app_user_<schema> (limited role).
 psql_appuser() {
-  docker exec -e PGPASSWORD="${APP_USER_PASSWORD}" "${CONTAINER_NAME}" \
+  docker exec -i -e PGPASSWORD="${APP_USER_PASSWORD}" "${CONTAINER_NAME}" \
     psql -U "${APP_USERNAME}" -d "${POSTGRES_DB}" "$@"
 }
 
@@ -212,6 +227,14 @@ verify_tables_in_schema() {
 
 verify_no_tables_in_public() {
   log_info "=== Verifying no application tables leaked into 'public' schema ==="
+
+  log_info "All schemas in database:"
+  psql_master -c \
+    "SELECT schema_name FROM information_schema.schemata ORDER BY schema_name;"
+
+  log_info "Tables in 'public' schema:"
+  psql_master -c \
+    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;"
 
   local public_tables
   public_tables=$(psql_master -t -c \
