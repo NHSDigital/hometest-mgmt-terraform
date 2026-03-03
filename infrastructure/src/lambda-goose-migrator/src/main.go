@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/rds/rdsutils"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
@@ -50,21 +51,59 @@ func getDBPassword(secretArn string) (string, error) {
 	return password, nil
 }
 
-// buildPostgresURL constructs the PostgreSQL connection URL from environment variables and Secrets Manager
+// getIAMAuthToken generates a short-lived RDS IAM authentication token using the Lambda's
+// execution role credentials. The token is valid for 15 minutes and used as the DB password.
+func getIAMAuthToken(host, port, region, dbUser string) (string, error) {
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(region),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to create AWS session: %w", err)
+	}
+	endpoint := fmt.Sprintf("%s:%s", host, port)
+	token, err := rdsutils.BuildAuthToken(endpoint, region, dbUser, sess.Config.Credentials)
+	if err != nil {
+		return "", fmt.Errorf("failed to build IAM auth token: %w", err)
+	}
+	return token, nil
+}
+
+// buildPostgresURL constructs the PostgreSQL connection URL from environment variables.
+// When USE_IAM_AUTH=true, an IAM authentication token is used instead of a static password.
+// The Lambda's execution role must have the rds-db:connect IAM permission.
 func buildPostgresURL() (string, error) {
 	user := os.Getenv("DB_USERNAME")
 	host := os.Getenv("DB_ADDRESS")
 	port := os.Getenv("DB_PORT")
 	dbname := os.Getenv("DB_NAME")
-	secretArn := os.Getenv("DB_SECRET_ARN")
+	useIAMAuth := os.Getenv("USE_IAM_AUTH") == "true"
 
-	if user == "" || host == "" || port == "" || dbname == "" || secretArn == "" {
-		return "", fmt.Errorf("missing one or more required environment variables")
+	if user == "" || host == "" || port == "" || dbname == "" {
+		return "", fmt.Errorf("missing one or more required environment variables: DB_USERNAME, DB_ADDRESS, DB_PORT, DB_NAME")
 	}
 
-	password, err := getDBPassword(secretArn)
-	if err != nil {
-		return "", fmt.Errorf("failed to retrieve DB password: %w", err)
+	var password string
+	if useIAMAuth {
+		region := os.Getenv("DB_REGION")
+		if region == "" {
+			return "", fmt.Errorf("DB_REGION is required when USE_IAM_AUTH is true")
+		}
+		log.Printf("Using IAM authentication for DB connection (region: %s, user: %s)", region, user)
+		token, err := getIAMAuthToken(host, port, region, user)
+		if err != nil {
+			return "", fmt.Errorf("failed to generate IAM auth token: %w", err)
+		}
+		password = token
+	} else {
+		secretArn := os.Getenv("DB_SECRET_ARN")
+		if secretArn == "" {
+			return "", fmt.Errorf("DB_SECRET_ARN is required when USE_IAM_AUTH is false")
+		}
+		var err error
+		password, err = getDBPassword(secretArn)
+		if err != nil {
+			return "", fmt.Errorf("failed to retrieve DB password: %w", err)
+		}
 	}
 
 	// URL-encode username and password
@@ -118,6 +157,19 @@ func setupSchemaAndUser(db *sql.DB, schema, appUserSecretName string) error {
 	// Set default search_path for the role so it always uses the correct schema
 	if _, err := db.Exec(fmt.Sprintf("ALTER ROLE %s SET search_path TO %s", appUsername, schema)); err != nil {
 		return fmt.Errorf("failed to set search_path for %s: %w", appUsername, err)
+	}
+
+	// Grant rds_iam so the app_user can authenticate via IAM tokens instead of a password.
+	// This is a no-op if the rds_iam role does not exist (non-Aurora environments).
+	var rdsIamExists bool
+	if err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'rds_iam')").Scan(&rdsIamExists); err != nil {
+		return fmt.Errorf("failed to check for rds_iam role: %w", err)
+	}
+	if rdsIamExists {
+		if _, err := db.Exec(fmt.Sprintf("GRANT rds_iam TO %s", appUsername)); err != nil {
+			return fmt.Errorf("failed to grant rds_iam to %s: %w", appUsername, err)
+		}
+		log.Printf("Granted rds_iam to '%s' for IAM authentication support", appUsername)
 	}
 
 	// Grant schema usage and DML privileges

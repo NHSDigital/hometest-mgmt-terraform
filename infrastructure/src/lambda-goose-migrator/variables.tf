@@ -98,3 +98,9 @@ variable "security_group_ids" {
   description = "List of security group IDs for Lambda VPC config"
   type        = list(string)
 }
+
+variable "use_iam_auth" {
+  description = "Whether to use IAM authentication for Aurora instead of a static password. Requires enable_iam_auth on the Aurora cluster and the DB user to be granted the rds_iam role."
+  type        = bool
+  default     = false
+}

@@ -240,7 +240,6 @@ verify_app_user_access() {
 
   # app_user must NOT be able to create tables (not a schema owner)
   log_info "  Verify app_user cannot CREATE TABLE..."
-  local create_output
   if psql_appuser -c "CREATE TABLE ${POSTGRES_SCHEMA}.should_fail (id int);" 2>&1; then
     log_error "app_user was unexpectedly able to CREATE TABLE — privileges are too broad!"
     return 1
