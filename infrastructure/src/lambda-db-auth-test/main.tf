@@ -38,6 +38,9 @@ module "db_auth_test_lambda" {
     DB_SCHEMA            = var.db_schema
     DB_REGION            = var.aws_region
     APP_USER_SECRET_NAME = var.app_user_secret_name
+    MASTER_SECRET_ARN    = var.master_secret_arn
+    MASTER_USERNAME      = var.master_username
+    DB_CLUSTER_ID        = var.db_cluster_id
   }
 
   architectures = ["arm64"]
@@ -99,6 +102,12 @@ resource "aws_iam_role_policy" "db_auth_test" {
         Sid      = "RdsIamAuth"
         Effect   = "Allow"
         Action   = ["rds-db:connect"]
+        Resource = ["*"]
+      },
+      {
+        Sid      = "RdsDescribe"
+        Effect   = "Allow"
+        Action   = ["rds:DescribeDBClusters"]
         Resource = ["*"]
       },
       {

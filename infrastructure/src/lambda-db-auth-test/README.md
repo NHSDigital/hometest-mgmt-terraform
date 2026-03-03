@@ -36,10 +36,13 @@
 | <a name="input_aws_account_shortname"></a> [aws\_account\_shortname](#input\_aws\_account\_shortname) | AWS account short name for resource naming | `string` | n/a | yes |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS region | `string` | n/a | yes |
 | <a name="input_db_address"></a> [db\_address](#input\_db\_address) | Aurora cluster endpoint | `string` | n/a | yes |
+| <a name="input_db_cluster_id"></a> [db\_cluster\_id](#input\_db\_cluster\_id) | Aurora DB cluster identifier (for DescribeDBClusters API check) | `string` | `""` | no |
 | <a name="input_db_name"></a> [db\_name](#input\_db\_name) | Database name | `string` | n/a | yes |
 | <a name="input_db_port"></a> [db\_port](#input\_db\_port) | Aurora cluster port | `string` | n/a | yes |
 | <a name="input_db_schema"></a> [db\_schema](#input\_db\_schema) | Database schema (e.g., hometest\_uat) | `string` | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., dev, uat) | `string` | n/a | yes |
+| <a name="input_master_secret_arn"></a> [master\_secret\_arn](#input\_master\_secret\_arn) | Secrets Manager ARN for the Aurora master user password | `string` | `""` | no |
+| <a name="input_master_username"></a> [master\_username](#input\_master\_username) | Aurora master username | `string` | `"postgres"` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Project name for resource naming | `string` | n/a | yes |
 | <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | Security group IDs for Lambda | `list(string)` | n/a | yes |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | VPC subnet IDs for Lambda | `list(string)` | n/a | yes |

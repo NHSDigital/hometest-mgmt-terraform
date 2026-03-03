@@ -21,9 +21,12 @@ dependency "aurora-postgres" {
   config_path = "${get_terragrunt_dir()}/../../../core/aurora-postgres"
 
   mock_outputs = {
-    cluster_endpoint      = "mock-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com"
-    cluster_port          = 5432
-    cluster_database_name = "mock_db"
+    cluster_endpoint               = "mock-cluster.cluster-abc123.eu-west-2.rds.amazonaws.com"
+    cluster_port                   = 5432
+    cluster_database_name          = "mock_db"
+    cluster_master_username        = "postgres"
+    cluster_master_user_secret_arn = "arn:aws:secretsmanager:eu-west-2:000000000000:secret:mock-secret"
+    cluster_id                     = "mock-cluster"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -53,6 +56,9 @@ inputs = {
   db_schema  = local.db_schema
 
   app_user_secret_name = "nhs-hometest/${local.environment}/app-user-db-secret"
+  master_secret_arn    = dependency.aurora-postgres.outputs.cluster_master_user_secret_arn
+  master_username      = dependency.aurora-postgres.outputs.cluster_master_username
+  db_cluster_id        = dependency.aurora-postgres.outputs.cluster_id
 
   subnet_ids = dependency.network.outputs.private_subnet_ids
   security_group_ids = [

@@ -69,3 +69,21 @@ variable "app_user_secret_name" {
   type        = string
   default     = ""
 }
+
+variable "master_secret_arn" {
+  description = "Secrets Manager ARN for the Aurora master user password"
+  type        = string
+  default     = ""
+}
+
+variable "master_username" {
+  description = "Aurora master username"
+  type        = string
+  default     = "postgres"
+}
+
+variable "db_cluster_id" {
+  description = "Aurora DB cluster identifier (for DescribeDBClusters API check)"
+  type        = string
+  default     = ""
+}
