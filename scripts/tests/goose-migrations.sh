@@ -102,7 +102,7 @@ wait_for_postgres() {
   attempt=1
   log_info "Verifying host-side connectivity on port ${POSTGRES_PORT}..."
   until PGPASSWORD="${POSTGRES_PASSWORD}" psql -h localhost -p "${POSTGRES_PORT}" -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -c "SELECT 1" >/dev/null 2>&1 \
-     || nc -z localhost "${POSTGRES_PORT}" 2>/dev/null; do
+      || nc -z localhost "${POSTGRES_PORT}" 2>/dev/null; do
     if [[ ${attempt} -ge ${max_attempts} ]]; then
       log_error "Host-side connection to localhost:${POSTGRES_PORT} failed after ${max_attempts} attempts"
       return 1
