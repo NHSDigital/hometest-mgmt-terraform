@@ -126,7 +126,9 @@ func buildPostgresURL() (string, error) {
 // setupSchemaAndUser creates the schema if it doesn't exist and ensures app_user role
 // has appropriate access scoped to that schema only.
 // The password is read from the Terraform-managed Secrets Manager secret.
-func setupSchemaAndUser(db *sql.DB, schema, appUserSecretName string) error {
+// When grantRdsIam is true, the rds_iam role is granted (IAM auth); when false,
+// rds_iam is revoked so the user falls back to password authentication.
+func setupSchemaAndUser(db *sql.DB, schema, appUserSecretName string, grantRdsIam bool) error {
 	appUsername := fmt.Sprintf("app_user_%s", schema)
 
 	log.Printf("Setting up schema '%s' and user '%s'...", schema, appUsername)
@@ -169,17 +171,38 @@ func setupSchemaAndUser(db *sql.DB, schema, appUserSecretName string) error {
 		return fmt.Errorf("failed to set search_path for %s: %w", appUsername, err)
 	}
 
-	// Grant rds_iam so the app_user can authenticate via IAM tokens instead of a password.
+	// Grant or revoke rds_iam based on whether IAM auth is desired.
+	// When rds_iam is granted, the user authenticates via PAM (IAM tokens only).
+	// When revoked, the user falls back to password auth (md5/scram).
 	// This is a no-op if the rds_iam role does not exist (non-Aurora environments).
 	var rdsIamExists bool
 	if err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = 'rds_iam')").Scan(&rdsIamExists); err != nil {
 		return fmt.Errorf("failed to check for rds_iam role: %w", err)
 	}
 	if rdsIamExists {
-		if _, err := db.Exec(fmt.Sprintf("GRANT rds_iam TO %s", appUsername)); err != nil {
-			return fmt.Errorf("failed to grant rds_iam to %s: %w", appUsername, err)
+		if grantRdsIam {
+			if _, err := db.Exec(fmt.Sprintf("GRANT rds_iam TO %s", appUsername)); err != nil {
+				return fmt.Errorf("failed to grant rds_iam to %s: %w", appUsername, err)
+			}
+			log.Printf("Granted rds_iam to '%s' for IAM authentication support", appUsername)
+		} else {
+			// Check if user currently has rds_iam and revoke it
+			var hasRdsIam bool
+			if err := db.QueryRow(
+				"SELECT EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid = (SELECT oid FROM pg_roles WHERE rolname = 'rds_iam') AND member = (SELECT oid FROM pg_roles WHERE rolname = $1))",
+				appUsername,
+			).Scan(&hasRdsIam); err != nil {
+				return fmt.Errorf("failed to check rds_iam membership for %s: %w", appUsername, err)
+			}
+			if hasRdsIam {
+				if _, err := db.Exec(fmt.Sprintf("REVOKE rds_iam FROM %s", appUsername)); err != nil {
+					return fmt.Errorf("failed to revoke rds_iam from %s: %w", appUsername, err)
+				}
+				log.Printf("Revoked rds_iam from '%s' — user will use password authentication", appUsername)
+			} else {
+				log.Printf("rds_iam not granted to '%s', no revocation needed", appUsername)
+			}
 		}
-		log.Printf("Granted rds_iam to '%s' for IAM authentication support", appUsername)
 	}
 
 	// Grant schema usage and DML privileges
@@ -306,12 +329,16 @@ func HandleRequest(ctx context.Context, event Event) (Response, error) {
 
 	// --- Migrate action (default) ---
 
+	// GRANT_RDS_IAM controls whether the app user gets the rds_iam role (for IAM auth).
+	// When false (or unset), the user uses password authentication.
+	grantRdsIam := os.Getenv("GRANT_RDS_IAM") == "true"
+
 	// Step 1: Create schema and app_user (runs as master user)
 	if schema != "public" {
 		if appUserSecretName == "" {
 			return Response{"APP_USER_SECRET_NAME is required when DB_SCHEMA is set"}, fmt.Errorf("APP_USER_SECRET_NAME is required when DB_SCHEMA is set")
 		}
-		if err := setupSchemaAndUser(db, schema, appUserSecretName); err != nil {
+		if err := setupSchemaAndUser(db, schema, appUserSecretName, grantRdsIam); err != nil {
 			log.Printf("Failed to setup schema and user: %s", err.Error())
 			return Response{"Failed to setup schema and user"}, err
 		}
