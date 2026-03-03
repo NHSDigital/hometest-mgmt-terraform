@@ -262,8 +262,11 @@ func teardownSchemaAndUser(db *sql.DB, schema string) error {
 	}
 
 	if roleExists {
-		// Reassign owned objects to current user (postgres) and drop owned
+		// Aurora's master user (rds_superuser) is not a true PostgreSQL superuser.
+		// REASSIGN OWNED BY requires membership in the source role, so we grant
+		// the app_user role to the current (master) user first.
 		revokeSQL := []string{
+			fmt.Sprintf("GRANT %s TO CURRENT_USER", appUsername),
 			fmt.Sprintf("REASSIGN OWNED BY %s TO CURRENT_USER", appUsername),
 			fmt.Sprintf("DROP OWNED BY %s", appUsername),
 			fmt.Sprintf("DROP ROLE %s", appUsername),
