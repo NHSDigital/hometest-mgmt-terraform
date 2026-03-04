@@ -77,9 +77,10 @@ resource "random_password" "app_user_password" {
 }
 
 resource "aws_secretsmanager_secret" "app_user" {
-  count       = var.db_schema != "public" ? 1 : 0
-  name        = var.app_user_secret_name
-  description = "Database credentials for app_user_${var.db_schema} (schema-scoped)"
+  count                   = var.db_schema != "public" ? 1 : 0
+  name                    = var.app_user_secret_name
+  description             = "Database credentials for app_user_${var.db_schema} (schema-scoped)"
+  recovery_window_in_days = 0
 
   tags = merge(local.common_tags, {
     Name = var.app_user_secret_name
