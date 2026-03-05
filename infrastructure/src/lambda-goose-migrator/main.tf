@@ -26,11 +26,16 @@ module "goose_migrator_lambda" {
   })
 
   environment_variables = {
-    DB_USERNAME   = var.db_username
-    DB_ADDRESS    = var.db_address
-    DB_PORT       = var.db_port
-    DB_NAME       = var.db_name
-    DB_SECRET_ARN = data.aws_rds_cluster.db.master_user_secret[0].secret_arn
+    DB_USERNAME          = var.db_username
+    DB_ADDRESS           = var.db_address
+    DB_PORT              = var.db_port
+    DB_NAME              = var.db_name
+    DB_SCHEMA            = var.db_schema
+    DB_REGION            = var.aws_region
+    USE_IAM_AUTH         = tostring(var.use_iam_auth)
+    DB_SECRET_ARN        = var.use_iam_auth ? "" : data.aws_rds_cluster.db.master_user_secret[0].secret_arn
+    APP_USER_SECRET_NAME = var.db_schema != "public" ? aws_secretsmanager_secret.app_user[0].name : ""
+    GRANT_RDS_IAM        = tostring(var.grant_rds_iam)
   }
 
   architectures = ["arm64"]
@@ -42,7 +47,7 @@ module "goose_migrator_lambda" {
       path = "${path.module}/src"
       commands = [
         "go mod tidy",
-        "GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o bootstrap main.go",
+        "GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o bootstrap main.go",
         ":zip",
       ]
       patterns = [
@@ -52,4 +57,45 @@ module "goose_migrator_lambda" {
       ]
     }
   ]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# APP USER SECRET - Terraform-managed credentials for schema-scoped app_user
+#
+# Creates a random password and stores it in Secrets Manager. The goose migrator
+# Lambda reads this password to CREATE/ALTER the DB role. App lambdas also read
+# it for their DB connections.
+#
+# Only created when db_schema != "public" (i.e., for per-environment schemas).
+# Password rotation: taint random_password.app_user_password and re-apply.
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "random_password" "app_user_password" {
+  count   = var.db_schema != "public" ? 1 : 0
+  length  = 32
+  special = false
+}
+
+resource "aws_secretsmanager_secret" "app_user" {
+  count                   = var.db_schema != "public" ? 1 : 0
+  name                    = var.app_user_secret_name
+  description             = "Database credentials for app_user_${var.db_schema} (schema-scoped)"
+  recovery_window_in_days = 0
+
+  tags = merge(local.common_tags, {
+    Name = var.app_user_secret_name
+  })
+}
+
+resource "aws_secretsmanager_secret_version" "app_user" {
+  count     = var.db_schema != "public" ? 1 : 0
+  secret_id = aws_secretsmanager_secret.app_user[0].id
+  secret_string = jsonencode({
+    username = "app_user_${var.db_schema}"
+    password = random_password.app_user_password[0].result
+    host     = var.db_address
+    port     = var.db_port
+    dbname   = var.db_name
+    engine   = "postgres"
+  })
 }
