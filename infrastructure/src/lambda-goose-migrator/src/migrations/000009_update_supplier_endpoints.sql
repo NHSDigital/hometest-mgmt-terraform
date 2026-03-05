@@ -1,6 +1,6 @@
 -- +goose Up
 ALTER TABLE supplier
-ADD COLUMN results_path varchar(255);
+ADD COLUMN IF NOT EXISTS results_path varchar(255);
 
 UPDATE supplier
 SET
@@ -30,4 +30,4 @@ SET
 WHERE supplier_id = '77777777-7777-4777-8777-777777777777';
 
 ALTER TABLE supplier
-DROP COLUMN results_path;
+DROP COLUMN IF EXISTS results_path;
