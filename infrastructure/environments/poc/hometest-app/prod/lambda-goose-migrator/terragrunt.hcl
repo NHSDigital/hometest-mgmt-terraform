@@ -1,9 +1,9 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# TERRAGRUNT CONFIGURATION FOR UAT ENVIRONMENT GOOSE MIGRATOR
-# Deployment: cd poc/hometest-app/uat/lambda-goose-migrator && terragrunt apply
+# TERRAGRUNT CONFIGURATION FOR PROD ENVIRONMENT GOOSE MIGRATOR
+# Deployment: cd poc/hometest-app/prod/lambda-goose-migrator && terragrunt apply
 #
 # All shared configuration (dependencies, inputs) comes from ../goose-migrator.hcl.
-# Environment name ("uat") is derived automatically from the parent directory name.
+# Environment name ("prod") is derived automatically from the parent directory name.
 # ---------------------------------------------------------------------------------------------------------------------
 
 include "root" {
