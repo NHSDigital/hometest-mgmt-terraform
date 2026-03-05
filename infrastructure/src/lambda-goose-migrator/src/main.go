@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rds/rdsutils"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 	"github.com/pressly/goose/v3"
 )
 
@@ -131,6 +131,10 @@ func buildPostgresURL() (string, error) {
 func setupSchemaAndUser(db *sql.DB, schema, appUserSecretName string, grantRdsIam bool) error {
 	appUsername := fmt.Sprintf("app_user_%s", schema)
 
+	// Quote identifiers to prevent SQL injection (schema/role names cannot be parameterized)
+	quotedSchema := pq.QuoteIdentifier(schema)
+	quotedUser := pq.QuoteIdentifier(appUsername)
+
 	log.Printf("Setting up schema '%s' and user '%s'...", schema, appUsername)
 
 	// Read the password from the Terraform-managed Secrets Manager secret
@@ -140,7 +144,7 @@ func setupSchemaAndUser(db *sql.DB, schema, appUserSecretName string, grantRdsIa
 	}
 
 	// Create schema if not exists
-	if _, err := db.Exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", schema)); err != nil {
+	if _, err := db.Exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", quotedSchema)); err != nil {
 		return fmt.Errorf("failed to create schema %s: %w", schema, err)
 	}
 	log.Printf("Schema '%s' ensured", schema)
@@ -152,22 +156,25 @@ func setupSchemaAndUser(db *sql.DB, schema, appUserSecretName string, grantRdsIa
 		return fmt.Errorf("failed to check if role %s exists: %w", appUsername, err)
 	}
 
+	// Use QuoteLiteral for password to safely escape special characters
+	quotedPassword := pq.QuoteLiteral(password)
+
 	if !roleExists {
 		// Create the role with the password from Secrets Manager
-		if _, err := db.Exec(fmt.Sprintf("CREATE ROLE %s LOGIN PASSWORD '%s'", appUsername, password)); err != nil {
+		if _, err := db.Exec(fmt.Sprintf("CREATE ROLE %s LOGIN PASSWORD %s", quotedUser, quotedPassword)); err != nil {
 			return fmt.Errorf("failed to create role %s: %w", appUsername, err)
 		}
 		log.Printf("Created role '%s'", appUsername)
 	} else {
 		// Sync password with the Terraform-managed secret (supports rotation)
-		if _, err := db.Exec(fmt.Sprintf("ALTER ROLE %s PASSWORD '%s'", appUsername, password)); err != nil {
+		if _, err := db.Exec(fmt.Sprintf("ALTER ROLE %s PASSWORD %s", quotedUser, quotedPassword)); err != nil {
 			return fmt.Errorf("failed to update password for role %s: %w", appUsername, err)
 		}
 		log.Printf("Synced password for existing role '%s' from Secrets Manager", appUsername)
 	}
 
 	// Set default search_path for the role so it always uses the correct schema
-	if _, err := db.Exec(fmt.Sprintf("ALTER ROLE %s SET search_path TO %s", appUsername, schema)); err != nil {
+	if _, err := db.Exec(fmt.Sprintf("ALTER ROLE %s SET search_path TO %s", quotedUser, quotedSchema)); err != nil {
 		return fmt.Errorf("failed to set search_path for %s: %w", appUsername, err)
 	}
 
@@ -181,7 +188,7 @@ func setupSchemaAndUser(db *sql.DB, schema, appUserSecretName string, grantRdsIa
 	}
 	if rdsIamExists {
 		if grantRdsIam {
-			if _, err := db.Exec(fmt.Sprintf("GRANT rds_iam TO %s", appUsername)); err != nil {
+			if _, err := db.Exec(fmt.Sprintf("GRANT rds_iam TO %s", quotedUser)); err != nil {
 				return fmt.Errorf("failed to grant rds_iam to %s: %w", appUsername, err)
 			}
 			log.Printf("Granted rds_iam to '%s' for IAM authentication support", appUsername)
@@ -195,7 +202,7 @@ func setupSchemaAndUser(db *sql.DB, schema, appUserSecretName string, grantRdsIa
 				return fmt.Errorf("failed to check rds_iam membership for %s: %w", appUsername, err)
 			}
 			if hasRdsIam {
-				if _, err := db.Exec(fmt.Sprintf("REVOKE rds_iam FROM %s", appUsername)); err != nil {
+				if _, err := db.Exec(fmt.Sprintf("REVOKE rds_iam FROM %s", quotedUser)); err != nil {
 					return fmt.Errorf("failed to revoke rds_iam from %s: %w", appUsername, err)
 				}
 				log.Printf("Revoked rds_iam from '%s' — user will use password authentication", appUsername)
@@ -207,11 +214,11 @@ func setupSchemaAndUser(db *sql.DB, schema, appUserSecretName string, grantRdsIa
 
 	// Grant schema usage and DML privileges
 	grants := []string{
-		fmt.Sprintf("GRANT USAGE ON SCHEMA %s TO %s", schema, appUsername),
-		fmt.Sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA %s TO %s", schema, appUsername),
-		fmt.Sprintf("GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA %s TO %s", schema, appUsername),
-		fmt.Sprintf("ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO %s", schema, appUsername),
-		fmt.Sprintf("ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO %s", schema, appUsername),
+		fmt.Sprintf("GRANT USAGE ON SCHEMA %s TO %s", quotedSchema, quotedUser),
+		fmt.Sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA %s TO %s", quotedSchema, quotedUser),
+		fmt.Sprintf("GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA %s TO %s", quotedSchema, quotedUser),
+		fmt.Sprintf("ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO %s", quotedSchema, quotedUser),
+		fmt.Sprintf("ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO %s", quotedSchema, quotedUser),
 	}
 
 	for _, grant := range grants {
@@ -239,11 +246,15 @@ type Event struct {
 func teardownSchemaAndUser(db *sql.DB, schema string) error {
 	appUsername := fmt.Sprintf("app_user_%s", schema)
 
+	// Quote identifiers to prevent SQL injection
+	quotedSchema := pq.QuoteIdentifier(schema)
+	quotedUser := pq.QuoteIdentifier(appUsername)
+
 	log.Printf("Tearing down schema '%s' and user '%s'...", schema, appUsername)
 
 	// Revoke all privileges and drop schema (CASCADE drops all objects in the schema)
 	teardownSQL := []string{
-		fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE", schema),
+		fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE", quotedSchema),
 	}
 
 	for _, stmt := range teardownSQL {
@@ -266,10 +277,10 @@ func teardownSchemaAndUser(db *sql.DB, schema string) error {
 		// REASSIGN OWNED BY requires membership in the source role, so we grant
 		// the app_user role to the current (master) user first.
 		revokeSQL := []string{
-			fmt.Sprintf("GRANT %s TO CURRENT_USER", appUsername),
-			fmt.Sprintf("REASSIGN OWNED BY %s TO CURRENT_USER", appUsername),
-			fmt.Sprintf("DROP OWNED BY %s", appUsername),
-			fmt.Sprintf("DROP ROLE %s", appUsername),
+			fmt.Sprintf("GRANT %s TO CURRENT_USER", quotedUser),
+			fmt.Sprintf("REASSIGN OWNED BY %s TO CURRENT_USER", quotedUser),
+			fmt.Sprintf("DROP OWNED BY %s", quotedUser),
+			fmt.Sprintf("DROP ROLE %s", quotedUser),
 		}
 		for _, stmt := range revokeSQL {
 			log.Printf("Executing: %s", stmt)
@@ -362,10 +373,12 @@ func HandleRequest(ctx context.Context, event Event) (Response, error) {
 	// privileges were modified or if migrations ran before they were set.
 	if schema != "public" {
 		appUsername := fmt.Sprintf("app_user_%s", schema)
+		quotedSchema := pq.QuoteIdentifier(schema)
+		quotedUser := pq.QuoteIdentifier(appUsername)
 		log.Printf("Re-granting privileges on migrated objects to '%s'...", appUsername)
 		regrants := []string{
-			fmt.Sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA %s TO %s", schema, appUsername),
-			fmt.Sprintf("GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA %s TO %s", schema, appUsername),
+			fmt.Sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA %s TO %s", quotedSchema, quotedUser),
+			fmt.Sprintf("GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA %s TO %s", quotedSchema, quotedUser),
 		}
 		for _, g := range regrants {
 			if _, err := db.Exec(g); err != nil {
