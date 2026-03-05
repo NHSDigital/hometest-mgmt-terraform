@@ -44,8 +44,10 @@ data "aws_iam_policy_document" "lambda_goose_migrator_policy" {
     resources = ["arn:aws:logs:*:*:*"]
   }
   statement {
-    effect    = "Allow"
-    actions   = ["secretsmanager:GetSecretValue"]
+    effect = "Allow"
+    actions = [
+      "secretsmanager:GetSecretValue"
+    ]
     resources = ["*"]
   }
   statement {

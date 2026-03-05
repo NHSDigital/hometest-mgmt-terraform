@@ -22,7 +22,6 @@ on:
           - network
           - aurora-postgres
           - shared_services
-          - lambda-goose-migrator
           - all
       action:
         description: "Terraform action to perform"
@@ -150,6 +149,7 @@ jobs:
             --invocation-type RequestResponse \
             --log-type Tail \
             --cli-read-timeout 0 \
+            --cli-binary-format raw-in-base64-out \
             --payload '{}' \
             /tmp/lambda-response.json > /tmp/lambda-invoke-meta.json
 
