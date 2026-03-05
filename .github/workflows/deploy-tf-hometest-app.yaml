@@ -97,8 +97,13 @@ jobs:
             echo "| hometest-service commit | \`${HS_COMMIT_SHORT}\` (${HS_COMMIT}) |"
           } >> "$GITHUB_STEP_SUMMARY"
 
-  deploy:
-    name: "Deploy ${{ matrix.subenv }}"
+  # ---------------------------------------------------------------------------
+  # DEPLOY PATH (plan / apply): migrate first → then deploy app
+  # ---------------------------------------------------------------------------
+
+  deploy-migrator:
+    name: "Migrate DB ${{ matrix.subenv }}"
+    if: inputs.action != 'destroy'
     runs-on: ubuntu-latest
     needs: [validate-inputs]
     timeout-minutes: 30
@@ -107,7 +112,59 @@ jobs:
       contents: read
     strategy:
       fail-fast: true
-      max-parallel: 1  # Sequential deployment to respect dependencies
+      max-parallel: 1
+      matrix:
+        subenv: ${{ fromJson(needs.validate-inputs.outputs.subenvs) }}
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v6
+        with:
+          path: hometest-mgmt-terraform
+
+      - name: Install mise tools
+        uses: ./hometest-mgmt-terraform/.github/actions/install-mise
+        with:
+          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
+
+      - name: "Deploy goose migrator (${{ matrix.subenv }})"
+        uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
+        with:
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          aws_region: ${{ env.AWS_REGION }}
+          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
+          action: ${{ inputs.action || 'plan' }}
+
+      - name: "Invoke goose migrator to run migrations"
+        if: inputs.action == 'apply'
+        uses: ./hometest-mgmt-terraform/.github/actions/invoke-goose-migrator
+        with:
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          aws_region: ${{ env.AWS_REGION }}
+          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
+          lambda_action: migrate
+          subenv: ${{ matrix.subenv }}
+
+      - name: "Post migration summary"
+        if: always()
+        run: |
+          {
+            echo "## Migrate DB: ${{ matrix.subenv }}"
+            echo "- **Status**: ${{ job.status }}"
+            echo "- **Action**: ${{ inputs.action || 'plan' }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-app:
+    name: "Deploy App ${{ matrix.subenv }}"
+    if: inputs.action != 'destroy'
+    runs-on: ubuntu-latest
+    needs: [validate-inputs, deploy-migrator]
+    timeout-minutes: 30
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      fail-fast: true
+      max-parallel: 1
       matrix:
         subenv: ${{ fromJson(needs.validate-inputs.outputs.subenvs) }}
     steps:
@@ -143,7 +200,7 @@ jobs:
         with:
           working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}
 
-      - name: "Deploy ${{ matrix.subenv }}"
+      - name: "Deploy app (${{ matrix.subenv }})"
         uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
@@ -155,16 +212,157 @@ jobs:
         if: always()
         run: |
           {
-            echo "## Subenv: ${{ matrix.subenv }}"
+            echo "## Deploy App: ${{ matrix.subenv }}"
             echo "- **Status**: ${{ job.status }}"
             echo "- **Action**: ${{ inputs.action || 'plan' }}"
             echo "- **Path**: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
+  # ---------------------------------------------------------------------------
+  # DESTROY PATH: destroy app → teardown schema → destroy migrator infra
+  # ---------------------------------------------------------------------------
+
+  destroy-app:
+    name: "Destroy App ${{ matrix.subenv }}"
+    if: inputs.action == 'destroy'
+    runs-on: ubuntu-latest
+    needs: [validate-inputs]
+    timeout-minutes: 30
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        subenv: ${{ fromJson(needs.validate-inputs.outputs.subenvs) }}
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v6
+        with:
+          path: hometest-mgmt-terraform
+
+      - name: "Checkout hometest-service"
+        uses: actions/checkout@v6
+        with:
+          repository: "NHSDigital/hometest-service"
+          ref: ${{ inputs.hometest_service_ref || 'main' }}
+          path: hometest-service
+          ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
+
+      - name: Install mise tools
+        uses: ./hometest-mgmt-terraform/.github/actions/install-mise
+        with:
+          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}
+
+      - name: "Destroy app (${{ matrix.subenv }})"
+        uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
+        with:
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          aws_region: ${{ env.AWS_REGION }}
+          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}
+          action: destroy
+
+      - name: "Post destroy summary"
+        if: always()
+        run: |
+          {
+            echo "## Destroy App: ${{ matrix.subenv }}"
+            echo "- **Status**: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  teardown-schema:
+    name: "Teardown Schema ${{ matrix.subenv }}"
+    if: inputs.action == 'destroy'
+    runs-on: ubuntu-latest
+    needs: [validate-inputs, destroy-app]
+    timeout-minutes: 30
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        subenv: ${{ fromJson(needs.validate-inputs.outputs.subenvs) }}
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v6
+        with:
+          path: hometest-mgmt-terraform
+
+      - name: Install mise tools
+        uses: ./hometest-mgmt-terraform/.github/actions/install-mise
+        with:
+          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
+
+      - name: "Invoke teardown to drop schema and user"
+        uses: ./hometest-mgmt-terraform/.github/actions/invoke-goose-migrator
+        with:
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          aws_region: ${{ env.AWS_REGION }}
+          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
+          lambda_action: teardown
+          subenv: ${{ matrix.subenv }}
+          function_required: "false"
+
+      - name: "Post teardown summary"
+        if: always()
+        run: |
+          {
+            echo "## Teardown Schema: ${{ matrix.subenv }}"
+            echo "- **Status**: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  destroy-migrator:
+    name: "Destroy Migrator ${{ matrix.subenv }}"
+    if: inputs.action == 'destroy'
+    runs-on: ubuntu-latest
+    needs: [validate-inputs, teardown-schema]
+    timeout-minutes: 30
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        subenv: ${{ fromJson(needs.validate-inputs.outputs.subenvs) }}
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v6
+        with:
+          path: hometest-mgmt-terraform
+
+      - name: Install mise tools
+        uses: ./hometest-mgmt-terraform/.github/actions/install-mise
+        with:
+          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
+
+      - name: "Destroy goose migrator (${{ matrix.subenv }})"
+        uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
+        with:
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          aws_region: ${{ env.AWS_REGION }}
+          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
+          action: destroy
+
+      - name: "Post destroy migrator summary"
+        if: always()
+        run: |
+          {
+            echo "## Destroy Migrator: ${{ matrix.subenv }}"
+            echo "- **Status**: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
+  # SUMMARY
+  # ---------------------------------------------------------------------------
+
   summary:
     name: "Deployment Summary"
     runs-on: ubuntu-latest
-    needs: [validate-inputs, deploy]
+    needs: [validate-inputs, deploy-migrator, deploy-app, destroy-app, teardown-schema, destroy-migrator]
     if: always()
     steps:
       - name: "Generate summary"
@@ -178,7 +376,7 @@ jobs:
             echo "| Stack | hometest-app |"
             echo "| Subenv(s) | ${{ inputs.subenv || 'dev' }} |"
             echo "| Action | ${{ inputs.action || 'plan' }} |"
-            echo "| Overall Status | ${{ needs.deploy.result }} |"
+            echo "| Overall Status | see individual jobs |"
             echo "| Run ID | ${{ github.run_id }} |"
             echo "| Triggered by | ${{ github.actor }} |"
           } >> "$GITHUB_STEP_SUMMARY"

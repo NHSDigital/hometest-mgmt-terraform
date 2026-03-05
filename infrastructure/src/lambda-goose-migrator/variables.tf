@@ -77,6 +77,18 @@ variable "db_cluster_id" {
   type        = string
 }
 
+variable "db_schema" {
+  description = "Database schema name for environment isolation (e.g., hometest_dev, hometest_staging)"
+  type        = string
+  default     = "public"
+}
+
+variable "app_user_secret_name" {
+  description = "Secrets Manager secret name to store the schema-scoped app_user credentials"
+  type        = string
+  default     = ""
+}
+
 variable "subnet_ids" {
   description = "List of subnet IDs for Lambda VPC config"
   type        = list(string)
@@ -85,4 +97,16 @@ variable "subnet_ids" {
 variable "security_group_ids" {
   description = "List of security group IDs for Lambda VPC config"
   type        = list(string)
+}
+
+variable "use_iam_auth" {
+  description = "Whether the goose migrator Lambda itself connects to Aurora using IAM auth instead of Secrets Manager password. The master user typically uses password auth, so this is usually false."
+  type        = bool
+  default     = false
+}
+
+variable "grant_rds_iam" {
+  description = "Whether to GRANT rds_iam to the app_user so that app lambdas can use IAM token authentication. Independent of how the migrator itself connects."
+  type        = bool
+  default     = false
 }
