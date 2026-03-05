@@ -22,7 +22,6 @@ on:
           - network
           - aurora-postgres
           - shared_services
-          - lambda-goose-migrator
           - all
       action:
         description: "Terraform action to perform"

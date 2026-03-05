@@ -25,6 +25,7 @@ on:
           - dev
           # - dev-example
           - uat
+          - demo
       action:
         description: "Terraform action to perform"
         required: true
