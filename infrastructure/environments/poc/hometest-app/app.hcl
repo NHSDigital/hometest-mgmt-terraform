@@ -56,6 +56,10 @@ locals {
   create_cloudfront_certificate = lookup(local._domain_overrides, "create_cloudfront_certificate", false)
   create_api_certificate        = lookup(local._domain_overrides, "create_api_certificate", false)
 
+  # Schema-per-environment: each env gets its own schema in the shared Aurora DB
+  db_schema            = "hometest_${local.environment}"
+  app_user_secret_name = "nhs-hometest/${local.environment}/app-user-db-secret"
+
   # ---------------------------------------------------------------------------
   # SOURCE PATHS
   # Override these in child terragrunt.hcl locals if needed
@@ -246,8 +250,7 @@ inputs = {
   lambda_secrets_arns = [
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/preventex-dev-client-secret-*",
     "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/sh24-dev-client-secret-*",
-    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/nhs-login-private-key-*",
-    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:rds!cluster-*"
+    "arn:aws:secretsmanager:eu-west-2:781863586270:secret:nhs-hometest/dev/nhs-login-private-key-*"
   ]
 
   # KMS keys for secrets encrypted with different keys than shared_services KMS
@@ -297,13 +300,15 @@ inputs = {
       timeout         = 30
       memory_size     = 256
       environment = {
-        NODE_OPTIONS   = "--enable-source-maps"
-        ENVIRONMENT    = local.environment
-        DB_USERNAME    = dependency.aurora_postgres.outputs.cluster_master_username
-        DB_ADDRESS     = dependency.aurora_postgres.outputs.cluster_endpoint
-        DB_PORT        = tostring(dependency.aurora_postgres.outputs.cluster_port)
-        DB_NAME        = dependency.aurora_postgres.outputs.cluster_database_name
-        DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = local.environment
+        DB_USERNAME  = "app_user_${local.db_schema}"
+        DB_ADDRESS   = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT      = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME      = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SCHEMA    = local.db_schema
+        USE_IAM_AUTH = "true"
+        DB_REGION    = local.aws_region
       }
     }
 
@@ -317,13 +322,15 @@ inputs = {
       timeout     = 60 # Longer timeout for external API calls to supplier
       memory_size = 512
       environment = {
-        NODE_OPTIONS   = "--enable-source-maps"
-        ENVIRONMENT    = local.environment
-        DB_USERNAME    = dependency.aurora_postgres.outputs.cluster_master_username
-        DB_ADDRESS     = dependency.aurora_postgres.outputs.cluster_endpoint
-        DB_PORT        = tostring(dependency.aurora_postgres.outputs.cluster_port)
-        DB_NAME        = dependency.aurora_postgres.outputs.cluster_database_name
-        DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = local.environment
+        DB_USERNAME  = "app_user_${local.db_schema}"
+        DB_ADDRESS   = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT      = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME      = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SCHEMA    = local.db_schema
+        USE_IAM_AUTH = "true"
+        DB_REGION    = local.aws_region
       }
     }
 
@@ -397,17 +404,20 @@ inputs = {
       description     = "Order Service - Creates test orders and persists to database"
       api_path_prefix = "order"
       handler         = "index.handler"
+      http_method     = "POST"
       timeout         = 30
       memory_size     = 256
       environment = {
         NODE_OPTIONS              = "--enable-source-maps"
         ENVIRONMENT               = local.environment
         ORDER_PLACEMENT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.aws_account_shortname}-${local.environment}-order-placement"
-        DB_USERNAME               = dependency.aurora_postgres.outputs.cluster_master_username
+        DB_USERNAME               = "app_user_${local.db_schema}"
         DB_ADDRESS                = dependency.aurora_postgres.outputs.cluster_endpoint
         DB_PORT                   = tostring(dependency.aurora_postgres.outputs.cluster_port)
         DB_NAME                   = dependency.aurora_postgres.outputs.cluster_database_name
-        DB_SECRET_NAME            = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
+        DB_SCHEMA                 = local.db_schema
+        USE_IAM_AUTH              = "true"
+        DB_REGION                 = local.aws_region
       }
     }
   }
