@@ -19,14 +19,12 @@ WHERE supplier_id = '77777777-7777-4777-8777-777777777777';
 UPDATE supplier
 SET
   service_url = 'https://func-nhshometest-staging.azurewebsites.net/',
-  oauth_token_path = '/api/oauth',
-  results_path = NULL
+  oauth_token_path = '/api/oauth'
 WHERE supplier_id = '11111111-1111-4111-8111-111111111111';
 
 UPDATE supplier
 SET
-  order_path = '/order',
-  results_path = NULL
+  order_path = '/order'
 WHERE supplier_id = '77777777-7777-4777-8777-777777777777';
 
 ALTER TABLE supplier
