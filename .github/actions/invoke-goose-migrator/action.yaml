@@ -36,14 +36,17 @@ runs:
 
     - name: "Invoke Lambda and stream CloudWatch logs"
       shell: bash
+      env:
+        WORKING_DIR: ${{ inputs.working_directory }}
+        FUNCTION_REQUIRED: ${{ inputs.function_required }}
+        LAMBDA_ACTION: ${{ inputs.lambda_action }}
+        SUBENV: ${{ inputs.subenv }}
       run: |
-        WORKING_DIR="${{ inputs.working_directory }}"
-
         # Get function name from terraform output
         FUNCTION_NAME=$(cd "$WORKING_DIR" && mise exec -- terragrunt output -raw function_name 2>/dev/null || echo "")
 
         if [ -z "$FUNCTION_NAME" ] || [ "$FUNCTION_NAME" == "None" ]; then
-          if [ "${{ inputs.function_required }}" == "false" ]; then
+          if [ "$FUNCTION_REQUIRED" == "false" ]; then
             echo "::warning::Could not determine Lambda function name — migrator may already be destroyed. Skipping."
             exit 0
           else
@@ -52,7 +55,7 @@ runs:
           fi
         fi
 
-        echo "Invoking Lambda: ${FUNCTION_NAME} (action: ${{ inputs.lambda_action }})"
+        echo "Invoking Lambda: ${FUNCTION_NAME} (action: ${LAMBDA_ACTION})"
         LOG_GROUP="/aws/lambda/${FUNCTION_NAME}"
         START_TIME_MS=$(date +%s%3N)
 
@@ -62,7 +65,7 @@ runs:
           --log-type Tail \
           --cli-read-timeout 0 \
           --cli-binary-format raw-in-base64-out \
-          --payload "{\"action\":\"${{ inputs.lambda_action }}\"}" \
+          --payload "{\"action\":\"${LAMBDA_ACTION}\"}" \
           /tmp/lambda-response.json > /tmp/lambda-invoke-meta.json
 
         STATUS_CODE=$(jq -r '.StatusCode // empty' /tmp/lambda-invoke-meta.json)
@@ -105,7 +108,11 @@ runs:
           fi
         fi
 
-        SUMMARY_TITLE="${{ inputs.lambda_action == 'migrate' && 'Migration' || 'Teardown' }} Logs (${{ inputs.subenv }})"
+        if [ "$LAMBDA_ACTION" == "migrate" ]; then
+          SUMMARY_TITLE="Migration Logs (${SUBENV})"
+        else
+          SUMMARY_TITLE="Teardown Logs (${SUBENV})"
+        fi
         echo "=== ${SUMMARY_TITLE} ==="
         if [ -n "$LOGS" ]; then
           echo "$LOGS"
@@ -125,7 +132,7 @@ runs:
         fi
 
         if [ -n "$FUNCTION_ERROR" ] && [ "$FUNCTION_ERROR" != "null" ]; then
-          echo "::error::Lambda ${{ inputs.lambda_action }} error: ${FUNCTION_ERROR}"
+          echo "::error::Lambda ${LAMBDA_ACTION} error: ${FUNCTION_ERROR}"
           cat /tmp/lambda-response.json
           exit 1
         fi
