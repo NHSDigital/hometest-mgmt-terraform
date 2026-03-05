@@ -379,9 +379,13 @@ inputs = {
       timeout         = 30
       memory_size     = 256
       environment = {
-        NODE_OPTIONS     = "--enable-source-maps"
-        ENVIRONMENT      = local.environment
-        DATABASE_URL = "${dependency.aurora_postgres.outputs.connection_string}?currentSchema=hometest"
+        NODE_OPTIONS   = "--enable-source-maps"
+        ENVIRONMENT    = local.environment
+        DB_USERNAME    = dependency.aurora_postgres.outputs.cluster_master_username
+        DB_ADDRESS     = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT        = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME        = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SECRET_NAME = dependency.aurora_postgres.outputs.cluster_master_user_secret_name
       }
       authorization        = "COGNITO_USER_POOLS"
       authorization_scopes = ["results/write"]
