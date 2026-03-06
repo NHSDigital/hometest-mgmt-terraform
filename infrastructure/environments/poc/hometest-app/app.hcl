@@ -58,6 +58,7 @@ locals {
 
   # Schema-per-environment: each env gets its own schema in the shared Aurora DB
   db_schema            = "hometest_${local.environment}"
+  db_app_user          = "app_user_${local.db_schema}"
   app_user_secret_name = "nhs-hometest/${local.environment}/app-user-db-secret"
 
   # ---------------------------------------------------------------------------
@@ -302,7 +303,7 @@ inputs = {
       environment = {
         NODE_OPTIONS = "--enable-source-maps"
         ENVIRONMENT  = local.environment
-        DB_USERNAME  = "app_user_${local.db_schema}"
+        DB_USERNAME  = local.db_app_user
         DB_ADDRESS   = dependency.aurora_postgres.outputs.cluster_endpoint
         DB_PORT      = tostring(dependency.aurora_postgres.outputs.cluster_port)
         DB_NAME      = dependency.aurora_postgres.outputs.cluster_database_name
@@ -324,7 +325,7 @@ inputs = {
       environment = {
         NODE_OPTIONS = "--enable-source-maps"
         ENVIRONMENT  = local.environment
-        DB_USERNAME  = "app_user_${local.db_schema}"
+        DB_USERNAME  = local.db_app_user
         DB_ADDRESS   = dependency.aurora_postgres.outputs.cluster_endpoint
         DB_PORT      = tostring(dependency.aurora_postgres.outputs.cluster_port)
         DB_NAME      = dependency.aurora_postgres.outputs.cluster_database_name
@@ -411,13 +412,104 @@ inputs = {
         NODE_OPTIONS              = "--enable-source-maps"
         ENVIRONMENT               = local.environment
         ORDER_PLACEMENT_QUEUE_URL = "https://sqs.${local.aws_region}.amazonaws.com/${local.account_id}/${local.project_name}-${local.aws_account_shortname}-${local.environment}-order-placement"
-        DB_USERNAME               = "app_user_${local.db_schema}"
+        DB_USERNAME               = local.db_app_user
         DB_ADDRESS                = dependency.aurora_postgres.outputs.cluster_endpoint
         DB_PORT                   = tostring(dependency.aurora_postgres.outputs.cluster_port)
         DB_NAME                   = dependency.aurora_postgres.outputs.cluster_database_name
         DB_SCHEMA                 = local.db_schema
         USE_IAM_AUTH              = "true"
         DB_REGION                 = local.aws_region
+      }
+    }
+
+    # # Get Order Lambda - Retrieves order details from database
+    # # CloudFront: /order/* (GET) → API Gateway → Lambda
+    # "get-order-lambda" = {
+    #   description     = "Get Order Service - Retrieves order details from database"
+    #   api_path_prefix = "order"
+    #   handler         = "index.handler"
+    #   http_method     = "GET"
+    #   timeout         = 30
+    #   memory_size     = 256
+    #   environment = {
+    #     NODE_OPTIONS = "--enable-source-maps"
+    #     ENVIRONMENT  = local.environment
+    #     ALLOW_ORIGIN = "https://${local.env_domain}"
+    #     DB_USERNAME  = local.db_app_user
+    #     DB_ADDRESS   = dependency.aurora_postgres.outputs.cluster_endpoint
+    #     DB_PORT      = tostring(dependency.aurora_postgres.outputs.cluster_port)
+    #     DB_NAME      = dependency.aurora_postgres.outputs.cluster_database_name
+    #     DB_SCHEMA    = local.db_schema
+    #     USE_IAM_AUTH = "true"
+    #     DB_REGION    = local.aws_region
+    #   }
+    # }
+
+    # Get Results Lambda - Retrieves test results from database
+    # CloudFront: /results/* (GET) → API Gateway → Lambda
+    "get-results-lambda" = {
+      description     = "Get Results Service - Retrieves test results from database"
+      api_path_prefix = "results"
+      handler         = "index.handler"
+      http_method     = "GET"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = local.environment
+        ALLOW_ORIGIN = "https://${local.env_domain}"
+        DB_USERNAME  = local.db_app_user
+        DB_ADDRESS   = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT      = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME      = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SCHEMA    = local.db_schema
+        USE_IAM_AUTH = "true"
+        DB_REGION    = local.aws_region
+      }
+    }
+
+    # Order Status Lambda - Updates order status
+    # CloudFront: /test-order/status/* (POST) → API Gateway → Lambda
+    "order-status-lambda" = {
+      description     = "Order Status Service - Updates order status"
+      api_path_prefix = "test-order/status"
+      handler         = "index.handler"
+      http_method     = "POST"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = local.environment
+        ALLOW_ORIGIN = "https://${local.env_domain}"
+        DB_USERNAME  = local.db_app_user
+        DB_ADDRESS   = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT      = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME      = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SCHEMA    = local.db_schema
+        USE_IAM_AUTH = "true"
+        DB_REGION    = local.aws_region
+      }
+    }
+
+    # Postcode Lookup Lambda - Looks up addresses by postcode via OS Places API
+    # CloudFront: /postcode-lookup/* (GET) → API Gateway → Lambda
+    "postcode-lookup-lambda" = {
+      description     = "Postcode Lookup Service - Address lookup via OS Places API"
+      api_path_prefix = "postcode-lookup"
+      handler         = "index.handler"
+      http_method     = "GET"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS                            = "--enable-source-maps"
+        ENVIRONMENT                             = local.environment
+        POSTCODE_LOOKUP_CREDENTIALS_SECRET_NAME = "nhs-hometest/${local.environment}/os-places-creds"
+        POSTCODE_LOOKUP_BASE_URL                = "https://api.os.uk/search/places/v1",
+        POSTCODE_LOOKUP_TIMEOUT_MS              = "5000",
+        POSTCODE_LOOKUP_MAX_RETRIES             = "3",
+        POSTCODE_LOOKUP_RETRY_DELAY_MS          = "1000",
+        POSTCODE_LOOKUP_RETRY_BACKOFF_FACTOR    = "2",
+        USE_STUB_POSTCODE_CLIENT                = false,
       }
     }
   }
