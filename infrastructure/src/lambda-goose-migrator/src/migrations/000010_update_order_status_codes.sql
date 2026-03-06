@@ -41,7 +41,8 @@ WHERE status_code = 'CONFIRMED';
 
 -- Restore original constraint without ON UPDATE CASCADE
 ALTER TABLE order_status
-  DROP CONSTRAINT order_status_status_code_fkey;
+DROP CONSTRAINT order_status_status_code_fkey;
+
 ALTER TABLE order_status
-  ADD CONSTRAINT order_status_status_code_fkey
-    FOREIGN KEY (status_code) REFERENCES status_type (status_code);
+ADD CONSTRAINT order_status_status_code_fkey
+FOREIGN KEY (status_code) REFERENCES status_type (status_code);
