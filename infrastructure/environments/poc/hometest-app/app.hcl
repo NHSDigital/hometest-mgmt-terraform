@@ -471,8 +471,9 @@ inputs = {
     # Order Status Lambda - Updates order status
     # CloudFront: /test-order/status/* (POST) → API Gateway → Lambda
     "order-status-lambda" = {
-      description     = "Order Status Service - Updates order status"
-      api_path_prefix = "test-order/status"
+      description = "Order Status Service - Updates order status"
+      # test-order/status in local env, changed because API GW v1 doesn't support overlapping path prefixes (e.g., /order and /order/status) — can be simplified to /order-status in non-local envs
+      api_path_prefix = "test-order-status"
       handler         = "index.handler"
       http_method     = "POST"
       timeout         = 30
