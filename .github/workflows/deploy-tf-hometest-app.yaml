@@ -99,7 +99,9 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------------
-  # DEPLOY PATH (plan / apply): migrate first → then deploy app
+  # DEPLOY PATH (plan / apply): deploy migrator (hooks auto-invoke) → deploy app
+  # The Terragrunt after_hook on apply automatically invokes the Lambda to run
+  # migrations — no separate invocation step needed.
   # ---------------------------------------------------------------------------
 
   deploy-migrator:
@@ -134,16 +136,6 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
           action: ${{ inputs.action || 'plan' }}
-
-      - name: "Invoke goose migrator to run migrations"
-        if: inputs.action == 'apply'
-        uses: ./hometest-mgmt-terraform/.github/actions/invoke-goose-migrator
-        with:
-          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          aws_region: ${{ env.AWS_REGION }}
-          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
-          lambda_action: migrate
-          subenv: ${{ matrix.subenv }}
 
       - name: "Post migration summary"
         if: always()
@@ -220,7 +212,9 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------------
-  # DESTROY PATH: destroy app → teardown schema → destroy migrator infra
+  # DESTROY PATH: destroy app → destroy migrator (before_hook auto-teardowns schema)
+  # The Terragrunt before_hook on destroy automatically invokes the Lambda to
+  # teardown the schema/user before destroying the migrator infrastructure.
   # ---------------------------------------------------------------------------
 
   destroy-app:
@@ -272,54 +266,11 @@ jobs:
             echo "- **Status**: ${{ job.status }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
-  teardown-schema:
-    name: "Teardown Schema ${{ matrix.subenv }}"
-    if: inputs.action == 'destroy'
-    runs-on: ubuntu-latest
-    needs: [validate-inputs, destroy-app]
-    timeout-minutes: 30
-    permissions:
-      id-token: write
-      contents: read
-    strategy:
-      fail-fast: true
-      max-parallel: 1
-      matrix:
-        subenv: ${{ fromJson(needs.validate-inputs.outputs.subenvs) }}
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v6
-        with:
-          path: hometest-mgmt-terraform
-
-      - name: Install mise tools
-        uses: ./hometest-mgmt-terraform/.github/actions/install-mise
-        with:
-          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
-
-      - name: "Invoke teardown to drop schema and user"
-        uses: ./hometest-mgmt-terraform/.github/actions/invoke-goose-migrator
-        with:
-          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
-          aws_region: ${{ env.AWS_REGION }}
-          working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
-          lambda_action: teardown
-          subenv: ${{ matrix.subenv }}
-          function_required: "false"
-
-      - name: "Post teardown summary"
-        if: always()
-        run: |
-          {
-            echo "## Teardown Schema: ${{ matrix.subenv }}"
-            echo "- **Status**: ${{ job.status }}"
-          } >> "$GITHUB_STEP_SUMMARY"
-
   destroy-migrator:
     name: "Destroy Migrator ${{ matrix.subenv }}"
     if: inputs.action == 'destroy'
     runs-on: ubuntu-latest
-    needs: [validate-inputs, teardown-schema]
+    needs: [validate-inputs, destroy-app]
     timeout-minutes: 30
     permissions:
       id-token: write
@@ -363,7 +314,7 @@ jobs:
   summary:
     name: "Deployment Summary"
     runs-on: ubuntu-latest
-    needs: [validate-inputs, deploy-migrator, deploy-app, destroy-app, teardown-schema, destroy-migrator]
+    needs: [validate-inputs, deploy-migrator, deploy-app, destroy-app, destroy-migrator]
     if: always()
     steps:
       - name: "Generate summary"
