@@ -12,5 +12,8 @@ CREATE UNIQUE INDEX idx_consent_order_uid ON consent (order_uid);
 
 
 -- +goose Down
--- Intentionally omitted: the consent table holds legally required audit data
--- and must never be dropped, even in a rollback scenario.
+-- NOTE: In production, this rollback should be avoided as the consent table
+-- holds legally required audit data. However, for testing purposes, we provide
+-- the cleanup statements below.
+DROP INDEX IF EXISTS idx_consent_order_uid;
+DROP TABLE IF EXISTS consent;
