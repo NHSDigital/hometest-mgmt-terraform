@@ -434,9 +434,13 @@ resource "aws_api_gateway_deployment" "apis" {
       aws_api_gateway_method.options[each.key].id,
       aws_api_gateway_method.root_options[each.key].id,
       aws_api_gateway_integration_response.options[each.key].id,
+      aws_api_gateway_integration_response.options[each.key].response_parameters,
       aws_api_gateway_integration_response.root_options[each.key].id,
+      aws_api_gateway_integration_response.root_options[each.key].response_parameters,
       aws_api_gateway_gateway_response.default_4xx[each.key].id,
+      aws_api_gateway_gateway_response.default_4xx[each.key].response_parameters,
       aws_api_gateway_gateway_response.default_5xx[each.key].id,
+      aws_api_gateway_gateway_response.default_5xx[each.key].response_parameters,
     ]))
   }
 
