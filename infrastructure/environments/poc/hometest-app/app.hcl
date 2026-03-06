@@ -291,6 +291,7 @@ inputs = {
   # To add extra lambdas (e.g., hello-world), define them in the child terragrunt.hcl:
   #   inputs = { lambdas = { "hello-world-lambda" = { ... } } }
   # =============================================================================
+
   lambdas = {
     # Eligibility Lookup Lambda
     # CloudFront: /eligibility-lookup/* → API Gateway → Lambda
@@ -473,7 +474,7 @@ inputs = {
     }
 
     # Order Status Lambda - Updates order status
-    # CloudFront: /test-order/status/* (POST) → API Gateway → Lambda
+    # CloudFront: /test-order-status/* (POST) → API Gateway → Lambda
     "order-status-lambda" = {
       description = "Order Status Service - Updates order status"
       # test-order/status in local env, changed because API GW v1 doesn't support overlapping path prefixes (e.g., /order and /order/status) — can be simplified to /order-status in non-local envs
