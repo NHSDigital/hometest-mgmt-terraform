@@ -1,5 +1,5 @@
 -- +goose Up
--- Re-add the order_status→status_type FK with ON UPDATE CASCADE so PK renames propagate
+
 -- +goose StatementBegin
 DO $$
 DECLARE _con text;
@@ -13,6 +13,10 @@ BEGIN
 END;
 $$;
 -- +goose StatementEnd
+-- Temporarily add ON UPDATE CASCADE to enable status code renames, then restore original constraint
+ALTER TABLE order_status
+ADD CONSTRAINT order_status_status_code_fkey
+FOREIGN KEY (status_code) REFERENCES status_type (status_code) ON UPDATE CASCADE;
 
 UPDATE status_type
 SET
@@ -26,7 +30,23 @@ SET
   description = 'Order has been confirmed by the supplier'
 WHERE status_code = 'ORDER_RECEIVED';
 
+-- Remove CASCADE after updates complete, restoring original non-cascading behavior
+ALTER TABLE order_status
+DROP CONSTRAINT order_status_status_code_fkey;
+
+ALTER TABLE order_status
+ADD CONSTRAINT order_status_status_code_fkey
+FOREIGN KEY (status_code) REFERENCES status_type (status_code);
+
 -- +goose Down
+ALTER TABLE order_status
+DROP CONSTRAINT order_status_status_code_fkey;
+
+-- Temporarily add ON UPDATE CASCADE to allow renames to revert, then restore original constraint
+ALTER TABLE order_status
+ADD CONSTRAINT order_status_status_code_fkey
+FOREIGN KEY (status_code) REFERENCES status_type (status_code) ON UPDATE CASCADE;
+
 UPDATE status_type
 SET
   status_code = 'PLACED',
