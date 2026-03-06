@@ -510,12 +510,12 @@ inputs = {
         ENVIRONMENT                             = local.environment
         ALLOW_ORIGIN                            = "https://${local.env_domain}"
         POSTCODE_LOOKUP_CREDENTIALS_SECRET_NAME = "nhs-hometest/${local.environment}/os-places-creds"
-        POSTCODE_LOOKUP_BASE_URL                = "https://api.os.uk/search/places/v1",
-        POSTCODE_LOOKUP_TIMEOUT_MS              = "5000",
-        POSTCODE_LOOKUP_MAX_RETRIES             = "3",
-        POSTCODE_LOOKUP_RETRY_DELAY_MS          = "1000",
-        POSTCODE_LOOKUP_RETRY_BACKOFF_FACTOR    = "2",
-        USE_STUB_POSTCODE_CLIENT                = false,
+        POSTCODE_LOOKUP_BASE_URL                = "https://api.os.uk/search/places/v1"
+        POSTCODE_LOOKUP_TIMEOUT_MS              = "5000"
+        POSTCODE_LOOKUP_MAX_RETRIES             = "3"
+        POSTCODE_LOOKUP_RETRY_DELAY_MS          = "1000"
+        POSTCODE_LOOKUP_RETRY_BACKOFF_FACTOR    = "2"
+        USE_STUB_POSTCODE_CLIENT                = false
       }
     }
   }
