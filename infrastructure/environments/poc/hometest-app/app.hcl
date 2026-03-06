@@ -422,28 +422,29 @@ inputs = {
       }
     }
 
-    # # Get Order Lambda - Retrieves order details from database
-    # # CloudFront: /order/* (GET) → API Gateway → Lambda
-    # "get-order-lambda" = {
-    #   description     = "Get Order Service - Retrieves order details from database"
-    #   api_path_prefix = "order"
-    #   handler         = "index.handler"
-    #   http_method     = "GET"
-    #   timeout         = 30
-    #   memory_size     = 256
-    #   environment = {
-    #     NODE_OPTIONS = "--enable-source-maps"
-    #     ENVIRONMENT  = local.environment
-    #     ALLOW_ORIGIN = "https://${local.env_domain}"
-    #     DB_USERNAME  = local.db_app_user
-    #     DB_ADDRESS   = dependency.aurora_postgres.outputs.cluster_endpoint
-    #     DB_PORT      = tostring(dependency.aurora_postgres.outputs.cluster_port)
-    #     DB_NAME      = dependency.aurora_postgres.outputs.cluster_database_name
-    #     DB_SCHEMA    = local.db_schema
-    #     USE_IAM_AUTH = "true"
-    #     DB_REGION    = local.aws_region
-    #   }
-    # }
+    # Get Order Lambda - Retrieves order details from database
+    # CloudFront: /order/* (GET) → API Gateway → Lambda
+    "get-order-lambda" = {
+      description = "Get Order Service - Retrieves order details from database"
+      # /order in local env, changed because API GW v1 doesn't support overlapping path prefixes (e.g., /order and /order/status) — can be simplified to /order in non-local envs
+      api_path_prefix = "get-order"
+      handler         = "index.handler"
+      http_method     = "GET"
+      timeout         = 30
+      memory_size     = 256
+      environment = {
+        NODE_OPTIONS = "--enable-source-maps"
+        ENVIRONMENT  = local.environment
+        ALLOW_ORIGIN = "https://${local.env_domain}"
+        DB_USERNAME  = local.db_app_user
+        DB_ADDRESS   = dependency.aurora_postgres.outputs.cluster_endpoint
+        DB_PORT      = tostring(dependency.aurora_postgres.outputs.cluster_port)
+        DB_NAME      = dependency.aurora_postgres.outputs.cluster_database_name
+        DB_SCHEMA    = local.db_schema
+        USE_IAM_AUTH = "true"
+        DB_REGION    = local.aws_region
+      }
+    }
 
     # Get Results Lambda - Retrieves test results from database
     # CloudFront: /results/* (GET) → API Gateway → Lambda
