@@ -402,29 +402,6 @@ inputs = {
       authorization_scopes = ["results/write"]
     }
 
-    # Order Status Lambda - Retrieves order status information
-    # CloudFront: /status/* → API Gateway → Lambda
-    "order-status-lambda" = {
-      description     = "Order Status Service - Retrieves order status information"
-      api_path_prefix = "status"
-      handler         = "index.handler"
-      timeout         = 30
-      memory_size     = 256
-      environment = {
-        NODE_OPTIONS = "--enable-source-maps"
-        ENVIRONMENT  = local.environment
-        DB_USERNAME  = "app_user_${local.db_schema}"
-        DB_ADDRESS   = dependency.aurora_postgres.outputs.cluster_endpoint
-        DB_PORT      = tostring(dependency.aurora_postgres.outputs.cluster_port)
-        DB_NAME      = dependency.aurora_postgres.outputs.cluster_database_name
-        DB_SCHEMA    = local.db_schema
-        USE_IAM_AUTH = "true"
-        DB_REGION    = local.aws_region
-      }
-      authorization        = "COGNITO_USER_POOLS"
-      authorization_scopes = ["orders/write"]
-    }
-
     # Order Service Lambda - Creates test orders and persists to database
     # CloudFront: /order/* → API Gateway → Lambda
     "order-service-lambda" = {
