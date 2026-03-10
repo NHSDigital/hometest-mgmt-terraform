@@ -49,16 +49,14 @@ runs:
         TARGETS: ${{ inputs.targets }}
       run: |
         if [[ -n "$TARGETS" ]]; then
+          # Convert comma-separated targets to -target flags
           TARGET_FLAGS=""
           IFS=',' read -ra TARGET_ARRAY <<< "$TARGETS"
           for target in "${TARGET_ARRAY[@]}"; do
+            # Trim whitespace
             target=$(echo "$target" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
             if [[ -n "$target" ]]; then
-              if [[ "$target" =~ [^A-Za-z0-9_./\[\]\-:*] ]]; then
-                echo "Error: Invalid character in target '$target'. Allowed characters are [A-Za-z0-9_./[]-:*]." >&2
-                exit 1
-              fi
-              TARGET_FLAGS="${TARGET_FLAGS} -target=${target}"
+              TARGET_FLAGS="${TARGET_FLAGS} -target='${target}'"
             fi
           done
           echo "flags=${TARGET_FLAGS}" >> "$GITHUB_OUTPUT"
