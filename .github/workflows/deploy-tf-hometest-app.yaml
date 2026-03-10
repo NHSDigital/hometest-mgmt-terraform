@@ -140,7 +140,6 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
           action: ${{ inputs.action || 'plan' }}
-          targets: ${{ inputs.targets }}
 
       - name: "Invoke goose migrator to run migrations"
         if: inputs.action == 'apply'
@@ -356,7 +355,6 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
           action: destroy
-          targets: ${{ inputs.targets }}
 
       - name: "Post destroy migrator summary"
         if: always()
