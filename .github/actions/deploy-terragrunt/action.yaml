@@ -45,8 +45,9 @@ runs:
     - name: "Build target flags"
       id: target-flags
       shell: bash
+      env:
+        TARGETS: ${{ inputs.targets }}
       run: |
-        TARGETS="${{ inputs.targets }}"
         if [[ -n "$TARGETS" ]]; then
           # Convert comma-separated targets to -target flags
           TARGET_FLAGS=""
