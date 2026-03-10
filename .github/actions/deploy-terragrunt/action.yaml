@@ -49,7 +49,6 @@ runs:
         TARGETS: ${{ inputs.targets }}
       run: |
         if [[ -n $TARGETS ]]; then
-            # Inicjalizacja tablicy dla flag
             TARGET_FLAGS=()
             IFS=',' read -ra TARGET_ARRAY <<< "$TARGETS"
 
@@ -58,13 +57,11 @@ runs:
                 target=$(echo "$target" | xargs)
 
                 if [[ -n $target ]]; then
-                    # Rozszerzony regex: dopuszcza cudzysłowy i znaki wymagane przez for_each
                     if [[ $target =~ [^A-Za-z0-9_./\[\]\-:*\"\'\(\)] ]]; then
                         echo "Error: Invalid character in target $target." >&2
                         exit 1
                     fi
 
-                    # Dodawanie do tablicy (bezpieczne przechowywanie)
                     TARGET_FLAGS+=("-target=$target")
                 fi
             done
