@@ -37,7 +37,7 @@ on:
           # - destroy-plan
         default: plan
       targets:
-        description: "Comma-separated list of resources to target (e.g., module.lambdas[\"order-status-lambda\"]). Leave empty for full deployment."
+        description: "Comma-separated list of resources to target in the app stack only (e.g., module.lambdas[\"order-status-lambda\"]). Does not apply to migrator. Leave empty for full deployment."
         required: false
         type: string
         default: ""

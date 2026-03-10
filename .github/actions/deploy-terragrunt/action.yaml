@@ -22,7 +22,7 @@ inputs:
     required: false
     default: "true"
   targets:
-    description: "Comma-separated list of resources to target (e.g., module.lambdas[\"order-status-lambda\"],aws_lambda_permission.api_gateway[\"order-status-lambda\"])"
+    description: "Comma-separated list of resources to target (e.g., module.lambdas[\"order-status-lambda\"],aws_lambda_permission.api_gateway[\"order-status-lambda\"]). Leave empty to apply to all resources."
     required: false
     default: ""
 
