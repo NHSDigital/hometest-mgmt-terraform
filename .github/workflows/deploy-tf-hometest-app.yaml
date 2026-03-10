@@ -36,6 +36,11 @@ on:
           - destroy
           # - destroy-plan
         default: plan
+      targets:
+        description: "Comma-separated list of resources to target (e.g., module.lambdas[\"order-status-lambda\"]). Leave empty for full deployment."
+        required: false
+        type: string
+        default: ""
 
 env:
   AWS_REGION: "eu-west-2"
@@ -93,6 +98,7 @@ jobs:
             echo "| Stack | hometest-app |"
             echo "| Subenv(s) | ${{ inputs.subenv || 'dev' }} |"
             echo "| Action | ${{ inputs.action || 'plan' }} |"
+            echo "| Targets | ${{ inputs.targets || 'all resources' }} |"
             echo "| Triggered by | ${{ github.actor }} |"
             echo "| hometest-service ref | \`${{ inputs.hometest_service_ref || 'main' }}\` |"
             echo "| hometest-service commit | \`${HS_COMMIT_SHORT}\` (${HS_COMMIT}) |"
@@ -134,6 +140,7 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
           action: ${{ inputs.action || 'plan' }}
+          targets: ${{ inputs.targets }}
 
       - name: "Invoke goose migrator to run migrations"
         if: inputs.action == 'apply'
@@ -208,6 +215,7 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}
           action: ${{ inputs.action || 'plan' }}
+          targets: ${{ inputs.targets }}
 
       - name: "Post deployment summary"
         if: always()
@@ -263,6 +271,7 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}
           action: destroy
+          targets: ${{ inputs.targets }}
 
       - name: "Post destroy summary"
         if: always()
@@ -347,6 +356,7 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           working_directory: ${{ needs.validate-inputs.outputs.working_dir_base }}/${{ matrix.subenv }}/lambda-goose-migrator
           action: destroy
+          targets: ${{ inputs.targets }}
 
       - name: "Post destroy migrator summary"
         if: always()
@@ -377,6 +387,7 @@ jobs:
             echo "| Stack | hometest-app |"
             echo "| Subenv(s) | ${{ inputs.subenv || 'dev' }} |"
             echo "| Action | ${{ inputs.action || 'plan' }} |"
+            echo "| Targets | ${{ inputs.targets || 'all resources' }} |"
             echo "| Overall Status | see individual jobs |"
             echo "| Run ID | ${{ github.run_id }} |"
             echo "| Triggered by | ${{ github.actor }} |"
