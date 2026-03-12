@@ -1,3 +1,4 @@
+---
 name: "Test stage"
 
 on:
@@ -31,51 +32,107 @@ on:
         description: "Version of the software, set by the CI/CD pipeline workflow"
         required: true
         type: string
+      hometest_service_ref:
+        description: "Branch, tag, or SHA to checkout for hometest-service"
+        required: false
+        type: string
+        default: "main"
 
 jobs:
-  test-unit:
-    name: "Unit tests"
+  test-tf:
+    name: "Check Terraform code"
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    permissions:
+      id-token: write    # REQUIRED for OIDC token
+      contents: read     # For checkout
+    strategy:
+      matrix:
+        module: [core/bootstrap, core/network, core/aurora-postgres, core/shared_services, hometest-app/dev, hometest-app/dev/lambda-goose-migrator]
+      fail-fast: false  # Continue other modules if one fails
+    steps:
+      - name: "Checkout hometest-mgmt-terraform"
+        uses: actions/checkout@v6
+        with:
+          path: hometest-mgmt-terraform
+
+      - name: "Checkout hometest-service"
+        uses: actions/checkout@v6
+        with:
+          repository: "NHSDigital/hometest-service"
+          ref: ${{ inputs.hometest_service_ref }}
+          path: hometest-service
+          ssh-key: ${{ secrets.NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV }}
+
+      - name: Install mise tools
+        uses: ./hometest-mgmt-terraform/.github/actions/install-mise
+        with:
+          working_directory: ./hometest-mgmt-terraform/infrastructure/environments/poc/${{ matrix.module }}
+
+      - name: "Run Terragrunt Plan for ${{ matrix.module }}"
+        uses: ./hometest-mgmt-terraform/.github/actions/deploy-terragrunt
+        with:
+          working_directory: ./hometest-mgmt-terraform/infrastructure/environments/poc/${{ matrix.module }}
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          action: "plan"
+          lock_enabled: "false"  # Disable locking for plan to avoid conflicts in PRs, since these are not actually applied
+
+  test-goose-migrations:
+    name: "Test Goose DB Migrations"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
-      - name: "Run unit test suite"
-        run: |
-          make test-unit
-      - name: "Save the result of fast test suite"
-        run: |
-          echo "Nothing to save"
-  test-lint:
-    name: "Linting"
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v4
-      - name: "Run linting"
-        run: |
-          make test-lint
-      - name: "Save the linting result"
-        run: |
-          echo "Nothing to save"
-  test-coverage:
-    name: "Test coverage"
-    needs: [test-unit]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v4
-      - name: "Run test coverage check"
-        run: |
-          make test-coverage
-      - name: "Save the coverage check result"
-        run: |
-          echo "Nothing to save"
+        uses: actions/checkout@v6
+
+      - name: "Install mise"
+        uses: ./.github/actions/install-mise
+
+      - name: "Run Goose Migration Tests"
+        run: mise run test-migrations
+
+  # test-unit:
+  #   name: "Unit tests"
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 5
+  #   steps:
+  #     - name: "Checkout code"
+  #       uses: actions/checkout@v6
+  #     - name: "Run unit test suite"
+  #       run: |
+  #         make test-unit
+  #     - name: "Save the result of fast test suite"
+  #       run: |
+  #         echo "Nothing to save"
+  # test-lint:
+  #   name: "Linting"
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 5
+  #   steps:
+  #     - name: "Checkout code"
+  #       uses: actions/checkout@v6
+  #     - name: "Run linting"
+  #       run: |
+  #         make test-lint
+  #     - name: "Save the linting result"
+  #       run: |
+  #         echo "Nothing to save"
+  # test-coverage:
+  #   name: "Test coverage"
+  #   needs: [test-unit]
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 5
+  #   steps:
+  #     - name: "Checkout code"
+  #       uses: actions/checkout@v6
+  #     - name: "Run test coverage check"
+  #       run: |
+  #         make test-coverage
+  #     - name: "Save the coverage check result"
+  #       run: |
+  #         echo "Nothing to save"
   perform-static-analysis:
     name: "Perform static analysis"
-    needs: [test-unit]
+    needs: [test-tf, test-goose-migrations]
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -83,12 +140,13 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
-          fetch-depth: 0 # Full history is needed to improving relevancy of reporting
-      - name: "Perform static analysis"
-        uses: ./.github/actions/perform-static-analysis
-        with:
-          sonar_organisation_key: "${{ vars.SONAR_ORGANISATION_KEY }}"
-          sonar_project_key: "${{ vars.SONAR_PROJECT_KEY }}"
-          sonar_token: "${{ secrets.SONAR_TOKEN }}"
+          fetch-depth: 0  # Full history is needed to improving relevancy of reporting
+      # TODO: revert when SonarCloud credentials will be provided
+      # - name: "Perform static analysis"
+      #   uses: ./.github/actions/perform-static-analysis
+      #   with:
+      #     sonar_organisation_key: "${{ vars.SONAR_ORGANISATION_KEY }}"
+      #     sonar_project_key: "${{ vars.SONAR_PROJECT_KEY }}"
+      #     sonar_token: "${{ secrets.SONAR_TOKEN }}"

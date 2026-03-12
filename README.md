@@ -1,129 +1,304 @@
-# Repository Template
+# NHS HomeTest Management Terraform
 
-[![CI/CD Pull Request](https://github.com/nhs-england-tools/repository-template/actions/workflows/cicd-1-pull-request.yaml/badge.svg)](https://github.com/nhs-england-tools/repository-template/actions/workflows/cicd-1-pull-request.yaml)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=repository-template&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=repository-template)
-
-Start with an overview or a brief description of what the project is about and what it does. For example -
-
-Welcome to our repository template designed to streamline your project setup! This robust template provides a reliable starting point for your new projects, covering an essential tech stack and encouraging best practices in documenting.
-
-This repository template aims to foster a user-friendly development environment by ensuring that every included file is concise and adequately self-documented. By adhering to this standard, we can promote increased clarity and maintainability throughout your project's lifecycle. Bundled within this template are resources that pave the way for seamless repository creation. Currently supported technologies are:
-
-- Terraform
-- Docker
-
-Make use of this repository template to expedite your project setup and enhance your productivity right from the get-go. Enjoy the advantage of having a well-structured, self-documented project that reduces overhead and increases focus on what truly matters - coding!
+Infrastructure as Code (IaC) for the NHS HomeTest Service using Terraform and Terragrunt for multi-environment AWS deployments.
 
 ## Table of Contents
 
-- [Repository Template](#repository-template)
+- [NHS HomeTest Management Terraform](#nhs-hometest-management-terraform)
   - [Table of Contents](#table-of-contents)
-  - [Setup](#setup)
-    - [Prerequisites](#prerequisites)
-    - [Configuration](#configuration)
-  - [Usage](#usage)
+  - [Overview](#overview)
+  - [Architecture](#architecture)
+    - [Cloud Resources](#cloud-resources)
+  - [Prerequisites](#prerequisites)
+  - [AWS SSO Setup](#aws-sso-setup)
+  - [Getting Started](#getting-started)
+  - [Infrastructure Components](#infrastructure-components)
+    - [Key Directories](#key-directories)
+  - [Deployment](#deployment)
+    - [Quick Deploy](#quick-deploy)
+    - [Deploy All](#deploy-all)
+  - [Development Tools](#development-tools)
+    - [Pre-commit Hooks](#pre-commit-hooks)
     - [Testing](#testing)
-  - [Design](#design)
-    - [Diagrams](#diagrams)
-    - [Modularity](#modularity)
-  - [Contributing](#contributing)
-  - [Contacts](#contacts)
+  - [Documentation](#documentation)
+    - [External Resources](#external-resources)
   - [Licence](#licence)
 
-## Setup
+## Overview
 
-By including preferably a one-liner or if necessary a set of clear CLI instructions we improve user experience. This should be a frictionless installation process that works on various operating systems (macOS, Linux, Windows WSL) and handles all the dependencies.
+This repository manages the AWS infrastructure for the NHS HomeTest Service, including:
 
-Clone the repository
+- **Bootstrap** — Terraform state backend (S3 + KMS) and GitHub OIDC for CI/CD
+- **Networking** — VPC, subnets, NAT gateways, Network Firewall, VPC endpoints, Route53
+- **Shared Services** — WAF, ACM certificates, KMS, Cognito, IAM roles
+- **Aurora PostgreSQL** — Serverless v2 database with Goose migrations
+- **HomeTest Application** — Lambda functions, API Gateway, CloudFront + S3 SPA, SQS queues
 
-```shell
-git clone https://github.com/nhs-england-tools/repository-template.git
-cd nhs-england-tools/repository-template
+## Architecture
+
+### Cloud Resources
+
+```mermaid
+graph TB
+    classDef aws fill:#FF9900,stroke:#232F3E,color:#232F3E,font-weight:bold
+    classDef network fill:#8C4FFF,stroke:#232F3E,color:#fff
+    classDef security fill:#DD344C,stroke:#232F3E,color:#fff
+    classDef compute fill:#ED7100,stroke:#232F3E,color:#fff
+    classDef storage fill:#3B48CC,stroke:#232F3E,color:#fff
+    classDef database fill:#3B48CC,stroke:#232F3E,color:#fff
+    classDef cdn fill:#8C4FFF,stroke:#232F3E,color:#fff
+    classDef messaging fill:#E7157B,stroke:#232F3E,color:#fff
+    classDef identity fill:#DD344C,stroke:#232F3E,color:#fff
+    classDef mgmt fill:#E7157B,stroke:#232F3E,color:#fff
+
+    USER["👤 User<br/>dev.hometest.service.nhs.uk"]
+
+    subgraph AWS["☁️ AWS Account 781863586270 — eu-west-2"]
+        subgraph BOOTSTRAP["🔧 Bootstrap (deployed once)"]
+            S3STATE["📦 S3<br/>Terraform State"]:::storage
+            KMSSTATE["🔐 KMS<br/>State Encryption"]:::security
+            OIDC["🔑 GitHub OIDC<br/>IAM Role"]:::identity
+        end
+
+        subgraph EDGE["🌐 Edge Services"]
+            R53["🌍 Route53<br/>hometest.service.nhs.uk<br/>DNSSEC + DNS Query Logging"]:::network
+            WAFCF["🛡️ WAF<br/>CloudFront"]:::security
+            WAFAPIGW["🛡️ WAF<br/>API Gateway"]:::security
+            ACM["📜 ACM<br/>*.hometest.service.nhs.uk"]:::security
+        end
+
+        subgraph VPC["🔒 VPC 10.0.0.0/16"]
+            subgraph PUBSUB["Public Subnets"]
+                NAT["🔀 NAT Gateway"]:::network
+                NFW["🧱 Network Firewall<br/>Domain + IP Filtering"]:::security
+            end
+
+            subgraph PRIVSUB["Private Subnets"]
+                subgraph ENV_DEV["📦 Per-Environment: dev"]
+                    CF["☁️ CloudFront<br/>+ S3 SPA (Next.js)"]:::cdn
+                    APIGW["🔌 API Gateway<br/>REST API v1"]:::compute
+                    L1["λ hello-world"]:::compute
+                    L2["λ eligibility-test-info"]:::compute
+                    L3["λ order-router<br/>(Preventex)"]:::compute
+                    L4["λ order-router-sh24<br/>(SH24)"]:::compute
+                    SQS1["📨 SQS<br/>Order Queue"]:::messaging
+                    SQS2["📨 SQS<br/>Order Queue SH24"]:::messaging
+                end
+
+                VPCE["🔗 VPC Endpoints<br/>S3, Lambda, SecretsManager,<br/>SQS, KMS, CloudWatch, ECR"]:::network
+            end
+
+            subgraph DATASUB["Data Subnets (isolated)"]
+                RDS["🐘 Aurora PostgreSQL<br/>Serverless v2<br/>hometest_poc"]:::database
+            end
+        end
+
+        subgraph SHARED["🔐 Shared Services"]
+            KMS["🔑 KMS<br/>Shared Encryption Key"]:::security
+            COGNITO["👥 Cognito<br/>User Pool + Identity Pool"]:::identity
+            IAM["👤 Developer IAM<br/>Deploy Role"]:::identity
+            SM["🗝️ Secrets Manager<br/>Supplier Credentials"]:::security
+        end
+
+        subgraph EXTERNAL["🌐 External Suppliers"]
+            PREVENTEX["Preventex API<br/>func-nhshometest-dev.azurewebsites.net"]
+            SH24["SH24 API<br/>admin.qa3.sh24.org.uk"]
+        end
+    end
+
+    USER -->|HTTPS| R53
+    R53 -->|DNS| CF
+    CF -->|"/* → S3 SPA"| APIGW
+    CF -.->|WAF| WAFCF
+    CF -.->|TLS| ACM
+
+    APIGW -->|"/hello-world/*"| L1
+    APIGW -->|"/test-order/*"| L2
+    APIGW -.->|WAF| WAFAPIGW
+
+    SQS1 -->|trigger| L3
+    SQS2 -->|trigger| L4
+
+    L2 -->|query| RDS
+    L2 -.->|secrets| SM
+    L3 -->|HTTP| PREVENTEX
+    L3 -.->|secrets| SM
+    L4 -->|HTTP| SH24
+    L4 -.->|secrets| SM
+
+    L1 & L2 & L3 & L4 -->|egress| NAT
+    NAT -->|filtered| NFW
+    L1 & L2 & L3 & L4 -.->|encrypt| KMS
+    L1 & L2 & L3 & L4 -.->|private access| VPCE
+
+    OIDC -.->|"CI/CD"| S3STATE
 ```
 
-### Prerequisites
+## Prerequisites
 
-The following software packages, or their equivalents, are expected to be installed and configured:
+The following tools are managed via [mise](https://github.com/jdx/mise) (see [.mise.toml](.mise.toml)):
 
-- [Docker](https://www.docker.com/) container runtime or a compatible tool, e.g. [Podman](https://podman.io/),
-- [asdf](https://asdf-vm.com/) version manager,
-- [GNU make](https://www.gnu.org/software/make/) 3.82 or later,
+| Tool | Version | Purpose |
+|------|---------|---------|
+| **Terraform** | 1.14.4 | Infrastructure provisioning |
+| **Terragrunt** | 0.99.1 | DRY Terraform configuration |
+| **AWS CLI** | 2.33.13 | AWS interaction |
+| **TFLint** | latest | Terraform linting |
+| **terraform-docs** | latest | Auto-generated documentation |
+| **Trivy** | latest | Security scanning |
+| **Checkov** | latest | Policy-as-code scanning |
+| **Gitleaks** | 8.18.4 | Secret scanning |
+| **pre-commit** | latest | Git hooks |
+| **Go** | 1.26.0 | Lambda goose migrator builds |
+| **goose** | latest | Database migrations |
 
-> [!NOTE]<br>
-> The version of GNU make available by default on macOS is earlier than 3.82. You will need to upgrade it or certain `make` tasks will fail. On macOS, you will need [Homebrew](https://brew.sh/) installed, then to install `make`, like so:
->
-> ```shell
-> brew install make
-> ```
->
-> You will then see instructions to fix your [`$PATH`](https://github.com/nhs-england-tools/dotfiles/blob/main/dot_path.tmpl) variable to make the newly installed version available. If you are using [dotfiles](https://github.com/nhs-england-tools/dotfiles), this is all done for you.
+Additional requirements:
 
-- [GNU sed](https://www.gnu.org/software/sed/) and [GNU grep](https://www.gnu.org/software/grep/) are required for the scripted command-line output processing,
-- [GNU coreutils](https://www.gnu.org/software/coreutils/) and [GNU binutils](https://www.gnu.org/software/binutils/) may be required to build dependencies like Python, which may need to be compiled during installation,
+- [Docker](https://www.docker.com/) or compatible container runtime
+- [GNU Make](https://www.gnu.org/software/make/) 3.82+
+- [Python](https://www.python.org/) (for Git hooks)
+- [jq](https://jqlang.github.io/jq/) (JSON processing)
+- Firefox with [AWS SSO Containers](https://addons.mozilla.org/en-US/firefox/addon/aws-sso-containers/) (optional, for multi-account browser management)
 
-> [!NOTE]<br>
-> For macOS users, installation of the GNU toolchain has been scripted and automated as part of the `dotfiles` project. Please see this [script](https://github.com/nhs-england-tools/dotfiles/blob/main/assets/20-install-base-packages.macos.sh) for details.
+Install all tool versions:
 
-- [Python](https://www.python.org/) required to run Git hooks,
-- [`jq`](https://jqlang.github.io/jq/) a lightweight and flexible command-line JSON processor.
+```bash
+mise install
+```
 
-### Configuration
+## AWS SSO Setup
 
-Installation and configuration of the toolchain dependencies
+```bash
+aws configure sso
 
-```shell
+# Resulting ~/.aws/config profile:
+# [profile Admin-PoC]
+# sso_session = nhs
+# sso_account_id = 781863586270
+# sso_role_name = Admin
+# region = eu-west-2
+#
+# [sso-session nhs]
+# sso_start_url = https://d-9c67018f89.awsapps.com/start/#
+# sso_region = eu-west-2
+# sso_registration_scopes = sso:account:access
+
+aws sso login --profile Admin-PoC
+export AWS_PROFILE=Admin-PoC
+```
+
+## Getting Started
+
+```bash
+# Clone the repository
+git clone https://github.com/NHSDigital/hometest-mgmt-terraform.git
+cd hometest-mgmt-terraform
+
+# Install tool versions
+mise install
+
+# Configure pre-commit hooks and development dependencies
 make config
 ```
 
-## Usage
+## Infrastructure Components
 
-After a successful installation, provide an informative example of how this project can be used. Additional code snippets, screenshots and demos work well in this space. You may also link to the other documentation resources, e.g. the [User Guide](./docs/user-guide.md) to demonstrate more use cases and to show more features.
+See [infrastructure/README.md](./infrastructure/README.md) for the full infrastructure guide including:
+
+- Directory structure and module documentation
+- Deployment order and dependencies
+- Security features (WAF, KMS, VPC, Network Firewall)
+- Troubleshooting guide
+
+### Key Directories
+
+| Directory | Purpose |
+|-----------|---------|
+| `infrastructure/src/` | Terraform root modules (bootstrap, network, shared_services, aurora-postgres, hometest-app) |
+| `infrastructure/modules/` | Reusable Terraform modules (api-gateway, cloudfront-spa, lambda, lambda-iam, aurora-postgres, lambda-goose-migrator, waf, etc.) |
+| `infrastructure/environments/` | Terragrunt environment configurations (poc/core, poc/dev) |
+| `scripts/` | Build, test, and deployment helper scripts |
+| `docs/` | ADRs, developer guides, diagrams, user guides |
+| `.github/workflows/` | CI/CD pipelines |
+
+## Deployment
+
+### Quick Deploy
+
+```bash
+# 1. Bootstrap (first time only — creates state backend)
+cd infrastructure/src/bootstrap
+terraform init && terraform apply
+
+# 2. Deploy core (network → shared_services → aurora-postgres → lambda-goose-migrator)
+cd infrastructure/environments/poc/core/network
+terragrunt apply
+
+cd ../shared_services
+terragrunt apply
+
+cd ../aurora-postgres
+terragrunt apply
+
+cd ../lambda-goose-migrator
+terragrunt apply
+
+# 3. Deploy application environment
+cd ../../dev/hometest-app
+terragrunt apply
+```
+
+### Deploy All
+
+```bash
+cd infrastructure/environments/poc
+terragrunt run-all apply
+```
+
+## Development Tools
+
+### Pre-commit Hooks
+
+Configured in [.pre-commit-config.yaml](.pre-commit-config.yaml):
+
+- `terraform_fmt` / `terragrunt_fmt` — formatting
+- `terraform_tflint` — linting
+- `terraform_trivy` — security scanning
+- `terraform_checkov` — policy-as-code
+- `terraform_docs` — auto-generate module docs
+- `gitleaks` — secret detection
+- `markdownlint` — Markdown linting
+
+```bash
+# Run all checks
+pre-commit run --all-files
+
+# Or via mise task
+mise run pre-commit
+```
 
 ### Testing
 
-There are `make` tasks for you to configure to run your tests.  Run `make test` to see how they work.  You should be able to use the same entry points for local development as in your CI pipeline.
-
-## Design
-
-### Diagrams
-
-The [C4 model](https://c4model.com/) is a simple and intuitive way to create software architecture diagrams that are clear, consistent, scalable and most importantly collaborative. This should result in documenting all the system interfaces, external dependencies and integration points.
-
-![Repository Template](./docs/diagrams/Repository_Template_GitHub_Generic.png)
-
-The source for diagrams should be in Git for change control and review purposes. Recommendations are [draw.io](https://app.diagrams.net/) (example above in [docs](.docs/diagrams/) folder) and [Mermaids](https://github.com/mermaid-js/mermaid). Here is an example Mermaids sequence diagram:
-
-```mermaid
-sequenceDiagram
-    User->>+Service: GET /users?params=...
-    Service->>Service: auth request
-    Service->>Database: get all users
-    Database-->>Service: list of users
-    Service->>Service: filter users
-    Service-->>-User: list[User]
+```bash
+make test
 ```
 
-### Modularity
+## Documentation
 
-Most of the projects are built with customisability and extendability in mind. At a minimum, this can be achieved by implementing service level configuration options and settings. The intention of this section is to show how this can be used. If the system processes data, you could mention here for example how the input is prepared for testing - anonymised, synthetic or live data.
+- [Infrastructure Guide](./infrastructure/README.md) — full infrastructure documentation
+- [Creating a New Environment](./docs/developer-guides/Creating_New_Environment.md) — step-by-step guide
+- [Developer Guides](./docs/developer-guides/) — Bash/Make, Docker, Terraform scripting
+- [User Guides](./docs/user-guides/) — static analysis, Git hooks, secrets scanning
+- [ADRs](./docs/adr/) — architecture decision records
 
-## Contributing
+### External Resources
 
-Describe or link templates on how to raise an issue, feature request or make a contribution to the codebase. Reference the other documentation files, like
-
-- Environment setup for contribution, i.e. `CONTRIBUTING.md`
-- Coding standards, branching, linting, practices for development and testing
-- Release process, versioning, changelog
-- Backlog, board, roadmap, ways of working
-- High-level requirements, guiding principles, decision records, etc.
-
-## Contacts
-
-Provide a way to contact the owners of this project. It can be a team, an individual or information on the means of getting in touch via active communication channels, e.g. opening a GitHub discussion, raising an issue, etc.
+- [Terragrunt Live Stacks Example](https://github.com/gruntwork-io/terragrunt-infrastructure-live-stacks-example/blob/main/root.hcl)
+- [Terragrunt Catalog Example](https://github.com/gruntwork-io/terragrunt-infrastructure-catalog-example/blob/main/stacks/ec2-asg-stateful-service/terragrunt.stack.hcl)
+- [mise Version Manager](https://github.com/jdx/mise)
+- [NHS AWS SSO User Access](https://nhsd-confluence.digital.nhs.uk/spaces/AWS/pages/592551759/AWS+Single+Sign+on+SSO+User+Access)
 
 ## Licence
-
-> The [LICENCE.md](./LICENCE.md) file will need to be updated with the correct year and owner
 
 Unless stated otherwise, the codebase is released under the MIT License. This covers both the codebase and any sample code in the documentation.
 

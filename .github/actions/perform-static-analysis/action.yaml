@@ -1,3 +1,4 @@
+---
 name: "Perform static analysis"
 description: "Perform static analysis"
 inputs:

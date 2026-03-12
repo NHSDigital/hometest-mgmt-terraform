@@ -1,0 +1,108 @@
+---
+name: "Deploy Terragrunt Module"
+description: "Configure AWS credentials, install mise, and run Terragrunt init/plan/apply"
+
+inputs:
+  aws_role_arn:
+    description: "AWS IAM Role ARN for OIDC authentication"
+    required: true
+  aws_region:
+    description: "AWS Region"
+    required: false
+    default: "eu-west-2"
+  working_directory:
+    description: "Working directory containing the Terragrunt configuration"
+    required: true
+  action:
+    description: "Terragrunt action: plan, apply, destroy-plan, destroy"
+    required: false
+    default: "apply"
+  lock_enabled:
+    description: "Whether to enable state locking (default: true)"
+    required: false
+    default: "true"
+  targets:
+    description: "Comma-separated list of resources to target (e.g., module.lambdas[\"order-status-lambda\"],aws_lambda_permission.api_gateway[\"order-status-lambda\"]). Leave empty to apply to all resources."
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ inputs.aws_role_arn }}
+        aws-region: ${{ inputs.aws_region }}
+
+    - name: "Determine repo root"
+      id: repo-root
+      shell: bash
+      run: |
+        REPO_ROOT=$(git -C "$GITHUB_ACTION_PATH" rev-parse --show-toplevel)
+        echo "path=${REPO_ROOT}" >> "$GITHUB_OUTPUT"
+
+    - name: "Build target flags"
+      id: target-flags
+      shell: bash
+      env:
+        TARGETS: ${{ inputs.targets }}
+      run: |
+        if [[ -n "$TARGETS" ]]; then
+          # Convert comma-separated targets to -target flags
+          TARGET_FLAGS=""
+          IFS=',' read -ra TARGET_ARRAY <<< "$TARGETS"
+          for target in "${TARGET_ARRAY[@]}"; do
+            # Trim whitespace
+            target=$(echo "$target" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            if [[ -n "$target" ]]; then
+              TARGET_FLAGS="${TARGET_FLAGS} -target='${target}'"
+            fi
+          done
+          echo "flags=${TARGET_FLAGS}" >> "$GITHUB_OUTPUT"
+          echo "Targeting specific resources: ${TARGET_FLAGS}"
+        else
+          echo "flags=" >> "$GITHUB_OUTPUT"
+          echo "No targets specified - will apply to all resources"
+        fi
+
+    - name: Cache terraform providers
+      uses: actions/cache@v5
+      with:
+        path: |
+          ~/.cache/terraform
+          ${{ steps.repo-root.outputs.path }}/.terraform-plugin-cache
+        key: terraform-${{ runner.os }}-mgmt-${{ github.event_name == 'pull_request' && 'pr' || 'push' }}-${{ hashFiles(format('{0}/**/providers.tf', steps.repo-root.outputs.path)) }}
+        restore-keys: |
+          terraform-${{ runner.os }}-mgmt-${{ github.event_name == 'pull_request' && 'pr' || 'push' }}-
+          terraform-${{ runner.os }}-mgmt-
+          terraform-${{ runner.os }}-
+
+    - name: Terragrunt Init
+      working-directory: ${{ inputs.working_directory }}
+      shell: bash
+      run: mise exec -- terragrunt init
+
+    - name: Terragrunt Plan
+      if: inputs.action == 'plan' || inputs.action == 'apply'
+      working-directory: ${{ inputs.working_directory }}
+      shell: bash
+      run: mise exec -- terragrunt plan -out=tfplan ${{ inputs.lock_enabled == 'false' && '-lock=false' || '' }} ${{ steps.target-flags.outputs.flags }}
+
+    - name: Terragrunt Destroy Plan
+      if: inputs.action == 'destroy-plan'
+      working-directory: ${{ inputs.working_directory }}
+      shell: bash
+      run: mise exec -- terragrunt plan -destroy -out=tfplan ${{ steps.target-flags.outputs.flags }}
+
+    - name: Terragrunt Apply
+      if: inputs.action == 'apply'
+      working-directory: ${{ inputs.working_directory }}
+      shell: bash
+      run: mise exec -- terragrunt apply -auto-approve tfplan
+
+    - name: Terragrunt Destroy
+      if: inputs.action == 'destroy'
+      working-directory: ${{ inputs.working_directory }}
+      shell: bash
+      run: mise exec -- terragrunt destroy -auto-approve ${{ steps.target-flags.outputs.flags }}

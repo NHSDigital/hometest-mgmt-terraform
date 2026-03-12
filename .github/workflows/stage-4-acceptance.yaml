@@ -1,3 +1,4 @@
+---
 name: "Acceptance stage"
 
 on:
@@ -39,7 +40,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Create infractructure"
         run: |
           echo "Creating infractructure..."
@@ -56,7 +57,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Run contract test"
         run: |
           make test-contract
@@ -70,7 +71,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Run security test"
         run: |
           make test-security
@@ -84,7 +85,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Run UI test"
         run: |
           make test-ui
@@ -98,7 +99,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Run UI performance test"
         run: |
           make test-ui-performance
@@ -112,7 +113,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Run integration test"
         run: |
           make test-integration
@@ -126,7 +127,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Run accessibility test"
         run: |
           make test-accessibility
@@ -140,7 +141,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Run load tests"
         run: |
           make test-load
@@ -164,7 +165,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Tear down environment"
         run: |
           echo "Tearing down environment..."

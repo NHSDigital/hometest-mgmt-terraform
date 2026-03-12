@@ -1,3 +1,4 @@
+---
 name: "CI/CD publish"
 
 on:
@@ -22,19 +23,21 @@ jobs:
       version: ${{ steps.variables.outputs.version }}
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Set CI/CD variables"
         id: variables
         run: |
           datetime=$(date -u +'%Y-%m-%dT%H:%M:%S%z')
-          echo "build_datetime=$datetime" >> $GITHUB_OUTPUT
-          echo "build_timestamp=$(date --date=$datetime -u +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
-          echo "build_epoch=$(date --date=$datetime -u +'%s')" >> $GITHUB_OUTPUT
-          echo "nodejs_version=$(grep "^nodejs\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
-          echo "python_version=$(grep "^python\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
-          echo "terraform_version=$(grep "^terraform\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
-          # TODO: Get the version, but it may not be the .version file as this should come from the CI/CD Pull Request Workflow
-          echo "version=$(head -n 1 .version 2> /dev/null || echo unknown)" >> $GITHUB_OUTPUT
+          {
+            echo "build_datetime=$datetime"
+            echo "build_timestamp=$(date --date="$datetime" -u +'%Y%m%d%H%M%S')"
+            echo "build_epoch=$(date --date="$datetime" -u +'%s')"
+            echo "nodejs_version=$(grep "^nodejs\s" .tool-versions | cut -f2 -d' ')"
+            echo "python_version=$(grep "^python\s" .tool-versions | cut -f2 -d' ')"
+            echo "terraform_version=$(grep "^terraform\s" .tool-versions | cut -f2 -d' ')"
+            # TODO: Get the version, but it may not be the .version file as this should come from the CI/CD Pull Request Workflow
+            echo "version=$(head -n 1 .version 2> /dev/null || echo unknown)"
+          } >> "$GITHUB_OUTPUT"
       - name: "List variables"
         run: |
           export BUILD_DATETIME="${{ steps.variables.outputs.build_datetime }}"
@@ -53,23 +56,23 @@ jobs:
     timeout-minutes: 3
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Get the artefacts"
         run: |
           echo "Getting the artefacts created by the build stage ..."
           # TODO: Use either action/cache or action/upload-artifact
-      - name: "Create release"
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ needs.metadata.outputs.version }}
-          release_name: Release ${{ needs.metadata.outputs.version }}
-          body: |
-            Release of ${{ needs.metadata.outputs.version }}
-          draft: false
-          prerelease: false
+      # - name: "Create release"
+      #   id: create_release
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: ${{ needs.metadata.outputs.version }}
+      #     release_name: Release ${{ needs.metadata.outputs.version }}
+      #     body: |
+      #       Release of ${{ needs.metadata.outputs.version }}
+      #     draft: false
+      #     prerelease: false
       # - name: "Upload release asset"
       #   uses: actions/upload-release-asset@v1
       #   env:
@@ -86,7 +89,7 @@ jobs:
     steps:
       - name: "Check prerequisites for notification"
         id: check
-        run: echo "secret_exist=${{ secrets.TEAMS_NOTIFICATION_WEBHOOK_URL != '' }}" >> $GITHUB_OUTPUT
+        run: echo "secret_exist=${{ secrets.TEAMS_NOTIFICATION_WEBHOOK_URL != '' }}" >> "$GITHUB_OUTPUT"
       - name: "Notify on publishing packages"
         if: steps.check.outputs.secret_exist == 'true'
         uses: nhs-england-tools/notify-msteams-action@v1.0.0

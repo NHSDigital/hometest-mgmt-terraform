@@ -1,3 +1,4 @@
+---
 # If using SBOM input, automatically generate CPEs when packages have none
 add-cpes-if-none: true
 

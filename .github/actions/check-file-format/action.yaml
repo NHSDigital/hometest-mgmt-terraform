@@ -1,3 +1,4 @@
+---
 name: "Check file format"
 description: "Check file format"
 runs:
