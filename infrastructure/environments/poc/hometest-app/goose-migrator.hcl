@@ -51,7 +51,11 @@ terraform {
   # The helper script works both locally and in CI (writes GITHUB_STEP_SUMMARY
   # when that variable is set).
   #
-  # Set SKIP_MIGRATOR=true to deploy/destroy the Lambda without invoking it.
+  # SKIPPING (local):  export SKIP_MIGRATOR=true before running terragrunt.
+  #                    This deploys/destroys the Lambda infrastructure but skips
+  #                    the Lambda invocation (no migrations or teardown run).
+  # SKIPPING (CI):     Set the 'skip_migrator' input on the workflow dispatch.
+  #                    This bypasses the entire deploy-migrator job.
   # ---------------------------------------------------------------------------
 
   # After a successful apply, invoke the Lambda to run migrations
