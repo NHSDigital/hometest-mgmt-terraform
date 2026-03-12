@@ -190,7 +190,7 @@ resource "aws_api_gateway_integration_response" "options" {
   status_code = aws_api_gateway_method_response.options[each.key].status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,x-correlation-id'"
     "method.response.header.Access-Control-Allow-Methods"     = "'GET,POST,PUT,DELETE,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"      = "'${local.cors_origin}'"
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
@@ -249,7 +249,7 @@ resource "aws_api_gateway_integration_response" "root_options" {
   status_code = aws_api_gateway_method_response.root_options[each.key].status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,x-correlation-id'"
     "method.response.header.Access-Control-Allow-Methods"     = "'GET,POST,PUT,DELETE,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"      = "'${local.cors_origin}'"
     "method.response.header.Access-Control-Allow-Credentials" = "'true'"
@@ -438,9 +438,13 @@ resource "aws_api_gateway_deployment" "apis" {
       aws_api_gateway_method.options[each.key].id,
       aws_api_gateway_method.root_options[each.key].id,
       aws_api_gateway_integration_response.options[each.key].id,
+      aws_api_gateway_integration_response.options[each.key].response_parameters,
       aws_api_gateway_integration_response.root_options[each.key].id,
+      aws_api_gateway_integration_response.root_options[each.key].response_parameters,
       aws_api_gateway_gateway_response.default_4xx[each.key].id,
+      aws_api_gateway_gateway_response.default_4xx[each.key].response_parameters,
       aws_api_gateway_gateway_response.default_5xx[each.key].id,
+      aws_api_gateway_gateway_response.default_5xx[each.key].response_parameters,
     ]))
   }
 
