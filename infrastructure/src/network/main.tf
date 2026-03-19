@@ -30,16 +30,19 @@ locals {
   # Subnet CIDR calculations for a /16 VPC
   # Layout:
   #   Public  /20 (newbits=4):  indices 0-2   -> 10.0.0.0/20, 10.0.16.0/20, 10.0.32.0/20
-  #   Private /19 (newbits=3):  indices 4-6   -> 10.0.64.0/19, 10.0.96.0/19, 10.0.128.0/19
+  #   Private /19 (newbits=3):  indices 2-4   -> 10.0.64.0/19, 10.0.96.0/19, 10.0.128.0/19
   #   Firewall /22 (newbits=6): indices 48-50 -> 10.0.192.0/22, 10.0.196.0/22, 10.0.200.0/22
   #   Data    /21 (newbits=5):  indices 28-30 -> 10.0.224.0/21, 10.0.232.0/21, 10.0.240.0/21
   public_subnets = [
     for i, az in local.azs : cidrsubnet(var.vpc_cidr, 4, i)
   ]
   private_subnets = [
-    for i, az in local.azs : cidrsubnet(var.vpc_cidr, 3, i + 4)
+    for i, az in local.azs : cidrsubnet(var.vpc_cidr, 3, i + 2)
   ]
   data_subnets = [
     for i, az in local.azs : cidrsubnet(var.vpc_cidr, 5, i + 28)
+  ]
+  firewall_subnets = [
+    for i, az in local.azs : cidrsubnet(var.vpc_cidr, 6, i + 48)
   ]
 }

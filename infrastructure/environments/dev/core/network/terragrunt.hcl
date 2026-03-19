@@ -42,6 +42,18 @@ inputs = {
 
   # Allow specific outbound connections
   allowed_egress_ips = [
+    {
+      ip          = "0.0.0.0/0"
+      port        = "443"
+      protocol    = "TCP"
+      description = "HTTPS from anywhere"
+    },
+    {
+      ip          = "0.0.0.0/0"
+      port        = "80"
+      protocol    = "TCP"
+      description = "HTTP from anywhere"
+    }
     # Add specific external API endpoints here if needed
     # Example:
     # {

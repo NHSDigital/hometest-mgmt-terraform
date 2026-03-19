@@ -7,7 +7,7 @@ resource "aws_subnet" "firewall" {
   count = var.enable_network_firewall ? length(local.azs) : 0
 
   vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(var.vpc_cidr, 6, count.index + 48)
+  cidr_block        = local.firewall_subnets[count.index]
   availability_zone = local.azs[count.index]
 
   tags = merge(local.common_tags, {

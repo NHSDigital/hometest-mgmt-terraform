@@ -542,7 +542,6 @@ No modules.
 | [aws_cloudwatch_log_group.dns_query_firehose](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.network_firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
-| [aws_cloudwatch_log_group.vpc_flow_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_resource_policy.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_resource_policy) | resource |
 | [aws_cloudwatch_log_stream.dns_query_firehose](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_stream) | resource |
 | [aws_cloudwatch_log_subscription_filter.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_subscription_filter) | resource |
@@ -619,6 +618,7 @@ No modules.
 | [aws_vpc_endpoint.s3](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
 | [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_cloudwatch_log_group.vpc_flow_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/cloudwatch_log_group) | data source |
 
 ## Inputs
 
@@ -687,6 +687,8 @@ No modules.
 | <a name="output_dnssec_enabled"></a> [dnssec\_enabled](#output\_dnssec\_enabled) | Whether DNSSEC is enabled for the hosted zone |
 | <a name="output_dnssec_kms_key_arn"></a> [dnssec\_kms\_key\_arn](#output\_dnssec\_kms\_key\_arn) | The ARN of the KMS key used for DNSSEC signing |
 | <a name="output_egress_filtering_config"></a> [egress\_filtering\_config](#output\_egress\_filtering\_config) | Summary of egress filtering configuration |
+| <a name="output_firewall_subnet_arns"></a> [firewall\_subnet\_arns](#output\_firewall\_subnet\_arns) | List of firewall subnet ARNs |
+| <a name="output_firewall_subnet_cidrs"></a> [firewall\_subnet\_cidrs](#output\_firewall\_subnet\_cidrs) | List of firewall subnet CIDR blocks |
 | <a name="output_firewall_subnet_ids"></a> [firewall\_subnet\_ids](#output\_firewall\_subnet\_ids) | List of firewall subnet IDs |
 | <a name="output_interface_vpc_endpoint_ids"></a> [interface\_vpc\_endpoint\_ids](#output\_interface\_vpc\_endpoint\_ids) | Map of Interface VPC Endpoint IDs |
 | <a name="output_lambda_rds_security_group_id"></a> [lambda\_rds\_security\_group\_id](#output\_lambda\_rds\_security\_group\_id) | Security group ID for Lambda functions accessing RDS |
