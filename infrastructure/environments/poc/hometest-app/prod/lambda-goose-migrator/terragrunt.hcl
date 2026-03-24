@@ -6,6 +6,10 @@
 # Environment name ("prod") is derived automatically from the parent directory name.
 # ---------------------------------------------------------------------------------------------------------------------
 
+locals {
+  environment = "prod"
+}
+
 include "root" {
   path = find_in_parent_folders("root.hcl")
 }

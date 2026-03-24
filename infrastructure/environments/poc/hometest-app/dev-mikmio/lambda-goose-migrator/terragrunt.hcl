@@ -1,10 +1,14 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# TERRAGRUNT CONFIGURATION FOR DEV-EXAMPLE ENVIRONMENT GOOSE MIGRATOR
-# Deployment: cd poc/hometest-app/dev-example/lambda-goose-migrator && terragrunt apply
+# TERRAGRUNT CONFIGURATION FOR DEV-MIKMIO ENVIRONMENT GOOSE MIGRATOR
+# Deployment: cd poc/hometest-app/dev-mikmio/lambda-goose-migrator && terragrunt apply
 #
 # All shared configuration (dependencies, inputs) comes from ../goose-migrator.hcl.
-# Environment name ("dev-example") is derived automatically from the parent directory name.
+# Environment name ("dev-mikmio") is derived automatically from the parent directory name.
 # ---------------------------------------------------------------------------------------------------------------------
+
+locals {
+  environment = "dev-mikmio"
+}
 
 include "root" {
   path = find_in_parent_folders("root.hcl")
