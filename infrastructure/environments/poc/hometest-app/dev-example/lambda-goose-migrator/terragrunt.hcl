@@ -6,10 +6,6 @@
 # Environment name ("dev-example") is derived automatically from the parent directory name.
 # ---------------------------------------------------------------------------------------------------------------------
 
-locals {
-  environment = "dev-example"
-}
-
 include "root" {
   path = find_in_parent_folders("root.hcl")
 }

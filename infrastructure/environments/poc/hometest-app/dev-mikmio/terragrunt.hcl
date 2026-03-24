@@ -6,10 +6,6 @@
 # Environment name ("dev-example") is derived automatically from this directory name.
 # ---------------------------------------------------------------------------------------------------------------------
 
-locals {
-  environment = "dev-mikmio"
-}
-
 include "root" {
   path = find_in_parent_folders("root.hcl")
 }

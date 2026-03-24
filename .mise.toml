@@ -40,6 +40,9 @@ python = "3.14"
 # https://github.com/aquasecurity/trivy/releases
 "aqua:aquasecurity/trivy" = "v0.69.3"
 
+# https://github.com/pypa/pipx/releases
+pipx = "1.11.0"
+
 # https://github.com/bridgecrewio/checkov/releases
 "pipx:checkov" = "3.2.510"
 
