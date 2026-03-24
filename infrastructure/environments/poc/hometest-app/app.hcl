@@ -108,22 +108,24 @@ terraform {
 
   # Build and package Lambda code locally (Terraform uploads and deploys)
   # Uses scripts/build-lambdas.sh which only rebuilds when source changes are detected
+  # Runs under hometest-service mise env so the correct Node.js version is used
   before_hook "build_lambdas" {
     commands = ["plan",
     "apply"]
     execute = [
       "bash", "-c",
-      "\"$(cd '${get_repo_root()}' && pwd)/scripts/build-lambdas.sh\" \"$(cd '${local.lambdas_source_dir}' && pwd)\" \"$(cd '${get_repo_root()}' && pwd)/.lambda-build-cache\""
+      "mise exec -C \"$(cd '${get_repo_root()}/../hometest-service' && pwd)\" -- \"$(cd '${get_repo_root()}' && pwd)/scripts/build-lambdas.sh\" \"$(cd '${local.lambdas_source_dir}' && pwd)\" \"$(cd '${get_repo_root()}' && pwd)/.lambda-build-cache\""
     ]
   }
 
   # Build SPA before apply (only rebuilds when source or backend URL changes)
   # Uses scripts/build-spa.sh which content-hashes source + NEXT_PUBLIC_BACKEND_URL
+  # Runs under hometest-service mise env so the correct Node.js version is used
   before_hook "build_spa" {
     commands = ["plan", "apply"]
     execute = [
       "bash", "-c",
-      "\"$(cd '${get_repo_root()}' && pwd)/scripts/build-spa.sh\" \"$(cd '${local.spa_source_dir}' && pwd)\" \"$(cd '${get_repo_root()}' && pwd)/.spa-build-cache\" \"https://${local.api_domain}\" \"${local.spa_type}\""
+      "mise exec -C \"$(cd '${get_repo_root()}/../hometest-service' && pwd)\" -- \"$(cd '${get_repo_root()}' && pwd)/scripts/build-spa.sh\" \"$(cd '${local.spa_source_dir}' && pwd)\" \"$(cd '${get_repo_root()}' && pwd)/.spa-build-cache\" \"https://${local.api_domain}\" \"${local.spa_type}\""
     ]
   }
 

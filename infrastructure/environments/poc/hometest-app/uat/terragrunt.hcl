@@ -7,6 +7,10 @@
 # Environment name ("uat") is derived automatically from this directory name.
 # ---------------------------------------------------------------------------------------------------------------------
 
+locals {
+  environment = "uat"
+}
+
 include "root" {
   path = find_in_parent_folders("root.hcl")
 }

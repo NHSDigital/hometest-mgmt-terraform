@@ -8,6 +8,10 @@
 # Only truly env-specific overrides (e.g., extra lambdas) belong here.
 # ---------------------------------------------------------------------------------------------------------------------
 
+locals {
+  environment = "dev"
+}
+
 include "root" {
   path = find_in_parent_folders("root.hcl")
 }
