@@ -232,7 +232,7 @@ module "wiremock_service" {
       }
 
       healthCheck = {
-        command     = ["CMD-SHELL", "wget --spider --quiet http://localhost:${local.wiremock_container_port}/__admin/health || exit 1"]
+        command     = ["CMD-SHELL", "wget -qO/dev/null http://localhost:${local.wiremock_container_port}/__admin/health || exit 1"]
         interval    = 30
         timeout     = 5
         retries     = 3
