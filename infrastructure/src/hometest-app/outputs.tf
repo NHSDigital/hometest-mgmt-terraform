@@ -171,15 +171,15 @@ output "deployment_info" {
 
 output "wiremock_alb_dns_name" {
   description = "DNS name of the internal WireMock ALB"
-  value       = try(aws_lb.wiremock[0].dns_name, null)
+  value       = try(module.wiremock_alb[0].dns_name, null)
 }
 
 output "wiremock_url" {
   description = "Internal URL for WireMock API (use from Lambdas / Playwright)"
-  value       = var.enable_wiremock ? "http://${aws_lb.wiremock[0].dns_name}" : null
+  value       = var.enable_wiremock ? "http://${module.wiremock_alb[0].dns_name}" : null
 }
 
 output "wiremock_admin_url" {
   description = "Internal URL for WireMock admin API"
-  value       = var.enable_wiremock ? "http://${aws_lb.wiremock[0].dns_name}/__admin" : null
+  value       = var.enable_wiremock ? "http://${module.wiremock_alb[0].dns_name}/__admin" : null
 }

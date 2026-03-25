@@ -263,8 +263,6 @@ dependency "ecs" {
     cluster_name                     = "mock-ecs-cluster"
     service_discovery_namespace_id   = "ns-mock1234567890"
     service_discovery_namespace_name = "ecs.mock.local"
-    ecs_tasks_security_group_id      = "sg-mock-ecs-tasks"
-    ecs_tasks_log_group_name         = "/ecs/mock/tasks"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }

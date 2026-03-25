@@ -20,8 +20,7 @@ dependency "network" {
   config_path = "../network"
 
   mock_outputs = {
-    vpc_id         = "vpc-00000000000000000"
-    vpc_cidr_block = "10.0.0.0/16"
+    vpc_id = "vpc-00000000000000000"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -37,7 +36,6 @@ dependency "shared_services" {
 
 inputs = {
   vpc_id      = dependency.network.outputs.vpc_id
-  vpc_cidr    = dependency.network.outputs.vpc_cidr_block
   kms_key_arn = dependency.shared_services.outputs.kms_key_arn
 
   log_retention_days = 30

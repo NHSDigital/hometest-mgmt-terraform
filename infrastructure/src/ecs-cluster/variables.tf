@@ -34,12 +34,7 @@ variable "tags" {
 }
 
 variable "vpc_id" {
-  description = "VPC ID for ECS cluster resources"
-  type        = string
-}
-
-variable "vpc_cidr" {
-  description = "VPC CIDR block for security group rules"
+  description = "VPC ID for service discovery namespace"
   type        = string
 }
 
