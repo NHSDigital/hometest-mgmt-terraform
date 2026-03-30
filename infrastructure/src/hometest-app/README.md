@@ -237,6 +237,7 @@ After deployment, you'll have access to:
 | <a name="module_sqs_notifications"></a> [sqs\_notifications](#module\_sqs\_notifications) | ../../modules/sqs | n/a |
 | <a name="module_sqs_order_placement"></a> [sqs\_order\_placement](#module\_sqs\_order\_placement) | ../../modules/sqs | n/a |
 | <a name="module_sqs_order_results"></a> [sqs\_order\_results](#module\_sqs\_order\_results) | ../../modules/sqs | n/a |
+| <a name="module_sqs_notify_messages"></a> [sqs\_notify\_messages](#module\_sqs\_notify\_messages) | ../../modules/sqs | n/a |
 
 ## Resources
 
