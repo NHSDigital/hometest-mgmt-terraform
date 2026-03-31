@@ -4,7 +4,7 @@ This repository contains Terraform/Terragrunt infrastructure code for the NHS Ho
 
 ## Project Structure
 
-- `infrastructure/src/` - Terraform root modules (bootstrap, network, aurora-postgres, shared_services, hometest-app, lambda-goose-migrator)
+- `infrastructure/src/` - Terraform root modules (bootstrap, network, aurora-postgres, shared_services, hometest-app, ecs-cluster, lambda-goose-migrator)
 - `infrastructure/modules/` - Reusable Terraform modules (lambda, api-gateway, aurora-postgres, cloudfront-spa, sqs, waf, etc.)
 - `infrastructure/environments/` - Terragrunt environment configurations (poc/core, poc/hometest-app)
 - `scripts/` - Shell scripts for testing, Docker, reports, and automation

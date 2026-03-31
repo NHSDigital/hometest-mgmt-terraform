@@ -182,8 +182,14 @@ module "wiremock_service" {
   capacity_provider_strategy = {
     fargate_spot = {
       capacity_provider = "FARGATE_SPOT"
-      weight            = 1
+      weight            = 10
       base              = 1
+    }
+
+    fargate = {
+      capacity_provider = "FARGATE"
+      weight            = 1
+      base              = 0
     }
   }
 
