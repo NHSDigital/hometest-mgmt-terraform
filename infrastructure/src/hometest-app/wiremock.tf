@@ -186,11 +186,11 @@ module "wiremock_service" {
       base              = 1
     }
 
-    fargate = {
-      capacity_provider = "FARGATE"
-      weight            = 1
-      base              = 0
-    }
+    # fargate = {
+    #   capacity_provider = "FARGATE"
+    #   weight            = 1
+    #   base              = 0
+    # }
   }
 
   desired_count = var.wiremock_desired_count
