@@ -1,8 +1,8 @@
 -- +goose Up
 ALTER TABLE order_status
-DROP COLUMN order_reference;
+DROP COLUMN IF EXISTS order_reference;
 
 
 -- +goose Down
 ALTER TABLE order_status
-ADD COLUMN order_reference bigint;
+ADD COLUMN IF NOT EXISTS order_reference bigint;
