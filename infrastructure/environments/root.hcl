@@ -26,6 +26,14 @@ locals {
 
   # Environment: from env.hcl if available, otherwise derived from directory name
   environment = try(local._env_locals.environment, basename(path_relative_to_include()))
+
+  # Verify that the AWS CLI is authenticated to the expected account
+  current_account_id = trimspace(run_cmd("--terragrunt-quiet", "aws", "sts", "get-caller-identity", "--query", "Account", "--output", "text"))
+  account_check = (
+    local.current_account_id == local.account_id
+    ? local.current_account_id
+    : error("AWS account mismatch! Expected ${local.account_id} (${local.account_name}) but AWS CLI is authenticated to ${local.current_account_id}. Check your AWS profile/credentials.")
+  )
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -70,7 +78,7 @@ remote_state {
     # Without it, all environments share the same key and overwrite each other's state.
     key        = "${local.account_name}-${local.environment}-${basename(path_relative_to_include())}.tfstate"
     encrypt    = true
-    kms_key_id = "arn:aws:kms:${local.region}:${local.account_id}:alias/${local.account_name}-${local.environment}-kms-tfstate-key-v4"
+    kms_key_id = "arn:aws:kms:${local.region}:${local.account_id}:alias/${local.account_name}-${local.environment}-kms-tfstate-key"
     region     = local.region
   }
   generate = {
