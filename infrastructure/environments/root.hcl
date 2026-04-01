@@ -69,7 +69,7 @@ terraform {
 remote_state {
   backend = "s3"
   config = {
-    bucket       = "${local.account_name}-${local.environment}-s3-tfstate"
+    bucket       = "${local.account_name}-core-s3-tfstate"
     use_lockfile = true
     # IMPORTANT: This key derives `environment` from env.hcl (via find_in_parent_folders)
     # and uses basename(path) as the module name. For NESTED modules (e.g., dev/lambda-goose-migrator)
@@ -78,7 +78,7 @@ remote_state {
     # Without it, all environments share the same key and overwrite each other's state.
     key        = "${local.account_name}-${local.environment}-${basename(path_relative_to_include())}.tfstate"
     encrypt    = true
-    kms_key_id = "arn:aws:kms:${local.region}:${local.account_id}:alias/${local.account_name}-${local.environment}-kms-tfstate-key"
+    kms_key_id = "arn:aws:kms:${local.region}:${local.account_id}:alias/${local.account_name}-core-kms-tfstate-key"
     region     = local.region
   }
   generate = {
