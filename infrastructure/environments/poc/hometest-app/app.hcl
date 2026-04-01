@@ -56,6 +56,11 @@ locals {
   create_cloudfront_certificate = lookup(local._domain_overrides, "create_cloudfront_certificate", false)
   create_api_certificate        = lookup(local._domain_overrides, "create_api_certificate", false)
 
+  # WireMock build configuration — controls SPA build-time env vars
+  # Reads enable_wiremock from the child terragrunt.hcl inputs (e.g. enable_wiremock = true)
+  _enable_wiremock   = trimspace(run_cmd("bash", "-c", "grep -qE '^[[:space:]]*enable_wiremock[[:space:]]*=[[:space:]]*true' '${get_terragrunt_dir()}/terragrunt.hcl' 2>/dev/null && echo true || echo false"))
+  _wiremock_base_url = "https://wiremock-${local.environment}.${local.base_domain}"
+
   # Schema-per-environment: each env gets its own schema in the shared Aurora DB
   db_schema   = "hometest_${local.environment}"
   db_app_user = "app_user_${local.db_schema}"
@@ -162,11 +167,13 @@ terraform {
   # Build SPA before apply (only rebuilds when source or backend URL changes)
   # Uses scripts/build-spa.sh which content-hashes source + NEXT_PUBLIC_BACKEND_URL
   # Runs under hometest-service mise env so the correct Node.js version is used
+  # When wiremock is enabled (via domain.hcl), USE_WIREMOCK_AUTH and NHS_LOGIN_AUTHORIZE_URL
+  # are baked into the SPA build.
   before_hook "build_spa" {
     commands = ["plan", "apply"]
     execute = [
       "bash", "-c",
-      "mise exec -C '${local.hometest_service_dir}' -- '${local.scripts_dir}/build-spa.sh' '${local.spa_source_dir}' '${local.spa_build_cache}' 'https://${local.api_domain}' '${local.spa_type}'"
+      "ENABLE_WIREMOCK='${local._enable_wiremock}' WIREMOCK_BASE_URL='${local._wiremock_base_url}' mise exec -C '${local.hometest_service_dir}' -- '${local.scripts_dir}/build-spa.sh' '${local.spa_source_dir}' '${local.spa_build_cache}' 'https://${local.api_domain}' '${local.spa_type}'"
     ]
   }
 
