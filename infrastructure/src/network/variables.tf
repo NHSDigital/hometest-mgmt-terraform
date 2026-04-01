@@ -174,6 +174,12 @@ variable "firewall_logs_retention_days" {
   }
 }
 
+variable "enable_firewall_flow_logs" {
+  description = "Enable FLOW log type for Network Firewall. FLOW logs record every packet and can be very high volume (10-100x ALERT logs). Disable for non-production environments to reduce CloudWatch ingestion costs."
+  type        = bool
+  default     = true
+}
+
 variable "firewall_default_deny" {
   description = "Enable default deny rule - drops all traffic not explicitly allowed. CAUTION: Ensure all required destinations are in allowed lists before enabling."
   type        = bool

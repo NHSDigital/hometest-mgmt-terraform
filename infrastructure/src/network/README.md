@@ -643,6 +643,7 @@ No modules.
 | <a name="input_dns_query_logs_retention_days"></a> [dns\_query\_logs\_retention\_days](#input\_dns\_query\_logs\_retention\_days) | Number of days to retain DNS query logs in S3 before expiration | `number` | `90` | no |
 | <a name="input_enable_dns_query_logging"></a> [enable\_dns\_query\_logging](#input\_enable\_dns\_query\_logging) | Enable DNS query logging for Route 53 with near real-time delivery to S3 | `bool` | `true` | no |
 | <a name="input_enable_dnssec"></a> [enable\_dnssec](#input\_enable\_dnssec) | Enable DNSSEC signing for the hosted zone (recommended for security) | `bool` | `false` | no |
+| <a name="input_enable_firewall_flow_logs"></a> [enable\_firewall\_flow\_logs](#input\_enable\_firewall\_flow\_logs) | Enable FLOW log type for Network Firewall. FLOW logs record every packet and can be very high volume (10-100x ALERT logs). Disable for non-production environments to reduce CloudWatch ingestion costs. | `bool` | `true` | no |
 | <a name="input_enable_interface_endpoints"></a> [enable\_interface\_endpoints](#input\_enable\_interface\_endpoints) | Enable VPC Interface Endpoints for AWS services (incurs costs) | `bool` | `true` | no |
 | <a name="input_enable_ipv6"></a> [enable\_ipv6](#input\_enable\_ipv6) | Enable IPv6 CIDR block assignment for the VPC (dual-stack) | `bool` | `false` | no |
 | <a name="input_enable_network_firewall"></a> [enable\_network\_firewall](#input\_enable\_network\_firewall) | Enable AWS Network Firewall for egress filtering and deep packet inspection | `bool` | `false` | no |

@@ -150,12 +150,15 @@ resource "aws_networkfirewall_logging_configuration" "main" {
       log_type             = "ALERT"
     }
 
-    log_destination_config {
-      log_destination = {
-        logGroup = aws_cloudwatch_log_group.network_firewall[0].name
+    dynamic "log_destination_config" {
+      for_each = var.enable_firewall_flow_logs ? [1] : []
+      content {
+        log_destination = {
+          logGroup = aws_cloudwatch_log_group.network_firewall[0].name
+        }
+        log_destination_type = "CloudWatchLogs"
+        log_type             = "FLOW"
       }
-      log_destination_type = "CloudWatchLogs"
-      log_type             = "FLOW"
     }
   }
 }
