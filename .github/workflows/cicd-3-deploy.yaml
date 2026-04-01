@@ -67,6 +67,7 @@ jobs:
     name: "Deploy TF Core/Bootstrap"
     runs-on: ubuntu-latest
     needs: [metadata]
+    environment: ${{ inputs.environment || 'poc' }}
     timeout-minutes: 30
     env:
       DEPLOY_PATH: ./hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment || 'poc' }}/core/bootstrap
@@ -94,6 +95,7 @@ jobs:
     name: "Deploy TF Core/Network"
     runs-on: ubuntu-latest
     needs: [deploy-bootstrap]
+    environment: ${{ inputs.environment || 'poc' }}
     timeout-minutes: 30
     env:
       DEPLOY_PATH: ./hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment || 'poc' }}/core/network
@@ -121,6 +123,7 @@ jobs:
     name: "Deploy TF Core/aurora-postgres"
     runs-on: ubuntu-latest
     needs: [deploy-network]
+    environment: ${{ inputs.environment || 'poc' }}
     timeout-minutes: 30
     env:
       DEPLOY_PATH: ./hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment || 'poc' }}/core/aurora-postgres
@@ -148,6 +151,7 @@ jobs:
     name: "Deploy TF Core/shared_services"
     runs-on: ubuntu-latest
     needs: [deploy-aurora]
+    environment: ${{ inputs.environment || 'poc' }}
     timeout-minutes: 30
     env:
       DEPLOY_PATH: ./hometest-mgmt-terraform/infrastructure/environments/${{ inputs.environment || 'poc' }}/core/shared_services
@@ -176,6 +180,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [deploy-shared-services]
     if: ${{ (inputs.environment || 'poc') == 'poc' }}
+    environment: ${{ inputs.environment || 'poc' }}
     timeout-minutes: 30
     env:
       DEPLOY_PATH: ./hometest-mgmt-terraform/infrastructure/environments/poc/core/ecs
