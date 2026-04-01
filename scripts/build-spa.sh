@@ -29,6 +29,10 @@ BACKEND_URL="${3:-}"
 SPA_TYPE="${4:-nextjs}"
 FORCE_REBUILD="${FORCE_SPA_REBUILD:-false}"
 
+# WireMock configuration (set via environment variables by Terragrunt hook)
+ENABLE_WIREMOCK="${ENABLE_WIREMOCK:-false}"
+WIREMOCK_BASE_URL="${WIREMOCK_BASE_URL:-}"
+
 if [[ -z "$SPA_DIR_INPUT" ]]; then
   echo "Usage: $0 <spa-directory> <cache-directory> <backend-url> [spa-type]"
   echo "  spa-directory:   Path to the SPA source directory"
@@ -158,6 +162,9 @@ calculate_source_hash() {
   # because Next.js bakes NEXT_PUBLIC_* vars into the static output at build time.
   all_hashes+="BACKEND_URL:${BACKEND_URL}|"
 
+  # Include wiremock config in hash — toggling wiremock changes build-time env vars
+  all_hashes+="ENABLE_WIREMOCK:${ENABLE_WIREMOCK}|"
+
   # Combine all hashes into final hash
   local final_hash
   final_hash=$(echo "$all_hashes" | $hash_cmd | cut -d' ' -f1)
@@ -201,6 +208,10 @@ show_hash_inputs() {
 
   echo "  Environment:"
   echo "    NEXT_PUBLIC_BACKEND_URL=$BACKEND_URL"
+  if [[ "$ENABLE_WIREMOCK" == "true" ]]; then
+    echo "    USE_WIREMOCK_AUTH=true"
+    echo "    NHS_LOGIN_AUTHORIZE_URL=${WIREMOCK_BASE_URL}/authorize"
+  fi
 }
 
 get_cached_hash() {
@@ -273,6 +284,14 @@ build_spa() {
   export NEXT_PUBLIC_BACKEND_URL="$BACKEND_URL"
   echo "  NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL"
 
+  # When wiremock is enabled, bake auth-related env vars into the SPA build
+  if [[ "$ENABLE_WIREMOCK" == "true" ]]; then
+    export USE_WIREMOCK_AUTH="true"
+    export NHS_LOGIN_AUTHORIZE_URL="${WIREMOCK_BASE_URL}/authorize"
+    echo "  USE_WIREMOCK_AUTH=$USE_WIREMOCK_AUTH"
+    echo "  NHS_LOGIN_AUTHORIZE_URL=$NHS_LOGIN_AUTHORIZE_URL"
+  fi
+
   # Run the build
   npm run build --silent 2>/dev/null || npm run build
 }
@@ -289,6 +308,12 @@ echo "SPA type:       $SPA_TYPE"
 echo "Output dir:     $DIST_DIR"
 echo "Cache directory: $CACHE_DIR"
 echo "Backend URL:    $BACKEND_URL"
+if [[ "$ENABLE_WIREMOCK" == "true" ]]; then
+  echo "WireMock:       ENABLED"
+  echo "WireMock URL:   $WIREMOCK_BASE_URL"
+else
+  echo "WireMock:       disabled"
+fi
 echo ""
 
 # Validate source directory
