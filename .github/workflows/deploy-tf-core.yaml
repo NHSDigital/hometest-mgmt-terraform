@@ -33,7 +33,7 @@ on:
           - plan
           - apply
           # - destroy-plan
-          # - destroy
+          - destroy
         default: plan
 
 env:
