@@ -8,6 +8,11 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
+locals {
+  account_vars          = read_terragrunt_config(find_in_parent_folders("account.hcl"))
+  aws_account_shortname = local.account_vars.locals.aws_account_shortname
+}
+
 # Configure the version of the module to use in this environment
 terraform {
   source = "../../../..//src/aurora-postgres"
@@ -40,7 +45,7 @@ inputs = {
 
 
   # Aurora Serverless v2 configuration
-  db_name                   = "hometest_poc"
+  db_name                   = "hometest_${local.aws_account_shortname}"
   username                  = "postgres"
   serverlessv2_min_capacity = 0.5
   serverlessv2_max_capacity = 4
