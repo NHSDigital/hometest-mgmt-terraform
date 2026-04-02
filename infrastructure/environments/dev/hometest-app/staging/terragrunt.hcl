@@ -25,18 +25,4 @@ include "app" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 inputs = {
-  # Hello World Lambda - simple health check (dev environment only)
-  lambdas = {
-    "hello-world-lambda" = {
-      description     = "Hello World Lambda - Health Check"
-      api_path_prefix = "hello-world"
-      handler         = "index.handler"
-      timeout         = 30
-      memory_size     = 256
-      environment = {
-        NODE_OPTIONS = "--enable-source-maps"
-        ENVIRONMENT  = basename(get_terragrunt_dir())
-      }
-    }
-  }
 }
