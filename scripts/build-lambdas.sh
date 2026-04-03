@@ -3,26 +3,39 @@
 # Build Lambdas Script
 # Only rebuilds lambda functions when source code changes are detected.
 # Uses content hashing to determine if a rebuild is necessary.
+#
+# Usage:
+#   LAMBDAS_SOURCE_DIR=<path> LAMBDAS_CACHE_DIR=<path> NODE_ENV=production ./build-lambdas.sh
+#
+# Required environment variables:
+#   LAMBDAS_SOURCE_DIR                Path to the lambdas source directory
+#
+# Optional environment variables:
+#   LAMBDAS_CACHE_DIR                 Build cache directory (default: .lambda-build-cache)
+#   NODE_ENV=production|development   Build mode (default: production, enables minification)
+#   FORCE_LAMBDA_REBUILD=true         Force rebuild even if no changes detected
 # -----------------------------------------------------------------------------
 
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# Configuration
+# Configuration (from environment variables)
 # -----------------------------------------------------------------------------
-LAMBDAS_DIR_INPUT="${1:-}"
-CACHE_DIR_INPUT="${2:-.lambda-build-cache}"
+LAMBDAS_DIR_INPUT="${LAMBDAS_SOURCE_DIR:-}"
+CACHE_DIR_INPUT="${LAMBDAS_CACHE_DIR:-.lambda-build-cache}"
 FORCE_REBUILD="${FORCE_LAMBDA_REBUILD:-false}"
 NODE_ENV="${NODE_ENV:-production}"
 
 if [[ -z "$LAMBDAS_DIR_INPUT" ]]; then
-  echo "Usage: $0 <lambdas-directory> [cache-directory]"
-  echo "  lambdas-directory: Path to the lambdas source directory"
-  echo "  cache-directory:   Path to store build cache (default: .lambda-build-cache)"
+  echo "Error: LAMBDAS_SOURCE_DIR is required"
   echo ""
-  echo "Environment variables:"
-  echo "  FORCE_LAMBDA_REBUILD=true  Force rebuild even if no changes detected"
-  echo "  NODE_ENV=production|development  Set build mode (default: production, enables minification)"
+  echo "Required environment variables:"
+  echo "  LAMBDAS_SOURCE_DIR                  Path to the lambdas source directory"
+  echo ""
+  echo "Optional environment variables:"
+  echo "  LAMBDAS_CACHE_DIR                   Build cache directory (default: .lambda-build-cache)"
+  echo "  NODE_ENV=production|development     Build mode (default: production, enables minification)"
+  echo "  FORCE_LAMBDA_REBUILD=true           Force rebuild even if no changes detected"
   exit 1
 fi
 

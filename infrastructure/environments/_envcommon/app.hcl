@@ -108,6 +108,7 @@ locals {
 
   # NHS Login Configuration
   nhs_login_base_url                         = "https://auth.sandpit.signin.nhs.uk"
+  nhs_login_authorize_url                    = "${local.nhs_login_base_url}/authorize"
   nhs_login_client_id                        = "hometest"
   auth_session_max_duration_minutes          = "60"
   auth_access_token_expiry_duration_minutes  = "60"
@@ -146,31 +147,38 @@ terraform {
 
   # ---------------------------------------------------------------------------
   # BUILD HOOKS
-  # These hooks build and package artifacts locally BEFORE terraform runs.
-  # Terraform then uploads and deploys the Lambda functions.
-  # Paths are configurable via locals: lambdas_source_dir, spa_source_dir, spa_type
+  # Build and package artifacts locally BEFORE terraform runs.
+  # All configuration is passed via environment variables.
+  # Scripts live in scripts/ and are run under hometest-service's mise env.
   # ---------------------------------------------------------------------------
 
-  # Build and package Lambda code locally (Terraform uploads and deploys)
-  # Uses scripts/build-lambdas.sh which only rebuilds when source changes are detected
-  # Runs under hometest-service mise env so the correct Node.js version is used
   before_hook "build_lambdas" {
-    commands = ["plan",
-    "apply"]
+    commands = ["plan", "apply"]
     execute = [
       "bash", "-c",
-      "cd '${local.hometest_service_dir}' && NODE_ENV=${local.lambda_node_env} mise exec -- '${local.scripts_dir}/build-lambdas.sh' '${local.lambdas_source_dir}' '${local.lambda_build_cache}'"
+      <<-EOF
+        cd '${local.hometest_service_dir}' && \
+        LAMBDAS_SOURCE_DIR='${local.lambdas_source_dir}' \
+        LAMBDAS_CACHE_DIR='${local.lambda_build_cache}' \
+        NODE_ENV='${local.lambda_node_env}' \
+        mise exec -- '${local.scripts_dir}/build-lambdas.sh'
+      EOF
     ]
   }
 
-  # Build SPA before apply (only rebuilds when source or backend URL changes)
-  # Uses scripts/build-spa.sh which content-hashes source + NEXT_PUBLIC_BACKEND_URL
-  # Runs under hometest-service mise env so the correct Node.js version is used
   before_hook "build_spa" {
     commands = ["plan", "apply"]
     execute = [
       "bash", "-c",
-      "cd '${local.hometest_service_dir}' && mise exec -- '${local.scripts_dir}/build-spa.sh' '${local.spa_source_dir}' '${local.spa_build_cache}' 'https://${local.api_domain}' '${local.spa_type}'"
+      <<-EOF
+        cd '${local.hometest_service_dir}' && \
+        SPA_SOURCE_DIR='${local.spa_source_dir}' \
+        SPA_CACHE_DIR='${local.spa_build_cache}' \
+        SPA_TYPE='${local.spa_type}' \
+        NEXT_PUBLIC_BACKEND_URL='https://${local.api_domain}' \
+        NEXT_PUBLIC_NHS_LOGIN_AUTHORIZE_URL='${local.nhs_login_authorize_url}' \
+        mise exec -- '${local.scripts_dir}/build-spa.sh'
+      EOF
     ]
   }
 
@@ -404,7 +412,7 @@ inputs = {
 
     # Login Lambda - NHS Login authentication
     # CloudFront: /login/* → API Gateway → Lambda
-    # CORS: handled in-code via @middy/http-cors using COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN env var
+    # CORS: handled in-code via @middy/http-cors using ALLOW_ORIGIN env var
     "login-lambda" = {
       description     = "Login Service - NHS Login authentication"
       api_path_prefix = "login"
@@ -414,6 +422,7 @@ inputs = {
       environment = {
         NODE_OPTIONS                               = "--enable-source-maps"
         ENVIRONMENT                                = local.environment
+        ALLOW_ORIGIN                               = local.spa_origin
         NHS_LOGIN_BASE_ENDPOINT_URL                = local.nhs_login_base_url
         NHS_LOGIN_CLIENT_ID                        = local.nhs_login_client_id
         NHS_LOGIN_REDIRECT_URL                     = "${local.spa_origin}/callback"
@@ -422,13 +431,13 @@ inputs = {
         AUTH_ACCESS_TOKEN_EXPIRY_DURATION_MINUTES  = local.auth_access_token_expiry_duration_minutes
         AUTH_REFRESH_TOKEN_EXPIRY_DURATION_MINUTES = local.auth_refresh_token_expiry_duration_minutes
         AUTH_COOKIE_SAME_SITE                      = local.auth_cookie_same_site
-        COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN         = local.spa_origin
+        # COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN         = local.spa_origin
       }
     }
 
     # Session Lambda - Validates auth cookie and returns NHS Login user info
     # CloudFront: /session/* → API Gateway → Lambda
-    # CORS: handled in-code via @middy/http-cors using COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN env var
+    # CORS: handled in-code via @middy/http-cors using ALLOW_ORIGIN env var
     "session-lambda" = {
       description     = "Session Service - Validates auth cookie and returns user info"
       api_path_prefix = "session"
@@ -438,10 +447,11 @@ inputs = {
       environment = {
         NODE_OPTIONS                       = "--enable-source-maps"
         ENVIRONMENT                        = local.environment
+        ALLOW_ORIGIN                       = local.spa_origin
         AUTH_COOKIE_KEY_ID                 = local.auth_cookie_key_id
         AUTH_COOKIE_PUBLIC_KEY_SECRET_NAME = local.nhs_login_private_key_secret_name
         NHS_LOGIN_BASE_ENDPOINT_URL        = local.nhs_login_base_url
-        COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN = local.spa_origin
+        # COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN = local.spa_origin
       }
     }
 
