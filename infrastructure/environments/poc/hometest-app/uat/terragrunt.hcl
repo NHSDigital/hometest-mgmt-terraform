@@ -21,7 +21,11 @@ include "app" {
 # All inputs, hooks, and lambdas come from app.hcl.
 # Domain and certificate config comes from domain.hcl.
 
+# locals {
+#   enable_wiremock = true
+# }
+
 inputs = {
-  # WireMock - enabled for dev to stub 3rd-party APIs and support Playwright tests
-  enable_wiremock = true
+  # (enable_wiremock is controlled via env.hcl so that the same flag also
+  #  steers the SPA build-time env vars in the before_hook.)
 }

@@ -47,6 +47,12 @@ locals {
   # ---------------------------------------------------------------------------
   _domain_overrides = try(read_terragrunt_config("${get_terragrunt_dir()}/domain.hcl").locals, {})
 
+  # Read per-environment flags from env.hcl (same file that carries the environment name).
+  # Defaults to an empty map so environments without the key get the safe default.
+  _env_flags      = try(read_terragrunt_config("${get_terragrunt_dir()}/env.hcl").locals, {})
+  enable_wiremock = lookup(local._env_flags, "enable_wiremock", false)
+  # enable_wiremock = false
+
   base_domain = "${local.account_vars.locals.aws_account_shortname}.hometest.service.nhs.uk"
   env_domain  = lookup(local._domain_overrides, "env_domain", "${local.environment}.${local.base_domain}")
   api_domain  = lookup(local._domain_overrides, "api_domain", "api-${local.environment}.${local.base_domain}")
@@ -116,6 +122,29 @@ locals {
   auth_cookie_same_site                      = "Lax"
   auth_cookie_key_id                         = "key"
 
+  # ---------------------------------------------------------------------------
+  # SPA BUILD: NHS Login authorize URL and WireMock auth flag
+  # When enable_wiremock = true the SPA uses the per-environment WireMock domain
+  # as the NHS Login stub and sets NEXT_PUBLIC_USE_WIREMOCK_AUTH=true.
+  # When false, the real NHS Login sandpit is used.
+  # ---------------------------------------------------------------------------
+  wiremock_base_url_for_spa   = "https://wiremock-${local.environment}.${local.base_domain}"
+  spa_nhs_login_authorize_url = local.enable_wiremock ? "${local.wiremock_base_url_for_spa}/authorize" : local.nhs_login_authorize_url
+  use_wiremock_auth           = local.enable_wiremock
+
+  # NHS Login base URL used by lambdas (login-lambda, session-lambda):
+  # when WireMock is enabled, lambdas must validate tokens against the WireMock JWKS endpoint
+  # so the issuer in the JWT matches the URL the lambda verifies against.
+  nhs_login_lambda_base_url = local.enable_wiremock ? local.wiremock_base_url_for_spa : local.nhs_login_base_url
+
+  # JWKS URI for the login-lambda JwksClient.
+  # When WireMock is enabled, the lambda is in a VPC and must reach WireMock via internal
+  # service discovery (bypassing the public ALB/WAF) to avoid a 403 Forbidden on JWKS fetch.
+  # Namespace follows the ecs-cluster module pattern: ecs.<project>-<account>-<env>.local
+  # When disabled, the lambda derives the URI from nhs_login_lambda_base_url automatically.
+  _ecs_service_discovery_namespace = "ecs.${local.project_name}-${local.aws_account_shortname}-${local.environment}.local"
+  nhs_login_jwks_uri               = local.enable_wiremock ? "http://wiremock-${local.environment}.${local._ecs_service_discovery_namespace}:8080/.well-known/jwks.json" : ""
+
   # Postcode Lookup Configuration
   postcode_lookup_base_url             = "https://api.os.uk/search/places/v1"
   postcode_lookup_timeout_ms           = "5000"
@@ -176,7 +205,8 @@ terraform {
         SPA_CACHE_DIR='${local.spa_build_cache}' \
         SPA_TYPE='${local.spa_type}' \
         NEXT_PUBLIC_BACKEND_URL='https://${local.api_domain}' \
-        NEXT_PUBLIC_NHS_LOGIN_AUTHORIZE_URL='${local.nhs_login_authorize_url}' \
+        NEXT_PUBLIC_NHS_LOGIN_AUTHORIZE_URL='${local.spa_nhs_login_authorize_url}' \
+        NEXT_PUBLIC_USE_WIREMOCK_AUTH='${local.use_wiremock_auth}' \
         mise exec -- '${local.scripts_dir}/build-spa.sh'
       EOF
     ]
@@ -423,7 +453,8 @@ inputs = {
         NODE_OPTIONS                               = "--enable-source-maps"
         ENVIRONMENT                                = local.environment
         ALLOW_ORIGIN                               = local.spa_origin
-        NHS_LOGIN_BASE_ENDPOINT_URL                = local.nhs_login_base_url
+        NHS_LOGIN_BASE_ENDPOINT_URL                = local.nhs_login_lambda_base_url
+        NHS_LOGIN_JWKS_URI                         = local.nhs_login_jwks_uri
         NHS_LOGIN_CLIENT_ID                        = local.nhs_login_client_id
         NHS_LOGIN_REDIRECT_URL                     = "${local.spa_origin}/callback"
         NHS_LOGIN_PRIVATE_KEY_SECRET_NAME          = local.nhs_login_private_key_secret_name
@@ -450,7 +481,7 @@ inputs = {
         ALLOW_ORIGIN                       = local.spa_origin
         AUTH_COOKIE_KEY_ID                 = local.auth_cookie_key_id
         AUTH_COOKIE_PUBLIC_KEY_SECRET_NAME = local.nhs_login_private_key_secret_name
-        NHS_LOGIN_BASE_ENDPOINT_URL        = local.nhs_login_base_url
+        NHS_LOGIN_BASE_ENDPOINT_URL        = local.nhs_login_lambda_base_url
         # COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN = local.spa_origin
       }
     }
@@ -626,10 +657,10 @@ inputs = {
 
   # ---------------------------------------------------------------------------
   # WireMock (ECS Fargate) — routes via shared ALB with host-based rules
-  # Disabled by default — enable per-environment in child terragrunt.hcl
+  # Disabled by default — enable per-environment in child env.hcl
   # Used for Playwright E2E tests and stubbing 3rd-party APIs in dev envs
   # ---------------------------------------------------------------------------
-  enable_wiremock                         = false
+  enable_wiremock                         = local.enable_wiremock
   wiremock_ecs_cluster_arn                = dependency.ecs.outputs.cluster_arn
   wiremock_subnet_ids                     = dependency.network.outputs.private_subnet_ids
   wiremock_alb_https_listener_arn         = dependency.ecs.outputs.alb_https_listener_arn
