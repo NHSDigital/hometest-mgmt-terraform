@@ -140,9 +140,11 @@ locals {
   # JWKS URI for the login-lambda JwksClient.
   # When WireMock is enabled, the lambda is in a VPC and must reach WireMock via internal
   # service discovery (bypassing the public ALB/WAF) to avoid a 403 Forbidden on JWKS fetch.
-  # Namespace follows the ecs-cluster module pattern: ecs.<project>-<account>-<env>.local
+  # The ECS cluster is deployed under poc/core/ecs/ with environment="core", so its
+  # service discovery namespace follows: ecs.<project>-<account>-core.local
+  # The WireMock service itself is named wiremock-<env> (e.g. wiremock-uat).
   # When disabled, the lambda derives the URI from nhs_login_lambda_base_url automatically.
-  _ecs_service_discovery_namespace = "ecs.${local.project_name}-${local.aws_account_shortname}-${local.environment}.local"
+  _ecs_service_discovery_namespace = "ecs.${local.project_name}-${local.aws_account_shortname}-core.local"
   nhs_login_jwks_uri               = local.enable_wiremock ? "http://wiremock-${local.environment}.${local._ecs_service_discovery_namespace}:8080/.well-known/jwks.json" : ""
 
   # Postcode Lookup Configuration
