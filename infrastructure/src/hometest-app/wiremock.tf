@@ -346,3 +346,27 @@ module "wiremock_service" {
 
   tags = local.common_tags
 }
+
+################################################################################
+# Lambda → WireMock egress rules
+#
+# The network module's lambda SG only opens egress on 443 and 53.
+# When WireMock is enabled, lambdas must also be able to reach WireMock on
+# port 8080 via internal service discovery. We attach one egress rule per
+# lambda SG here rather than widening the shared lambda SG globally.
+################################################################################
+
+resource "aws_vpc_security_group_egress_rule" "lambda_to_wiremock" {
+  for_each = var.enable_wiremock ? toset(var.lambda_security_group_ids) : toset([])
+
+  security_group_id            = each.value
+  referenced_security_group_id = module.wiremock_service[0].security_group_id
+  from_port                    = local.wiremock_container_port
+  to_port                      = local.wiremock_container_port
+  ip_protocol                  = "tcp"
+  description                  = "HTTP to WireMock (service discovery, port ${local.wiremock_container_port})"
+
+  tags = merge(local.common_tags, {
+    Name = "${local.wiremock_name}-lambda-egress"
+  })
+}
