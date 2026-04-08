@@ -496,6 +496,18 @@ variable "wiremock_desired_count" {
   default     = 1
 }
 
+variable "wiremock_bypass_waf" {
+  description = "When true, WireMock gets a dedicated internet-facing ALB without WAF instead of using the shared core ALB (which has WAF attached). Allows per-environment control."
+  type        = bool
+  default     = false
+}
+
+variable "wiremock_public_subnet_ids" {
+  description = "Public subnet IDs for the dedicated WireMock ALB (only used when wiremock_bypass_waf = true)"
+  type        = list(string)
+  default     = []
+}
+
 ################################################################################
 # Region Configuration
 ################################################################################

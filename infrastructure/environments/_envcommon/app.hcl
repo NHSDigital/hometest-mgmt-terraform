@@ -49,8 +49,9 @@ locals {
 
   # Read per-environment flags from env.hcl (same file that carries the environment name).
   # Defaults to an empty map so environments without the key get the safe default.
-  _env_flags      = try(read_terragrunt_config("${get_terragrunt_dir()}/env.hcl").locals, {})
-  enable_wiremock = lookup(local._env_flags, "enable_wiremock", false)
+  _env_flags         = try(read_terragrunt_config("${get_terragrunt_dir()}/env.hcl").locals, {})
+  enable_wiremock    = lookup(local._env_flags, "enable_wiremock", false)
+  wiremock_bypass_waf = lookup(local._env_flags, "wiremock_bypass_waf", false)
   # enable_wiremock = false
 
   base_domain = "${local.account_vars.locals.aws_account_shortname}.hometest.service.nhs.uk"
@@ -663,8 +664,10 @@ inputs = {
   # Used for Playwright E2E tests and stubbing 3rd-party APIs in dev envs
   # ---------------------------------------------------------------------------
   enable_wiremock                         = local.enable_wiremock
+  wiremock_bypass_waf                     = local.wiremock_bypass_waf
   wiremock_ecs_cluster_arn                = dependency.ecs.outputs.cluster_arn
   wiremock_subnet_ids                     = dependency.network.outputs.private_subnet_ids
+  wiremock_public_subnet_ids              = local.wiremock_bypass_waf ? dependency.network.outputs.public_subnet_ids : []
   wiremock_alb_https_listener_arn         = dependency.ecs.outputs.alb_https_listener_arn
   wiremock_alb_security_group_id          = dependency.ecs.outputs.alb_security_group_id
   wiremock_alb_dns_name                   = dependency.ecs.outputs.alb_dns_name

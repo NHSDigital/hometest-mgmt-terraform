@@ -27,8 +27,19 @@
 
 locals {
   wiremock_name           = "${local.resource_prefix}-wiremock"
+  wiremock_short_name     = "${local.resource_prefix}-wm"
   wiremock_container_port = 8080
   wiremock_domain         = var.enable_wiremock && var.wiremock_domain_name != null ? var.wiremock_domain_name : null
+
+  # When bypass_waf is true, WireMock gets its own internet-facing ALB without WAF.
+  # When false, it shares the core ALB (which has WAF attached).
+  wiremock_use_dedicated_alb = var.enable_wiremock && var.wiremock_bypass_waf
+
+  # Resolve which ALB values to use for listener rules, DNS, and SG references
+  wiremock_effective_alb_dns_name           = local.wiremock_use_dedicated_alb ? try(aws_lb.wiremock[0].dns_name, null) : var.wiremock_alb_dns_name
+  wiremock_effective_alb_zone_id            = local.wiremock_use_dedicated_alb ? try(aws_lb.wiremock[0].zone_id, null) : var.wiremock_alb_zone_id
+  wiremock_effective_https_listener_arn     = local.wiremock_use_dedicated_alb ? try(aws_lb_listener.wiremock_https[0].arn, null) : var.wiremock_alb_https_listener_arn
+  wiremock_effective_alb_security_group_id  = local.wiremock_use_dedicated_alb ? try(aws_security_group.wiremock_alb[0].id, null) : var.wiremock_alb_security_group_id
 }
 
 ################################################################################
@@ -55,7 +66,117 @@ resource "aws_cloudwatch_log_group" "wiremock" {
 }
 
 ################################################################################
-# ALB Target Group — registers with shared core ALB
+# Dedicated ALB (no WAF) — created only when wiremock_bypass_waf = true
+# Internet-facing ALB in public subnets, with its own security group and
+# HTTPS listener. Replaces the shared core ALB for this WireMock instance.
+################################################################################
+
+resource "aws_security_group" "wiremock_alb" {
+  count = local.wiremock_use_dedicated_alb ? 1 : 0
+
+  name        = "${local.wiremock_name}-alb-sg"
+  description = "Security group for WireMock dedicated ALB (no WAF)"
+  vpc_id      = var.vpc_id
+
+  tags = merge(local.common_tags, { Name = "${local.wiremock_name}-alb-sg" })
+}
+
+resource "aws_vpc_security_group_ingress_rule" "wiremock_alb_https" {
+  count = local.wiremock_use_dedicated_alb ? 1 : 0
+
+  security_group_id = aws_security_group.wiremock_alb[0].id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+  description       = "HTTPS from internet"
+
+  tags = local.common_tags
+}
+
+resource "aws_vpc_security_group_ingress_rule" "wiremock_alb_http" {
+  count = local.wiremock_use_dedicated_alb ? 1 : 0
+
+  security_group_id = aws_security_group.wiremock_alb[0].id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 80
+  to_port           = 80
+  ip_protocol       = "tcp"
+  description       = "HTTP from internet (redirected to HTTPS)"
+
+  tags = local.common_tags
+}
+
+resource "aws_vpc_security_group_egress_rule" "wiremock_alb_to_vpc" {
+  count = local.wiremock_use_dedicated_alb ? 1 : 0
+
+  security_group_id = aws_security_group.wiremock_alb[0].id
+  cidr_ipv4         = data.aws_vpc.selected[0].cidr_block
+  ip_protocol       = "-1"
+  description       = "All traffic within VPC (to ECS tasks)"
+
+  tags = local.common_tags
+}
+
+resource "aws_lb" "wiremock" {
+  count = local.wiremock_use_dedicated_alb ? 1 : 0
+
+  name               = "${local.wiremock_short_name}-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.wiremock_alb[0].id]
+  subnets            = var.wiremock_public_subnet_ids
+
+  drop_invalid_header_fields = true
+  enable_deletion_protection = false
+
+  tags = local.common_tags
+}
+
+resource "aws_lb_listener" "wiremock_https" {
+  count = local.wiremock_use_dedicated_alb ? 1 : 0
+
+  load_balancer_arn = aws_lb.wiremock[0].arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn   = var.acm_regional_certificate_arn
+
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "application/json"
+      message_body = "{\"error\":\"not_found\"}"
+      status_code  = "404"
+    }
+  }
+
+  tags = local.common_tags
+}
+
+resource "aws_lb_listener" "wiremock_http_redirect" {
+  count = local.wiremock_use_dedicated_alb ? 1 : 0
+
+  load_balancer_arn = aws_lb.wiremock[0].arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+
+  tags = local.common_tags
+}
+
+################################################################################
+# ALB Target Group — registers with shared core ALB or dedicated ALB
 ################################################################################
 
 resource "aws_lb_target_group" "wiremock" {
@@ -83,14 +204,16 @@ resource "aws_lb_target_group" "wiremock" {
 }
 
 ################################################################################
-# ALB Listener Rule — host-based routing on the shared HTTPS listener
+# ALB Listener Rule — host-based routing on the HTTPS listener
+# Uses dedicated ALB (no WAF) when wiremock_bypass_waf = true,
+# otherwise uses the shared core ALB (with WAF).
 # Matches: wiremock-<env>.<account>.hometest.service.nhs.uk
 ################################################################################
 
 resource "aws_lb_listener_rule" "wiremock" {
-  count = var.enable_wiremock && var.wiremock_alb_https_listener_arn != null ? 1 : 0
+  count = var.enable_wiremock && (var.wiremock_bypass_waf || var.wiremock_alb_https_listener_arn != null) ? 1 : 0
 
-  listener_arn = var.wiremock_alb_https_listener_arn
+  listener_arn = local.wiremock_effective_https_listener_arn
 
   action {
     type             = "forward"
@@ -113,15 +236,15 @@ resource "aws_lb_listener_rule" "wiremock" {
 ################################################################################
 
 resource "aws_route53_record" "wiremock" {
-  count = var.enable_wiremock && local.wiremock_domain != null && var.wiremock_alb_dns_name != null ? 1 : 0
+  count = var.enable_wiremock && local.wiremock_domain != null && (var.wiremock_bypass_waf || var.wiremock_alb_dns_name != null) ? 1 : 0
 
   zone_id = var.route53_zone_id
   name    = local.wiremock_domain
   type    = "A"
 
   alias {
-    name                   = var.wiremock_alb_dns_name
-    zone_id                = var.wiremock_alb_zone_id
+    name                   = local.wiremock_effective_alb_dns_name
+    zone_id                = local.wiremock_effective_alb_zone_id
     evaluate_target_health = true
   }
 }
@@ -286,8 +409,8 @@ module "wiremock_service" {
         from_port                    = local.wiremock_container_port
         to_port                      = local.wiremock_container_port
         ip_protocol                  = "tcp"
-        referenced_security_group_id = var.wiremock_alb_security_group_id
-        description                  = "HTTP from shared ALB"
+        referenced_security_group_id = local.wiremock_effective_alb_security_group_id
+        description                  = "HTTP from ALB"
       }
     },
     # Allow Lambda functions to call WireMock directly (service-to-service)

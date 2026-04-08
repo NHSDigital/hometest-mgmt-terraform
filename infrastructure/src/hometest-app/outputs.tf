@@ -176,7 +176,7 @@ output "wiremock_url" {
     ? (
       var.wiremock_domain_name != null
       ? "https://${var.wiremock_domain_name}"
-      : try("https://${var.wiremock_alb_dns_name}", null)
+      : try("https://${local.wiremock_effective_alb_dns_name}", null)
     )
     : null
   )
@@ -189,7 +189,7 @@ output "wiremock_admin_url" {
     ? (
       var.wiremock_domain_name != null
       ? "https://${var.wiremock_domain_name}/__admin"
-      : try("https://${var.wiremock_alb_dns_name}/__admin", null)
+      : try("https://${local.wiremock_effective_alb_dns_name}/__admin", null)
     )
     : null
   )
