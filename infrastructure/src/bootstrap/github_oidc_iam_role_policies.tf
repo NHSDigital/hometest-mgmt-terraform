@@ -108,6 +108,9 @@ data "aws_iam_policy_document" "infrastructure_policy" {
       # Database
       "rds:*",
 
+      # Auto Scaling (ECS, etc.)
+      "application-autoscaling:*",
+
       # STS
       "sts:GetCallerIdentity",
       "sts:AssumeRole"
