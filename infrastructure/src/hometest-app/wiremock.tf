@@ -118,7 +118,7 @@ resource "aws_vpc_security_group_egress_rule" "wiremock_alb_to_vpc" {
   tags = local.common_tags
 }
 
-resource "aws_lb" "wiremock" { #tfsec:ignore:aws-elb-alb-not-public #checkov:skip=CKV_AWS_91:WireMock ALB is a test stub - access logs not required
+resource "aws_lb" "wiremock" { # NOSONAR - WireMock ALB is a test stub, access logs not required #checkov:skip=CKV_AWS_91
   count = local.wiremock_use_dedicated_alb ? 1 : 0
 
   name               = "${local.wiremock_short_name}-alb"
