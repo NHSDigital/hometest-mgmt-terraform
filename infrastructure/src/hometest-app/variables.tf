@@ -496,6 +496,12 @@ variable "wiremock_desired_count" {
   default     = 1
 }
 
+variable "wiremock_use_spot" {
+  description = "Use Fargate Spot for WireMock tasks (up to 70% cheaper but may be interrupted). Set to false for on-demand Fargate."
+  type        = bool
+  default     = true
+}
+
 variable "wiremock_bypass_waf" {
   description = "When true, WireMock gets a dedicated internet-facing ALB without WAF instead of using the shared core ALB (which has WAF attached). Allows per-environment control."
   type        = bool
@@ -506,6 +512,30 @@ variable "wiremock_public_subnet_ids" {
   description = "Public subnet IDs for the dedicated WireMock ALB (only used when wiremock_bypass_waf = true)"
   type        = list(string)
   default     = []
+}
+
+variable "wiremock_scheduled_scaling" {
+  description = "Enable scheduled scaling for WireMock — scale to 0 outside business hours and back to desired_count during business hours. Requires wiremock_ecs_cluster_name."
+  type        = bool
+  default     = false
+}
+
+variable "wiremock_ecs_cluster_name" {
+  description = "Name of the ECS cluster (required for Application Auto Scaling resource ID)"
+  type        = string
+  default     = null
+}
+
+variable "wiremock_scale_up_cron" {
+  description = "Cron expression (UTC) for scaling WireMock back up (e.g. 'cron(0 9 ? * MON-FRI *)'  = 9 AM UTC weekdays)"
+  type        = string
+  default     = "cron(0 9 ? * MON-FRI *)"
+}
+
+variable "wiremock_scale_down_cron" {
+  description = "Cron expression (UTC) for scaling WireMock to 0 (e.g. 'cron(0 18 ? * MON-FRI *)'  = 6 PM UTC weekdays)"
+  type        = string
+  default     = "cron(0 18 ? * MON-FRI *)"
 }
 
 ################################################################################

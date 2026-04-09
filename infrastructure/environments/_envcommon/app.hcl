@@ -50,8 +50,12 @@ locals {
   # Read per-environment flags from env.hcl (same file that carries the environment name).
   # Defaults to an empty map so environments without the key get the safe default.
   _env_flags         = try(read_terragrunt_config("${get_terragrunt_dir()}/env.hcl").locals, {})
-  enable_wiremock    = lookup(local._env_flags, "enable_wiremock", false)
-  wiremock_bypass_waf = lookup(local._env_flags, "wiremock_bypass_waf", false)
+  enable_wiremock            = lookup(local._env_flags, "enable_wiremock", false)
+  wiremock_bypass_waf        = lookup(local._env_flags, "wiremock_bypass_waf", false)
+  wiremock_scheduled_scaling = lookup(local._env_flags, "wiremock_scheduled_scaling", false)
+  wiremock_use_spot          = lookup(local._env_flags, "wiremock_use_spot", true)
+  wiremock_cpu               = lookup(local._env_flags, "wiremock_cpu", 256)
+  wiremock_memory            = lookup(local._env_flags, "wiremock_memory", 512)
   # enable_wiremock = false
 
   base_domain = "${local.account_vars.locals.aws_account_shortname}.hometest.service.nhs.uk"
@@ -679,4 +683,9 @@ inputs = {
   wiremock_alb_zone_id                    = dependency.ecs.outputs.alb_zone_id
   wiremock_service_discovery_namespace_id = dependency.ecs.outputs.service_discovery_namespace_id
   wiremock_domain_name                    = "wiremock-${local.environment}.${local.base_domain}"
+  wiremock_scheduled_scaling              = local.wiremock_scheduled_scaling
+  wiremock_ecs_cluster_name               = local.wiremock_scheduled_scaling ? dependency.ecs.outputs.cluster_name : null
+  wiremock_use_spot                       = local.wiremock_use_spot
+  wiremock_cpu                            = local.wiremock_cpu
+  wiremock_memory                         = local.wiremock_memory
 }

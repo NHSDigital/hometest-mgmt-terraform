@@ -302,18 +302,18 @@ module "wiremock_service" {
     cpu_architecture        = "ARM64"
   }
 
-  capacity_provider_strategy = {
+  capacity_provider_strategy = var.wiremock_use_spot ? {
     fargate_spot = {
       capacity_provider = "FARGATE_SPOT"
       weight            = 10
       base              = 1
     }
-
-    # fargate = {
-    #   capacity_provider = "FARGATE"
-    #   weight            = 1
-    #   base              = 0
-    # }
+  } : {
+    fargate = {
+      capacity_provider = "FARGATE"
+      weight            = 1
+      base              = 1
+    }
   }
 
   desired_count = var.wiremock_desired_count
@@ -492,4 +492,54 @@ resource "aws_vpc_security_group_egress_rule" "lambda_to_wiremock" {
   tags = merge(local.common_tags, {
     Name = "${local.wiremock_name}-lambda-egress"
   })
+}
+
+################################################################################
+# Scheduled Scaling — scale to 0 outside business hours
+#
+# Uses Application Auto Scaling scheduled actions to set desired_count = 0
+# at wiremock_scale_down_cron and back to wiremock_desired_count at
+# wiremock_scale_up_cron. Only created when wiremock_scheduled_scaling = true.
+################################################################################
+
+resource "aws_appautoscaling_target" "wiremock" {
+  count = var.enable_wiremock && var.wiremock_scheduled_scaling ? 1 : 0
+
+  max_capacity       = var.wiremock_desired_count
+  min_capacity       = 0
+  resource_id        = "service/${var.wiremock_ecs_cluster_name}/${local.wiremock_name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+
+  depends_on = [module.wiremock_service]
+}
+
+resource "aws_appautoscaling_scheduled_action" "wiremock_scale_up" {
+  count = var.enable_wiremock && var.wiremock_scheduled_scaling ? 1 : 0
+
+  name               = "${local.wiremock_name}-scale-up"
+  service_namespace  = aws_appautoscaling_target.wiremock[0].service_namespace
+  resource_id        = aws_appautoscaling_target.wiremock[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.wiremock[0].scalable_dimension
+  schedule           = var.wiremock_scale_up_cron
+
+  scalable_target_action {
+    min_capacity = var.wiremock_desired_count
+    max_capacity = var.wiremock_desired_count
+  }
+}
+
+resource "aws_appautoscaling_scheduled_action" "wiremock_scale_down" {
+  count = var.enable_wiremock && var.wiremock_scheduled_scaling ? 1 : 0
+
+  name               = "${local.wiremock_name}-scale-down"
+  service_namespace  = aws_appautoscaling_target.wiremock[0].service_namespace
+  resource_id        = aws_appautoscaling_target.wiremock[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.wiremock[0].scalable_dimension
+  schedule           = var.wiremock_scale_down_cron
+
+  scalable_target_action {
+    min_capacity = 0
+    max_capacity = 0
+  }
 }
