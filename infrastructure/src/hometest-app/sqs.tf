@@ -28,7 +28,7 @@ module "sqs_order_placement" {
   create_dlq        = true
   max_receive_count = 3
 
-  kms_master_key_id       = var.kms_key_arn
+  kms_master_key_id       = var.pii_data_kms_key_arn
   sqs_managed_sse_enabled = false
 
   create_cloudwatch_alarms = true
@@ -56,7 +56,7 @@ module "sqs_notify_messages" {
   create_dlq        = true
   max_receive_count = 3
 
-  kms_master_key_id       = var.kms_key_arn
+  kms_master_key_id       = var.pii_data_kms_key_arn
   sqs_managed_sse_enabled = false
 
   create_cloudwatch_alarms = true
@@ -85,7 +85,7 @@ module "sqs_order_results" {
   create_dlq        = true
   max_receive_count = 3
 
-  kms_master_key_id       = var.kms_key_arn
+  kms_master_key_id       = var.pii_data_kms_key_arn
   sqs_managed_sse_enabled = false
 
   create_cloudwatch_alarms = true
@@ -120,7 +120,7 @@ module "sqs_notifications" {
   create_dlq        = true
   max_receive_count = 3
 
-  kms_master_key_id       = var.kms_key_arn
+  kms_master_key_id       = var.pii_data_kms_key_arn
   sqs_managed_sse_enabled = false
 
   create_cloudwatch_alarms = true
@@ -150,7 +150,7 @@ module "sqs_events" {
   create_dlq        = true
   max_receive_count = 3
 
-  kms_master_key_id       = var.kms_key_arn
+  kms_master_key_id       = var.pii_data_kms_key_arn
   sqs_managed_sse_enabled = false
 
   # Allow Lambda service to receive/delete messages from this queue

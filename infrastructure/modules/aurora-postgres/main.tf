@@ -60,13 +60,14 @@ module "aurora_postgres" {
   source  = "terraform-aws-modules/rds-aurora/aws"
   version = "~> v10.2.0" # https://github.com/terraform-aws-modules/terraform-aws-rds-aurora/releases
 
-  name                        = var.identifier
-  engine                      = "aurora-postgresql"
-  engine_version              = var.engine_version
-  master_username             = var.username
-  manage_master_user_password = var.manage_master_user_password
-  database_name               = var.db_name
-  port                        = 5432
+  name                          = var.identifier
+  engine                        = "aurora-postgresql"
+  engine_version                = var.engine_version
+  master_username               = var.username
+  manage_master_user_password   = var.manage_master_user_password
+  master_user_secret_kms_key_id = var.master_user_secret_kms_key_id
+  database_name                 = var.db_name
+  port                          = 5432
 
   vpc_id                 = var.vpc_id
   db_subnet_group_name   = var.db_subnet_group_name

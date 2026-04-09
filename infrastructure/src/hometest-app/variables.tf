@@ -46,6 +46,11 @@ variable "kms_key_arn" {
   type        = string
 }
 
+variable "pii_data_kms_key_arn" {
+  description = "ARN of PII data KMS key for SQS and database encryption (from shared_services)"
+  type        = string
+}
+
 variable "sns_alerts_topic_arn" {
   description = "ARN of shared alerts SNS topic (from shared_services)"
   type        = string

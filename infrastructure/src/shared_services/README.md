@@ -140,7 +140,9 @@ inputs = {
 | [aws_iam_role_policy.cognito_unauthenticated](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_iam_role_policy.developer_lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_kms_alias.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
+| [aws_kms_alias.pii_data](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
 | [aws_kms_key.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_kms_key.pii_data](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
 | [aws_resourcegroups_group.rg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/resourcegroups_group) | resource |
 | [aws_route53_record.regional_cert_validation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_secretsmanager_secret.api_config](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
@@ -269,6 +271,8 @@ inputs = {
 | <a name="output_kms_key_alias_arn"></a> [kms\_key\_alias\_arn](#output\_kms\_key\_alias\_arn) | ARN of the KMS key alias |
 | <a name="output_kms_key_arn"></a> [kms\_key\_arn](#output\_kms\_key\_arn) | ARN of the shared KMS key |
 | <a name="output_kms_key_id"></a> [kms\_key\_id](#output\_kms\_key\_id) | ID of the shared KMS key |
+| <a name="output_pii_data_kms_key_arn"></a> [pii\_data\_kms\_key\_arn](#output\_pii\_data\_kms\_key\_arn) | ARN of the PII data KMS key (for RDS, SQS, Secrets Manager) |
+| <a name="output_pii_data_kms_key_id"></a> [pii\_data\_kms\_key\_id](#output\_pii\_data\_kms\_key\_id) | ID of the PII data KMS key |
 | <a name="output_shared_config"></a> [shared\_config](#output\_shared\_config) | All shared service configuration for app deployments |
 | <a name="output_sns_alerts_topic_arn"></a> [sns\_alerts\_topic\_arn](#output\_sns\_alerts\_topic\_arn) | ARN of the shared alerts SNS topic |
 | <a name="output_tfstate_readonly_policy_arn"></a> [tfstate\_readonly\_policy\_arn](#output\_tfstate\_readonly\_policy\_arn) | ARN of the Terraform state read-only IAM policy |

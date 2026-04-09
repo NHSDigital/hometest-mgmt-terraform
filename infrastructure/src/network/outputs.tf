@@ -205,7 +205,7 @@ output "vpc_flow_log_group_arn" {
 
 output "vpc_flow_log_kms_key_arn" {
   description = "ARN of the KMS key used to encrypt VPC Flow Logs"
-  value       = aws_kms_key.vpc_flow_logs.arn
+  value       = var.logs_kms_key_arn
 }
 
 #------------------------------------------------------------------------------
@@ -373,7 +373,7 @@ output "dns_query_logs_firehose_arn" {
 
 output "dns_query_logs_kms_key_arn" {
   description = "The ARN of the KMS key used to encrypt DNS query logs"
-  value       = var.enable_dns_query_logging ? aws_kms_key.dns_query_logs[0].arn : null
+  value       = var.enable_dns_query_logging ? var.logs_kms_key_arn : null
 }
 
 output "dns_query_log_config_id" {

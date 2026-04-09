@@ -22,6 +22,16 @@ output "kms_key_alias_arn" {
   value       = aws_kms_alias.main.arn
 }
 
+output "pii_data_kms_key_arn" {
+  description = "ARN of the PII data KMS key (for RDS, SQS, Secrets Manager)"
+  value       = aws_kms_key.pii_data.arn
+}
+
+output "pii_data_kms_key_id" {
+  description = "ID of the PII data KMS key"
+  value       = aws_kms_key.pii_data.key_id
+}
+
 #------------------------------------------------------------------------------
 # WAF Web ACLs
 #------------------------------------------------------------------------------

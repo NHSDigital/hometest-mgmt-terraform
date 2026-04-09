@@ -183,6 +183,7 @@ The module uses the `terraform-aws-modules/lambda/aws` module with a custom buil
 | <a name="input_db_username"></a> [db\_username](#input\_db\_username) | Database username | `string` | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., dev, staging, prod) | `string` | n/a | yes |
 | <a name="input_grant_rds_iam"></a> [grant\_rds\_iam](#input\_grant\_rds\_iam) | Whether to GRANT rds\_iam to the app\_user so that app lambdas can use IAM token authentication. Independent of how the migrator itself connects. | `bool` | `false` | no |
+| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | ARN of the customer-managed KMS key for encrypting Secrets Manager secrets | `string` | n/a | yes |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Project name used for resource naming | `string` | n/a | yes |
 | <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | List of security group IDs for Lambda VPC config | `list(string)` | n/a | yes |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | List of subnet IDs for Lambda VPC config | `list(string)` | n/a | yes |

@@ -89,6 +89,7 @@ module "aurora_postgres" {
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., dev, staging, prod) | `string` | n/a | yes |
 | <a name="input_kms_key_id"></a> [kms\_key\_id](#input\_kms\_key\_id) | The ARN for the KMS encryption key | `string` | `""` | no |
 | <a name="input_maintenance_window"></a> [maintenance\_window](#input\_maintenance\_window) | The window to perform maintenance in | `string` | `"Mon:04:00-Mon:05:00"` | no |
+| <a name="input_master_user_secret_kms_key_id"></a> [master\_user\_secret\_kms\_key\_id](#input\_master\_user\_secret\_kms\_key\_id) | The ARN of the KMS key used to encrypt the master user password secret in Secrets Manager | `string` | `null` | no |
 | <a name="input_number_of_instances"></a> [number\_of\_instances](#input\_number\_of\_instances) | Number of Aurora instances to create in the cluster | `number` | `1` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Project name used for resource naming | `string` | n/a | yes |
 | <a name="input_publicly_accessible"></a> [publicly\_accessible](#input\_publicly\_accessible) | Whether the database should be publicly accessible | `bool` | `false` | no |

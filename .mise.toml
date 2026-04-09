@@ -96,6 +96,15 @@ echo "$dirs" | xargs rm -rf
 echo "Done."
 '''
 
+[tasks.find-untagged]
+description = "List AWS resources missing the 'Project' tag"
+run = '''
+aws resourcegroupstaggingapi get-resources \
+  --region eu-west-2 \
+  --output json \
+  | jq -r '.ResourceTagMappingList[] | select(.Tags | map(.Key) | index("Project") | not) | .ResourceARN'
+'''
+
 [env]
 # https://terragrunt.gruntwork.io/docs/troubleshooting/performance/
 TF_PLUGIN_CACHE_DIR = "{{config_root}}/.terraform-plugin-cache"

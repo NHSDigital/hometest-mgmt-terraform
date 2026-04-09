@@ -30,7 +30,17 @@ dependency "network" {
     data_subnet_ids      = ["subnet-mock-1", "subnet-mock-2"]
     db_subnet_group_name = "mock-db-subnet-group"
   }
-  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "destroy"]
+}
+
+dependency "shared_services" {
+  config_path = "../shared_services"
+
+  mock_outputs = {
+    kms_key_arn          = "arn:aws:kms:eu-west-2:123456789012:key/mock-key-id"
+    pii_data_kms_key_arn = "arn:aws:kms:eu-west-2:123456789012:key/mock-pii-key-id"
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "destroy"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -42,6 +52,10 @@ inputs = {
   # Network configuration from dependency
   vpc_id               = dependency.network.outputs.vpc_id
   db_subnet_group_name = dependency.network.outputs.db_subnet_group_name
+
+  # Encryption - use shared_services PII data CMK for storage and master password secret
+  kms_key_id                    = dependency.shared_services.outputs.pii_data_kms_key_arn
+  master_user_secret_kms_key_id = dependency.shared_services.outputs.pii_data_kms_key_arn
 
 
   # Aurora Serverless v2 configuration

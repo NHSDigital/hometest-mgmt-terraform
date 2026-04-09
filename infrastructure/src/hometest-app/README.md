@@ -348,6 +348,7 @@ After deployment, you'll have access to:
 | <a name="input_lambdas_base_path"></a> [lambdas\_base\_path](#input\_lambdas\_base\_path) | Base path where lambda zip files are located | `string` | `"../../../examples/lambdas"` | no |
 | <a name="input_log_retention_days"></a> [log\_retention\_days](#input\_log\_retention\_days) | CloudWatch log retention in days | `number` | `14` | no |
 | <a name="input_permissions_policy"></a> [permissions\_policy](#input\_permissions\_policy) | Permissions Policy header | `string` | `"accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"` | no |
+| <a name="input_pii_data_kms_key_arn"></a> [pii\_data\_kms\_key\_arn](#input\_pii\_data\_kms\_key\_arn) | ARN of PII data KMS key for SQS and database encryption (from shared\_services) | `string` | n/a | yes |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project | `string` | n/a | yes |
 | <a name="input_route53_zone_id"></a> [route53\_zone\_id](#input\_route53\_zone\_id) | Route53 hosted zone ID (from network) | `string` | n/a | yes |
 | <a name="input_sns_alerts_topic_arn"></a> [sns\_alerts\_topic\_arn](#input\_sns\_alerts\_topic\_arn) | ARN of shared alerts SNS topic (from shared\_services) | `string` | `null` | no |

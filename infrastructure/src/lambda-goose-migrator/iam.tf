@@ -35,6 +35,7 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 
 data "aws_iam_policy_document" "lambda_goose_migrator_policy" {
   statement {
+    sid    = "CloudWatchLogs"
     effect = "Allow"
     actions = [
       "logs:CreateLogGroup",
@@ -43,19 +44,44 @@ data "aws_iam_policy_document" "lambda_goose_migrator_policy" {
     ]
     resources = ["arn:aws:logs:*:*:*"]
   }
+
+  # Restrict Secrets Manager access to only the specific secrets this Lambda needs.
+  # All referenced secrets MUST be encrypted with the CMK specified in var.kms_key_arn.
   statement {
+    sid    = "SecretsManagerRead"
     effect = "Allow"
     actions = [
-      "secretsmanager:GetSecretValue"
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret"
     ]
-    resources = ["*"]
+    resources = compact([
+      try(data.aws_rds_cluster.db.master_user_secret[0].secret_arn, ""),
+      var.db_schema != "public" ? aws_secretsmanager_secret.app_user[0].arn : ""
+    ])
   }
+
+  # Only allow decryption using the customer-managed KMS key (pii-data key).
+  # This ensures the Lambda cannot decrypt secrets encrypted with the AWS-managed
+  # aws/secretsmanager key — only CMK-encrypted secrets are accessible.
   statement {
+    sid    = "KMSDecryptCMKOnly"
+    effect = "Allow"
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
+    ]
+    resources = [var.kms_key_arn]
+  }
+
+  statement {
+    sid       = "RDSIAMConnect"
     effect    = "Allow"
     actions   = ["rds-db:connect"]
     resources = ["*"]
   }
+
   statement {
+    sid    = "VPCNetworkInterfaces"
     effect = "Allow"
     actions = [
       "ec2:DescribeNetworkInterfaces",

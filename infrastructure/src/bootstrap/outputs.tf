@@ -24,6 +24,16 @@ output "kms_key_alias" {
   value       = aws_kms_alias.tfstate.name
 }
 
+output "logs_kms_key_arn" {
+  description = "ARN of the KMS key for logs encryption"
+  value       = aws_kms_key.logs.arn
+}
+
+output "logs_kms_key_id" {
+  description = "ID of the KMS key for logs encryption"
+  value       = aws_kms_key.logs.key_id
+}
+
 # OIDC Provider Outputs
 output "github_oidc_provider_arn" {
   description = "ARN of the GitHub OIDC provider"
