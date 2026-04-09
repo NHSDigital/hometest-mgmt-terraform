@@ -24,12 +24,12 @@ runs:
         REPO_ROOT=$(git -C "$GITHUB_ACTION_PATH" rev-parse --show-toplevel)
         echo "path=${REPO_ROOT}" >> "$GITHUB_OUTPUT"
 
-
     - name: "Restore mise cache"
       uses: actions/cache/restore@v5
       with:
         path: |
           ~/.local/share/mise
+          ${{ inputs.working_directory }}/.mise-cache
           hometest-service/.mise-cache
         key: mise-${{ runner.os }}-mgmt-${{ hashFiles(format('{0}/mise.lock', inputs.working_directory)) }}
         restore-keys: |
@@ -72,5 +72,6 @@ runs:
       with:
         path: |
           ~/.local/share/mise
+          ${{ inputs.working_directory }}/.mise-cache
           hometest-service/.mise-cache
         key: mise-${{ runner.os }}-mgmt-${{ hashFiles(format('{0}/mise.lock', inputs.working_directory)) }}
