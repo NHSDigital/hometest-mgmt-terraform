@@ -3,5 +3,5 @@
 locals {
   environment         = "uat"
   enable_wiremock     = true
-  wiremock_bypass_waf = true # Expose WireMock directly to internet (dedicated ALB, no WAF)
+  wiremock_bypass_waf = false # Use shared ALB — WAF allowlist rule exempts WireMock traffic
 }

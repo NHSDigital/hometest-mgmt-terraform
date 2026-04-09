@@ -47,8 +47,9 @@ inputs = {
   create_acm_certificates = true
 
   # WAF Configuration
-  waf_rate_limit         = 2000
-  waf_log_retention_days = 30
+  waf_rate_limit                     = 2000
+  waf_log_retention_days             = 30
+  waf_wiremock_allowed_host_prefix   = "wiremock-" # Allow WireMock traffic through shared ALB WAF
 
   # KMS
   kms_deletion_window_days = 30
