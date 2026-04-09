@@ -137,6 +137,16 @@ dependency "network" {
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
+dependency "shared_services" {
+  config_path = "${get_terragrunt_dir()}/../../../core/shared_services"
+
+  mock_outputs = {
+    kms_key_arn          = "arn:aws:kms:eu-west-2:123456789012:key/mock-key-id"
+    pii_data_kms_key_arn = "arn:aws:kms:eu-west-2:123456789012:key/mock-pii-key-id"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy"]
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # INPUTS - Passed to the Terraform module
 # ---------------------------------------------------------------------------------------------------------------------
@@ -165,4 +175,7 @@ inputs = {
     dependency.network.outputs.lambda_rds_security_group_id,
     dependency.network.outputs.lambda_security_group_id
   ]
+
+  # Encryption
+  kms_key_arn = dependency.shared_services.outputs.pii_data_kms_key_arn
 }

@@ -24,10 +24,11 @@ module "aurora_postgres" {
   db_subnet_group_name = var.db_subnet_group_name
 
   # Aurora Serverless v2 configuration
-  engine_version              = var.engine_version
-  db_name                     = var.db_name
-  username                    = var.username
-  manage_master_user_password = true
+  engine_version                = var.engine_version
+  db_name                       = var.db_name
+  username                      = var.username
+  manage_master_user_password   = true
+  master_user_secret_kms_key_id = var.master_user_secret_kms_key_id
 
   number_of_instances = var.number_of_instances
 

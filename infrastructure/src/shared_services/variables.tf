@@ -54,6 +54,12 @@ variable "waf_rate_limit" {
   default     = 2000
 }
 
+variable "waf_wiremock_allowed_host_prefix" {
+  description = "Host header prefix to allow through WAF without inspection (e.g. 'wiremock-'). When set, requests whose Host header starts with this value are allowed by the WAF. Enables WireMock to use the shared ALB instead of a dedicated no-WAF ALB."
+  type        = string
+  default     = null
+}
+
 variable "waf_log_retention_days" {
   description = "Days to retain WAF logs"
   type        = number

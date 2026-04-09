@@ -47,6 +47,17 @@ locals {
   # ---------------------------------------------------------------------------
   _domain_overrides = try(read_terragrunt_config("${get_terragrunt_dir()}/domain.hcl").locals, {})
 
+  # Read per-environment flags from env.hcl (same file that carries the environment name).
+  # Defaults to an empty map so environments without the key get the safe default.
+  _env_flags                 = try(read_terragrunt_config("${get_terragrunt_dir()}/env.hcl").locals, {})
+  enable_wiremock            = lookup(local._env_flags, "enable_wiremock", false)
+  wiremock_bypass_waf        = lookup(local._env_flags, "wiremock_bypass_waf", false)
+  wiremock_scheduled_scaling = lookup(local._env_flags, "wiremock_scheduled_scaling", false)
+  wiremock_use_spot          = lookup(local._env_flags, "wiremock_use_spot", true)
+  wiremock_cpu               = lookup(local._env_flags, "wiremock_cpu", 256)
+  wiremock_memory            = lookup(local._env_flags, "wiremock_memory", 512)
+  # enable_wiremock = false
+
   base_domain = "${local.account_vars.locals.aws_account_shortname}.hometest.service.nhs.uk"
   env_domain  = lookup(local._domain_overrides, "env_domain", "${local.environment}.${local.base_domain}")
   api_domain  = lookup(local._domain_overrides, "api_domain", "api-${local.environment}.${local.base_domain}")
@@ -108,12 +119,38 @@ locals {
 
   # NHS Login Configuration
   nhs_login_base_url                         = "https://auth.sandpit.signin.nhs.uk"
+  nhs_login_authorize_url                    = "${local.nhs_login_base_url}/authorize"
   nhs_login_client_id                        = "hometest"
   auth_session_max_duration_minutes          = "60"
   auth_access_token_expiry_duration_minutes  = "60"
   auth_refresh_token_expiry_duration_minutes = "60"
   auth_cookie_same_site                      = "Lax"
   auth_cookie_key_id                         = "key"
+
+  # ---------------------------------------------------------------------------
+  # SPA BUILD: NHS Login authorize URL and WireMock auth flag
+  # When enable_wiremock = true the SPA uses the per-environment WireMock domain
+  # as the NHS Login stub and sets NEXT_PUBLIC_USE_WIREMOCK_AUTH=true.
+  # When false, the real NHS Login sandpit is used.
+  # ---------------------------------------------------------------------------
+  wiremock_base_url_for_spa   = "https://wiremock-${local.environment}.${local.base_domain}"
+  spa_nhs_login_authorize_url = local.enable_wiremock ? "${local.wiremock_base_url_for_spa}/authorize" : local.nhs_login_authorize_url
+  use_wiremock_auth           = local.enable_wiremock
+
+  # NHS Login base URL used by lambdas (login-lambda, session-lambda):
+  # when WireMock is enabled, lambdas must validate tokens against the WireMock JWKS endpoint
+  # so the issuer in the JWT matches the URL the lambda verifies against.
+  nhs_login_lambda_base_url = local.enable_wiremock ? local.wiremock_base_url_for_spa : local.nhs_login_base_url
+
+  # JWKS URI for the login-lambda JwksClient.
+  # When WireMock is enabled, the lambda is in a VPC and must reach WireMock via internal
+  # service discovery (bypassing the public ALB/WAF) to avoid a 403 Forbidden on JWKS fetch.
+  # The ECS cluster is deployed under poc/core/ecs/ with environment="core", so its
+  # service discovery namespace follows: ecs.<project>-<account>-core.local
+  # The WireMock service itself is named wiremock-<env> (e.g. wiremock-uat).
+  # When disabled, the lambda derives the URI from nhs_login_lambda_base_url automatically.
+  _ecs_service_discovery_namespace = "ecs.${local.project_name}-${local.aws_account_shortname}-core.local"
+  nhs_login_jwks_uri               = local.enable_wiremock ? "http://wiremock-${local.environment}.${local._ecs_service_discovery_namespace}:8080/.well-known/jwks.json" : ""
 
   # Postcode Lookup Configuration
   postcode_lookup_base_url             = "https://api.os.uk/search/places/v1"
@@ -147,31 +184,39 @@ terraform {
 
   # ---------------------------------------------------------------------------
   # BUILD HOOKS
-  # These hooks build and package artifacts locally BEFORE terraform runs.
-  # Terraform then uploads and deploys the Lambda functions.
-  # Paths are configurable via locals: lambdas_source_dir, spa_source_dir, spa_type
+  # Build and package artifacts locally BEFORE terraform runs.
+  # All configuration is passed via environment variables.
+  # Scripts live in scripts/ and are run under hometest-service's mise env.
   # ---------------------------------------------------------------------------
 
-  # Build and package Lambda code locally (Terraform uploads and deploys)
-  # Uses scripts/build-lambdas.sh which only rebuilds when source changes are detected
-  # Runs under hometest-service mise env so the correct Node.js version is used
   before_hook "build_lambdas" {
-    commands = ["plan",
-    "apply"]
+    commands = ["plan", "apply"]
     execute = [
       "bash", "-c",
-      "cd '${local.hometest_service_dir}' && NODE_ENV=${local.lambda_node_env} mise exec -- '${local.scripts_dir}/build-lambdas.sh' '${local.lambdas_source_dir}' '${local.lambda_build_cache}'"
+      <<-EOF
+        cd '${local.hometest_service_dir}' && \
+        LAMBDAS_SOURCE_DIR='${local.lambdas_source_dir}' \
+        LAMBDAS_CACHE_DIR='${local.lambda_build_cache}' \
+        NODE_ENV='${local.lambda_node_env}' \
+        mise exec -- '${local.scripts_dir}/build-lambdas.sh'
+      EOF
     ]
   }
 
-  # Build SPA before apply (only rebuilds when source or backend URL changes)
-  # Uses scripts/build-spa.sh which content-hashes source + NEXT_PUBLIC_BACKEND_URL
-  # Runs under hometest-service mise env so the correct Node.js version is used
   before_hook "build_spa" {
     commands = ["plan", "apply"]
     execute = [
       "bash", "-c",
-      "cd '${local.hometest_service_dir}' && mise exec -- '${local.scripts_dir}/build-spa.sh' '${local.spa_source_dir}' '${local.spa_build_cache}' 'https://${local.api_domain}' '${local.spa_type}'"
+      <<-EOF
+        cd '${local.hometest_service_dir}' && \
+        SPA_SOURCE_DIR='${local.spa_source_dir}' \
+        SPA_CACHE_DIR='${local.spa_build_cache}' \
+        SPA_TYPE='${local.spa_type}' \
+        NEXT_PUBLIC_BACKEND_URL='https://${local.api_domain}' \
+        NEXT_PUBLIC_NHS_LOGIN_AUTHORIZE_URL='${local.spa_nhs_login_authorize_url}' \
+        NEXT_PUBLIC_USE_WIREMOCK_AUTH='${local.use_wiremock_auth}' \
+        mise exec -- '${local.scripts_dir}/build-spa.sh'
+      EOF
     ]
   }
 
@@ -229,6 +274,7 @@ dependency "shared_services" {
 
   mock_outputs = {
     kms_key_arn                     = "arn:aws:kms:eu-west-2:123456789012:key/mock-key-id"
+    pii_data_kms_key_arn            = "arn:aws:kms:eu-west-2:123456789012:key/mock-pii-key-id"
     sns_alerts_topic_arn            = "arn:aws:sns:eu-west-2:123456789012:mock-alerts-topic"
     waf_regional_arn                = "arn:aws:wafv2:eu-west-2:123456789012:regional/webacl/mock/mock-id"
     waf_cloudfront_arn              = "arn:aws:wafv2:us-east-1:123456789012:global/webacl/mock/mock-id"
@@ -300,6 +346,7 @@ inputs = {
 
   # Dependencies from shared_services
   kms_key_arn          = dependency.shared_services.outputs.kms_key_arn
+  pii_data_kms_key_arn = dependency.shared_services.outputs.pii_data_kms_key_arn
   sns_alerts_topic_arn = dependency.shared_services.outputs.sns_alerts_topic_arn
   waf_cloudfront_arn   = dependency.shared_services.outputs.waf_cloudfront_arn
   waf_regional_arn     = dependency.shared_services.outputs.waf_regional_arn
@@ -405,7 +452,7 @@ inputs = {
 
     # Login Lambda - NHS Login authentication
     # CloudFront: /login/* → API Gateway → Lambda
-    # CORS: handled in-code via @middy/http-cors using COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN env var
+    # CORS: handled in-code via @middy/http-cors using ALLOW_ORIGIN env var
     "login-lambda" = {
       description     = "Login Service - NHS Login authentication"
       api_path_prefix = "login"
@@ -415,7 +462,9 @@ inputs = {
       environment = {
         NODE_OPTIONS                               = "--enable-source-maps"
         ENVIRONMENT                                = local.environment
-        NHS_LOGIN_BASE_ENDPOINT_URL                = local.nhs_login_base_url
+        ALLOW_ORIGIN                               = local.spa_origin
+        NHS_LOGIN_BASE_ENDPOINT_URL                = local.nhs_login_lambda_base_url
+        NHS_LOGIN_JWKS_URI                         = local.nhs_login_jwks_uri
         NHS_LOGIN_CLIENT_ID                        = local.nhs_login_client_id
         NHS_LOGIN_REDIRECT_URL                     = "${local.spa_origin}/callback"
         NHS_LOGIN_PRIVATE_KEY_SECRET_NAME          = local.nhs_login_private_key_secret_name
@@ -423,13 +472,13 @@ inputs = {
         AUTH_ACCESS_TOKEN_EXPIRY_DURATION_MINUTES  = local.auth_access_token_expiry_duration_minutes
         AUTH_REFRESH_TOKEN_EXPIRY_DURATION_MINUTES = local.auth_refresh_token_expiry_duration_minutes
         AUTH_COOKIE_SAME_SITE                      = local.auth_cookie_same_site
-        COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN         = local.spa_origin
+        # COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN         = local.spa_origin
       }
     }
 
     # Session Lambda - Validates auth cookie and returns NHS Login user info
     # CloudFront: /session/* → API Gateway → Lambda
-    # CORS: handled in-code via @middy/http-cors using COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN env var
+    # CORS: handled in-code via @middy/http-cors using ALLOW_ORIGIN env var
     "session-lambda" = {
       description     = "Session Service - Validates auth cookie and returns user info"
       api_path_prefix = "session"
@@ -439,10 +488,11 @@ inputs = {
       environment = {
         NODE_OPTIONS                       = "--enable-source-maps"
         ENVIRONMENT                        = local.environment
+        ALLOW_ORIGIN                       = local.spa_origin
         AUTH_COOKIE_KEY_ID                 = local.auth_cookie_key_id
         AUTH_COOKIE_PUBLIC_KEY_SECRET_NAME = local.nhs_login_private_key_secret_name
-        NHS_LOGIN_BASE_ENDPOINT_URL        = local.nhs_login_base_url
-        COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN = local.spa_origin
+        NHS_LOGIN_BASE_ENDPOINT_URL        = local.nhs_login_lambda_base_url
+        # COOKIE_ACCESS_CONTROL_ALLOW_ORIGIN = local.spa_origin
       }
     }
 
@@ -621,16 +671,23 @@ inputs = {
 
   # ---------------------------------------------------------------------------
   # WireMock (ECS Fargate) — routes via shared ALB with host-based rules
-  # Disabled by default — enable per-environment in child terragrunt.hcl
+  # Disabled by default — enable per-environment in child env.hcl
   # Used for Playwright E2E tests and stubbing 3rd-party APIs in dev envs
   # ---------------------------------------------------------------------------
-  enable_wiremock                         = false
+  enable_wiremock                         = local.enable_wiremock
+  wiremock_bypass_waf                     = local.wiremock_bypass_waf
   wiremock_ecs_cluster_arn                = dependency.ecs.outputs.cluster_arn
   wiremock_subnet_ids                     = dependency.network.outputs.private_subnet_ids
+  wiremock_public_subnet_ids              = local.wiremock_bypass_waf ? dependency.network.outputs.public_subnet_ids : []
   wiremock_alb_https_listener_arn         = dependency.ecs.outputs.alb_https_listener_arn
   wiremock_alb_security_group_id          = dependency.ecs.outputs.alb_security_group_id
   wiremock_alb_dns_name                   = dependency.ecs.outputs.alb_dns_name
   wiremock_alb_zone_id                    = dependency.ecs.outputs.alb_zone_id
   wiremock_service_discovery_namespace_id = dependency.ecs.outputs.service_discovery_namespace_id
   wiremock_domain_name                    = "wiremock-${local.environment}.${local.base_domain}"
+  wiremock_scheduled_scaling              = local.wiremock_scheduled_scaling
+  wiremock_ecs_cluster_name               = local.wiremock_scheduled_scaling ? dependency.ecs.outputs.cluster_name : null
+  wiremock_use_spot                       = local.wiremock_use_spot
+  wiremock_cpu                            = local.wiremock_cpu
+  wiremock_memory                         = local.wiremock_memory
 }

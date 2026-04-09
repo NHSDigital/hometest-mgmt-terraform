@@ -27,7 +27,7 @@ module "ecs_cluster" {
   # Container Insights for observability
   setting = [{
     name  = "containerInsights"
-    value = "enhanced"
+    value = "enabled"
   }]
 
   # ECS Exec audit logging (encrypted)

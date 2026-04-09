@@ -164,6 +164,15 @@ resource "aws_iam_role_policy" "secrets_manager" {
           "secretsmanager:DescribeSecret"
         ]
         Resource = var.secrets_arns
+      },
+      {
+        Sid    = "DenySecretsNotInAllowList"
+        Effect = "Deny"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        NotResource = var.secrets_arns
       }
     ]
   })

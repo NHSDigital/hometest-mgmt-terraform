@@ -14,6 +14,15 @@ terraform {
   source = "../../../..//src/network"
 }
 
+dependency "bootstrap" {
+  config_path = "../bootstrap"
+
+  mock_outputs = {
+    logs_kms_key_arn = "arn:aws:kms:eu-west-2:123456789012:key/mock-logs-key-id"
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "destroy"]
+}
+
 # poc is non-production - cost optimisations vs production HA:
 #   az_count = 1                     : single NAT GW + single firewall endpoint; ~$65/month saving vs per-AZ NAT,
 #                                      ~$284/month saving vs 3 firewall endpoints (if network firewall enabled)
@@ -22,6 +31,7 @@ terraform {
 #   firewall_logs_retention_days = 7  : reduces CloudWatch storage for POC logs
 # For production, remove these overrides to restore az_count = 3 and full logging.
 inputs = {
+  logs_kms_key_arn             = dependency.bootstrap.outputs.logs_kms_key_arn
   az_count                     = 1
   enable_firewall_flow_logs    = false
   firewall_logs_retention_days = 7

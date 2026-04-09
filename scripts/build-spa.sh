@@ -2,42 +2,54 @@
 # -----------------------------------------------------------------------------
 # Build SPA Script
 # Only rebuilds the SPA when source code or configuration changes are detected.
-# Uses content hashing (including NEXT_PUBLIC_BACKEND_URL) to determine if a
-# rebuild is necessary — changing the backend URL triggers a rebuild.
+# Uses content hashing (including NEXT_PUBLIC_* env vars) to determine if a
+# rebuild is necessary — changing any baked-in value triggers a rebuild.
 #
 # Usage:
-#   ./build-spa.sh <spa-directory> <cache-directory> <backend-url> [spa-type]
+#   SPA_SOURCE_DIR=<path> SPA_CACHE_DIR=<path> \
+#   NEXT_PUBLIC_BACKEND_URL=<url> \
+#   NEXT_PUBLIC_NHS_LOGIN_AUTHORIZE_URL=<url> \
+#   NEXT_PUBLIC_USE_WIREMOCK_AUTH=true|false \
+#   ./build-spa.sh
 #
-# Arguments:
-#   spa-directory   Path to the SPA source directory (e.g., hometest-service/ui)
-#   cache-directory Path to store build cache (e.g., .spa-build-cache)
-#   backend-url     The NEXT_PUBLIC_BACKEND_URL to bake into the build
-#   spa-type        "nextjs" (default) or "vite"
+# Required environment variables:
+#   SPA_SOURCE_DIR                       Path to the SPA source directory
+#   NEXT_PUBLIC_BACKEND_URL              Backend API URL baked into the build
 #
-# Environment variables:
-#   FORCE_SPA_REBUILD=true  Force rebuild even if no changes detected
+# Optional environment variables:
+#   SPA_CACHE_DIR                        Build cache directory (default: .spa-build-cache)
+#   SPA_TYPE                             "nextjs" (default) or "vite"
+#   NEXT_PUBLIC_NHS_LOGIN_AUTHORIZE_URL  NHS Login authorize URL baked into the build
+#   NEXT_PUBLIC_USE_WIREMOCK_AUTH        "true" to use WireMock auth, "false" for real sandpit (default: false)
+#   FORCE_SPA_REBUILD=true               Force rebuild even if no changes detected
 # -----------------------------------------------------------------------------
 
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# Configuration
+# Configuration (from environment variables)
 # -----------------------------------------------------------------------------
-SPA_DIR_INPUT="${1:-}"
-CACHE_DIR_INPUT="${2:-.spa-build-cache}"
-BACKEND_URL="${3:-}"
-SPA_TYPE="${4:-nextjs}"
+SPA_DIR_INPUT="${SPA_SOURCE_DIR:-}"
+CACHE_DIR_INPUT="${SPA_CACHE_DIR:-.spa-build-cache}"
+BACKEND_URL="${NEXT_PUBLIC_BACKEND_URL:-}"
+SPA_TYPE="${SPA_TYPE:-nextjs}"
+NHS_LOGIN_AUTHORIZE_URL="${NEXT_PUBLIC_NHS_LOGIN_AUTHORIZE_URL:-}"
+USE_WIREMOCK_AUTH="${NEXT_PUBLIC_USE_WIREMOCK_AUTH:-false}"
 FORCE_REBUILD="${FORCE_SPA_REBUILD:-false}"
 
 if [[ -z "$SPA_DIR_INPUT" ]]; then
-  echo "Usage: $0 <spa-directory> <cache-directory> <backend-url> [spa-type]"
-  echo "  spa-directory:   Path to the SPA source directory"
-  echo "  cache-directory: Path to store build cache (default: .spa-build-cache)"
-  echo "  backend-url:     NEXT_PUBLIC_BACKEND_URL to bake into the build"
-  echo "  spa-type:        'nextjs' (default) or 'vite'"
+  echo "Error: SPA_SOURCE_DIR is required"
   echo ""
-  echo "Environment variables:"
-  echo "  FORCE_SPA_REBUILD=true  Force rebuild even if no changes detected"
+  echo "Required environment variables:"
+  echo "  SPA_SOURCE_DIR                        Path to the SPA source directory"
+  echo "  NEXT_PUBLIC_BACKEND_URL               Backend API URL to bake into the build"
+  echo ""
+  echo "Optional environment variables:"
+  echo "  SPA_CACHE_DIR                          Build cache directory (default: .spa-build-cache)"
+  echo "  SPA_TYPE                               'nextjs' (default) or 'vite'"
+  echo "  NEXT_PUBLIC_NHS_LOGIN_AUTHORIZE_URL     NHS Login authorize URL"
+  echo "  NEXT_PUBLIC_USE_WIREMOCK_AUTH           'true' for WireMock auth, 'false' for sandpit (default: false)"
+  echo "  FORCE_SPA_REBUILD=true                  Force rebuild even if no changes detected"
   exit 1
 fi
 
@@ -154,9 +166,11 @@ calculate_source_hash() {
     fi
   done
 
-  # Include backend URL in the hash — changing the API target requires a rebuild
+  # Include NEXT_PUBLIC_* vars in the hash — changing them requires a rebuild
   # because Next.js bakes NEXT_PUBLIC_* vars into the static output at build time.
   all_hashes+="BACKEND_URL:${BACKEND_URL}|"
+  all_hashes+="NHS_LOGIN_AUTHORIZE_URL:${NHS_LOGIN_AUTHORIZE_URL}|"
+  all_hashes+="USE_WIREMOCK_AUTH:${USE_WIREMOCK_AUTH}|"
 
   # Combine all hashes into final hash
   local final_hash
@@ -201,6 +215,8 @@ show_hash_inputs() {
 
   echo "  Environment:"
   echo "    NEXT_PUBLIC_BACKEND_URL=$BACKEND_URL"
+  echo "    NEXT_PUBLIC_NHS_LOGIN_AUTHORIZE_URL=$NHS_LOGIN_AUTHORIZE_URL"
+  echo "    NEXT_PUBLIC_USE_WIREMOCK_AUTH=$USE_WIREMOCK_AUTH"
 }
 
 get_cached_hash() {
@@ -271,7 +287,11 @@ build_spa() {
 
   # Set environment variables for the build
   export NEXT_PUBLIC_BACKEND_URL="$BACKEND_URL"
+  export NEXT_PUBLIC_NHS_LOGIN_AUTHORIZE_URL="$NHS_LOGIN_AUTHORIZE_URL"
+  export NEXT_PUBLIC_USE_WIREMOCK_AUTH="$USE_WIREMOCK_AUTH"
   echo "  NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL"
+  echo "  NEXT_PUBLIC_NHS_LOGIN_AUTHORIZE_URL=$NEXT_PUBLIC_NHS_LOGIN_AUTHORIZE_URL"
+  echo "  NEXT_PUBLIC_USE_WIREMOCK_AUTH=$NEXT_PUBLIC_USE_WIREMOCK_AUTH"
 
   # Run the build
   npm run build --silent 2>/dev/null || npm run build
@@ -284,11 +304,13 @@ build_spa() {
 echo "=========================================="
 echo "SPA Build Script"
 echo "=========================================="
-echo "SPA directory:  $SPA_DIR"
-echo "SPA type:       $SPA_TYPE"
-echo "Output dir:     $DIST_DIR"
-echo "Cache directory: $CACHE_DIR"
-echo "Backend URL:    $BACKEND_URL"
+echo "SPA directory:    $SPA_DIR"
+echo "SPA type:         $SPA_TYPE"
+echo "Output dir:       $DIST_DIR"
+echo "Cache directory:  $CACHE_DIR"
+echo "Backend URL:      $BACKEND_URL"
+echo "NHS Login URL:    $NHS_LOGIN_AUTHORIZE_URL"
+echo "WireMock auth:    $USE_WIREMOCK_AUTH"
 echo ""
 
 # Validate source directory

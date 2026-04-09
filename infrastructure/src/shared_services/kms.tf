@@ -110,3 +110,98 @@ resource "aws_kms_alias" "main" {
   name          = "alias/${local.resource_prefix}-kms-shared-services-key"
   target_key_id = aws_kms_key.main.key_id
 }
+
+################################################################################
+# KMS Key for PII Data Encryption
+# Covers: Aurora PostgreSQL (storage + master secret), SQS queues, Secrets Manager
+################################################################################
+
+resource "aws_kms_key" "pii_data" {
+  description             = "KMS key for PII data encryption (RDS, SQS, Secrets Manager)"
+  deletion_window_in_days = var.kms_deletion_window_days
+  enable_key_rotation     = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "EnableIAMUserPermissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${var.aws_account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowRDSService"
+        Effect = "Allow"
+        Principal = {
+          Service = "rds.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt*",
+          "kms:Decrypt*",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:Describe*",
+          "kms:CreateGrant"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = var.aws_account_id
+          }
+        }
+      },
+      {
+        Sid    = "AllowSQSService"
+        Effect = "Allow"
+        Principal = {
+          Service = "sqs.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt*",
+          "kms:Decrypt*",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:Describe*"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowLambdaService"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowSNSService"
+        Effect = "Allow"
+        Principal = {
+          Service = "sns.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = "${local.resource_prefix}-kms-pii-data-key"
+  })
+}
+
+resource "aws_kms_alias" "pii_data" {
+  name          = "alias/${local.resource_prefix}-kms-pii-data-key"
+  target_key_id = aws_kms_key.pii_data.key_id
+}
