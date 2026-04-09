@@ -49,7 +49,7 @@ variable "vpc_id" {
 variable "engine_version" {
   description = "PostgreSQL engine version"
   type        = string
-  default     = "18.1"
+  default     = "17.9"
 }
 
 variable "serverlessv2_min_capacity" {

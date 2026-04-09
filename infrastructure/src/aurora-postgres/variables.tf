@@ -74,7 +74,7 @@ variable "kms_key_id" {
 variable "engine_version" {
   description = "PostgreSQL engine version"
   type        = string
-  default     = "17.7"
+  default     = "17.9"
 }
 # Aurora module requires db_subnet_group_name if not creating a new subnet group
 variable "db_subnet_group_name" {
