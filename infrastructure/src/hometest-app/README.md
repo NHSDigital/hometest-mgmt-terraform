@@ -215,21 +215,21 @@ After deployment, you'll have access to:
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 6.37.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.37.0 |
 | <a name="provider_aws.us_east_1"></a> [aws.us\_east\_1](#provider\_aws.us\_east\_1) | ~> 6.37.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_cloudfront_spa"></a> [cloudfront\_spa](#module\_cloudfront\_spa) | ../../modules/cloudfront-spa | n/a |
 | <a name="module_lambda_iam"></a> [lambda\_iam](#module\_lambda\_iam) | ../../modules/lambda-iam | n/a |
 | <a name="module_lambdas"></a> [lambdas](#module\_lambdas) | ../../modules/lambda | n/a |
@@ -243,7 +243,7 @@ After deployment, you'll have access to:
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_acm_certificate.api_domain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate) | resource |
 | [aws_acm_certificate.cloudfront](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate) | resource |
 | [aws_acm_certificate_validation.api_domain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate_validation) | resource |
@@ -271,6 +271,9 @@ After deployment, you'll have access to:
 | [aws_api_gateway_resource.proxy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_resource) | resource |
 | [aws_api_gateway_rest_api.apis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_rest_api) | resource |
 | [aws_api_gateway_stage.apis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_stage) | resource |
+| [aws_appautoscaling_scheduled_action.wiremock_scale_down](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/appautoscaling_scheduled_action) | resource |
+| [aws_appautoscaling_scheduled_action.wiremock_scale_up](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/appautoscaling_scheduled_action) | resource |
+| [aws_appautoscaling_target.wiremock](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/appautoscaling_target) | resource |
 | [aws_cloudwatch_log_group.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.wiremock](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_iam_role.api_gateway_cloudwatch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
@@ -278,6 +281,9 @@ After deployment, you'll have access to:
 | [aws_lambda_event_source_mapping.order_router_order_placement](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_event_source_mapping) | resource |
 | [aws_lambda_event_source_mapping.sqs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_event_source_mapping) | resource |
 | [aws_lambda_permission.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_lb.wiremock](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb) | resource |
+| [aws_lb_listener.wiremock_http_redirect](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
+| [aws_lb_listener.wiremock_https](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener_rule.wiremock](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener_rule) | resource |
 | [aws_lb_target_group.wiremock](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_resourcegroups_group.rg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/resourcegroups_group) | resource |
@@ -285,15 +291,19 @@ After deployment, you'll have access to:
 | [aws_route53_record.api_domain_cert_validation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_route53_record.cloudfront_cert_validation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_route53_record.wiremock](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
+| [aws_security_group.wiremock_alb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_service_discovery_service.wiremock](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/service_discovery_service) | resource |
 | [aws_vpc_security_group_egress_rule.lambda_to_wiremock](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_egress_rule) | resource |
+| [aws_vpc_security_group_egress_rule.wiremock_alb_to_vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_egress_rule) | resource |
+| [aws_vpc_security_group_ingress_rule.wiremock_alb_http](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule) | resource |
+| [aws_vpc_security_group_ingress_rule.wiremock_alb_https](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule) | resource |
 | [aws_wafv2_web_acl_association.apis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association) | resource |
 | [aws_vpc.selected](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_acm_certificate_arn"></a> [acm\_certificate\_arn](#input\_acm\_certificate\_arn) | ACM certificate ARN for CloudFront (us-east-1, from shared\_services) | `string` | `null` | no |
 | <a name="input_acm_regional_certificate_arn"></a> [acm\_regional\_certificate\_arn](#input\_acm\_regional\_certificate\_arn) | ARN of the shared regional ACM certificate (from shared\_services) for API Gateway custom domain. Used when create\_api\_certificate = false (default for POC wildcard cert pattern). | `string` | `null` | no |
 | <a name="input_api_custom_domain_name"></a> [api\_custom\_domain\_name](#input\_api\_custom\_domain\_name) | Custom domain name for API Gateway (e.g., api-dev.poc.hometest.service.nhs.uk). API traffic is served directly from this domain instead of through CloudFront. | `string` | `null` | no |
@@ -350,19 +360,26 @@ After deployment, you'll have access to:
 | <a name="input_wiremock_alb_https_listener_arn"></a> [wiremock\_alb\_https\_listener\_arn](#input\_wiremock\_alb\_https\_listener\_arn) | ARN of the shared ALB HTTPS listener (from core ECS cluster) | `string` | `null` | no |
 | <a name="input_wiremock_alb_security_group_id"></a> [wiremock\_alb\_security\_group\_id](#input\_wiremock\_alb\_security\_group\_id) | Security group ID of the shared ALB (from core ECS cluster) | `string` | `null` | no |
 | <a name="input_wiremock_alb_zone_id"></a> [wiremock\_alb\_zone\_id](#input\_wiremock\_alb\_zone\_id) | Canonical hosted zone ID of the shared ALB (from core ECS cluster, for Route53 alias) | `string` | `null` | no |
+| <a name="input_wiremock_bypass_waf"></a> [wiremock\_bypass\_waf](#input\_wiremock\_bypass\_waf) | When true, WireMock gets a dedicated internet-facing ALB without WAF instead of using the shared core ALB (which has WAF attached). Allows per-environment control. | `bool` | `false` | no |
 | <a name="input_wiremock_cpu"></a> [wiremock\_cpu](#input\_wiremock\_cpu) | CPU units for the WireMock Fargate task (256 = 0.25 vCPU) | `number` | `256` | no |
 | <a name="input_wiremock_desired_count"></a> [wiremock\_desired\_count](#input\_wiremock\_desired\_count) | Number of WireMock tasks to run | `number` | `1` | no |
 | <a name="input_wiremock_domain_name"></a> [wiremock\_domain\_name](#input\_wiremock\_domain\_name) | Custom domain for WireMock (e.g., wiremock-dev.poc.hometest.service.nhs.uk). Must be covered by acm\_regional\_certificate\_arn. | `string` | `null` | no |
 | <a name="input_wiremock_ecs_cluster_arn"></a> [wiremock\_ecs\_cluster\_arn](#input\_wiremock\_ecs\_cluster\_arn) | ARN of the ECS cluster to deploy WireMock into | `string` | `null` | no |
+| <a name="input_wiremock_ecs_cluster_name"></a> [wiremock\_ecs\_cluster\_name](#input\_wiremock\_ecs\_cluster\_name) | Name of the ECS cluster (required for Application Auto Scaling resource ID) | `string` | `null` | no |
 | <a name="input_wiremock_image_tag"></a> [wiremock\_image\_tag](#input\_wiremock\_image\_tag) | Docker image tag for wiremock/wiremock (e.g., '3.13.2', 'latest') | `string` | `"3.13.2"` | no |
 | <a name="input_wiremock_memory"></a> [wiremock\_memory](#input\_wiremock\_memory) | Memory (MiB) for the WireMock Fargate task | `number` | `512` | no |
+| <a name="input_wiremock_public_subnet_ids"></a> [wiremock\_public\_subnet\_ids](#input\_wiremock\_public\_subnet\_ids) | Public subnet IDs for the dedicated WireMock ALB (only used when wiremock\_bypass\_waf = true) | `list(string)` | `[]` | no |
+| <a name="input_wiremock_scale_down_cron"></a> [wiremock\_scale\_down\_cron](#input\_wiremock\_scale\_down\_cron) | Cron expression (UTC) for scaling WireMock to 0 (e.g. 'cron(0 18 ? * MON-FRI *)'  = 6 PM UTC weekdays) | `string` | `"cron(0 18 ? * MON-FRI *)"` | no |
+| <a name="input_wiremock_scale_up_cron"></a> [wiremock\_scale\_up\_cron](#input\_wiremock\_scale\_up\_cron) | Cron expression (UTC) for scaling WireMock back up (e.g. 'cron(0 9 ? * MON-FRI *)'  = 9 AM UTC weekdays) | `string` | `"cron(0 9 ? * MON-FRI *)"` | no |
+| <a name="input_wiremock_scheduled_scaling"></a> [wiremock\_scheduled\_scaling](#input\_wiremock\_scheduled\_scaling) | Enable scheduled scaling for WireMock — scale to 0 outside business hours and back to desired\_count during business hours. Requires wiremock\_ecs\_cluster\_name. | `bool` | `false` | no |
 | <a name="input_wiremock_service_discovery_namespace_id"></a> [wiremock\_service\_discovery\_namespace\_id](#input\_wiremock\_service\_discovery\_namespace\_id) | Cloud Map namespace ID for service discovery (from core ECS cluster) | `string` | `null` | no |
 | <a name="input_wiremock_subnet_ids"></a> [wiremock\_subnet\_ids](#input\_wiremock\_subnet\_ids) | Private subnet IDs for WireMock ECS tasks | `list(string)` | `[]` | no |
+| <a name="input_wiremock_use_spot"></a> [wiremock\_use\_spot](#input\_wiremock\_use\_spot) | Use Fargate Spot for WireMock tasks (up to 70% cheaper but may be interrupted). Set to false for on-demand Fargate. | `bool` | `true` | no |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_api1_gateway_id"></a> [api1\_gateway\_id](#output\_api1\_gateway\_id) | ID of API Gateway 1 (legacy - use api\_gateways instead) |
 | <a name="output_api1_lambda_arn"></a> [api1\_lambda\_arn](#output\_api1\_lambda\_arn) | ARN of the API 1 Lambda (legacy - use lambda\_functions instead) |
 | <a name="output_api1_lambda_name"></a> [api1\_lambda\_name](#output\_api1\_lambda\_name) | Name of the API 1 Lambda (legacy - use lambda\_functions instead) |

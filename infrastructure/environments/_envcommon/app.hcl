@@ -49,7 +49,7 @@ locals {
 
   # Read per-environment flags from env.hcl (same file that carries the environment name).
   # Defaults to an empty map so environments without the key get the safe default.
-  _env_flags         = try(read_terragrunt_config("${get_terragrunt_dir()}/env.hcl").locals, {})
+  _env_flags                 = try(read_terragrunt_config("${get_terragrunt_dir()}/env.hcl").locals, {})
   enable_wiremock            = lookup(local._env_flags, "enable_wiremock", false)
   wiremock_bypass_waf        = lookup(local._env_flags, "wiremock_bypass_waf", false)
   wiremock_scheduled_scaling = lookup(local._env_flags, "wiremock_scheduled_scaling", false)

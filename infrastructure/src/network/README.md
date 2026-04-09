@@ -520,14 +520,14 @@ resource "aws_lambda_function" "example" {
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 6.37.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.37.0 |
 | <a name="provider_aws.us_east_1"></a> [aws.us\_east\_1](#provider\_aws.us\_east\_1) | ~> 6.37.0 |
 
@@ -538,7 +538,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_cloudwatch_log_group.dns_query_firehose](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.dns_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.network_firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
@@ -623,7 +623,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_allowed_egress_domains"></a> [allowed\_egress\_domains](#input\_allowed\_egress\_domains) | List of allowed egress domains (for HTTPS/TLS traffic). Supports wildcards like '.example.com'. | `list(string)` | `[]` | no |
 | <a name="input_allowed_egress_ips"></a> [allowed\_egress\_ips](#input\_allowed\_egress\_ips) | List of allowed egress IP addresses with port and protocol. These IPs will be permitted through the firewall. | <pre>list(object({<br/>    ip          = string # IP address or CIDR (e.g., "203.0.113.10/32")<br/>    port        = string # Port number or "ANY"<br/>    protocol    = string # Protocol: TCP, UDP, or IP<br/>    description = string # Description for documentation<br/>  }))</pre> | `[]` | no |
 | <a name="input_allowed_ingress_ips"></a> [allowed\_ingress\_ips](#input\_allowed\_ingress\_ips) | List of allowed ingress IP addresses with port and protocol. These IPs will be permitted through the firewall for inbound traffic. | <pre>list(object({<br/>    ip          = string # IP address or CIDR (e.g., "203.0.113.10/32")<br/>    port        = string # Port number or "ANY"<br/>    protocol    = string # Protocol: TCP, UDP, or IP<br/>    description = string # Description for documentation<br/>  }))</pre> | `[]` | no |
@@ -666,7 +666,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_availability_zones"></a> [availability\_zones](#output\_availability\_zones) | List of availability zones used |
 | <a name="output_data_nacl_id"></a> [data\_nacl\_id](#output\_data\_nacl\_id) | ID of the data subnet Network ACL |
 | <a name="output_data_route_table_id"></a> [data\_route\_table\_id](#output\_data\_route\_table\_id) | ID of the data route table |

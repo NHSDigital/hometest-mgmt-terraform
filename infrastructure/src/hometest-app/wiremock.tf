@@ -36,10 +36,10 @@ locals {
   wiremock_use_dedicated_alb = var.enable_wiremock && var.wiremock_bypass_waf
 
   # Resolve which ALB values to use for listener rules, DNS, and SG references
-  wiremock_effective_alb_dns_name           = local.wiremock_use_dedicated_alb ? try(aws_lb.wiremock[0].dns_name, null) : var.wiremock_alb_dns_name
-  wiremock_effective_alb_zone_id            = local.wiremock_use_dedicated_alb ? try(aws_lb.wiremock[0].zone_id, null) : var.wiremock_alb_zone_id
-  wiremock_effective_https_listener_arn     = local.wiremock_use_dedicated_alb ? try(aws_lb_listener.wiremock_https[0].arn, null) : var.wiremock_alb_https_listener_arn
-  wiremock_effective_alb_security_group_id  = local.wiremock_use_dedicated_alb ? try(aws_security_group.wiremock_alb[0].id, null) : var.wiremock_alb_security_group_id
+  wiremock_effective_alb_dns_name          = local.wiremock_use_dedicated_alb ? try(aws_lb.wiremock[0].dns_name, null) : var.wiremock_alb_dns_name
+  wiremock_effective_alb_zone_id           = local.wiremock_use_dedicated_alb ? try(aws_lb.wiremock[0].zone_id, null) : var.wiremock_alb_zone_id
+  wiremock_effective_https_listener_arn    = local.wiremock_use_dedicated_alb ? try(aws_lb_listener.wiremock_https[0].arn, null) : var.wiremock_alb_https_listener_arn
+  wiremock_effective_alb_security_group_id = local.wiremock_use_dedicated_alb ? try(aws_security_group.wiremock_alb[0].id, null) : var.wiremock_alb_security_group_id
 }
 
 ################################################################################
@@ -308,7 +308,7 @@ module "wiremock_service" {
       weight            = 10
       base              = 1
     }
-  } : {
+    } : {
     fargate = {
       capacity_provider = "FARGATE"
       weight            = 1
