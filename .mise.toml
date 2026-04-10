@@ -6,6 +6,9 @@ install_before = "7d"
 [settings.python]
 compile = false
 
+[settings.aqua]
+github_attestations = false
+
 [tools]
 # Custom registries are not included in mise-versions
 # https://mise-versions.jdx.dev/
