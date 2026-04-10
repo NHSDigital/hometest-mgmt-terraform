@@ -32,9 +32,9 @@
 
 locals {
   # Load configuration from parent folders
-  account_vars      = read_terragrunt_config(find_in_parent_folders("account.hcl"))
-  global_vars       = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
-  account_app_vars  = read_terragrunt_config(find_in_parent_folders("app.hcl"))
+  account_vars     = read_terragrunt_config(find_in_parent_folders("account.hcl"))
+  global_vars      = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
+  account_app_vars = read_terragrunt_config(find_in_parent_folders("app.hcl"))
 
   # Environment derived from parent directory name (e.g., dev/, dev-mikmio/)
   # get_terragrunt_dir() returns {env}/app/, so dirname gives {env}/
@@ -59,8 +59,8 @@ locals {
 
   # Read per-environment config from env.hcl in the parent (environment) directory.
   # env.hcl carries the environment name, domain overrides, and feature flags (e.g., wiremock).
-  _env_flags        = try(read_terragrunt_config("${local._env_dir}/env.hcl").locals, {})
-  _domain_overrides = local._env_flags
+  _env_flags                 = try(read_terragrunt_config("${local._env_dir}/env.hcl").locals, {})
+  _domain_overrides          = local._env_flags
   enable_wiremock            = lookup(local._env_flags, "enable_wiremock", false)
   wiremock_bypass_waf        = lookup(local._env_flags, "wiremock_bypass_waf", false)
   wiremock_scheduled_scaling = lookup(local._env_flags, "wiremock_scheduled_scaling", false)
