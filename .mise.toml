@@ -10,7 +10,7 @@ compile = false
 github_attestations = false
 cosign = false
 slsa = false
-# minisign = false
+minisign = false
 
 [tools]
 # Custom registries are not included in mise-versions
