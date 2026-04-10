@@ -119,12 +119,16 @@ The new `terragrunt.hcl` inherits all settings from `_envcommon/app.hcl` automat
 
 #### 4a. Optional: Custom Domain via `domain.hcl`
 
-By default, the environment gets a subdomain under the POC wildcard cert:
+By default (without a `domain.hcl`), the environment gets URLs derived from the POC wildcard cert:
 
-- SPA: `{env}.poc.hometest.service.nhs.uk`
-- API: `api-{env}.poc.hometest.service.nhs.uk`
+| Service | URL pattern | Example (`dev2`) |
+|---------|-------------|-------------------|
+| SPA (UI) | `{env}.poc.hometest.service.nhs.uk` | `dev2.poc.hometest.service.nhs.uk` |
+| API | `api-{env}.poc.hometest.service.nhs.uk` | `api-dev2.poc.hometest.service.nhs.uk` |
 
-To use a custom domain (e.g. `dev2.hometest.service.nhs.uk`), create a `domain.hcl` in the environment directory:
+These defaults require no extra configuration — they are covered by the shared wildcard certificate (`*.poc.hometest.service.nhs.uk`) from `shared_services`.
+
+To use a custom domain outside the POC wildcard scope (e.g. `dev2.hometest.service.nhs.uk`), create a `domain.hcl` in the environment directory:
 
 ```hcl
 # Domain overrides for dev2 environment.
