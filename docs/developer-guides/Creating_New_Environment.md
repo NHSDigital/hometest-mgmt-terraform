@@ -10,7 +10,7 @@ Each environment deploys its own isolated set of:
 - API Gateway (REST API with per-lambda path routing)
 - CloudFront distribution + S3 bucket (Next.js SPA)
 - SQS queues (for async order processing)
-- Route53 DNS record (default: `{env}.poc.hometest.service.nhs.uk`, or custom via `domain.hcl`)
+- Route53 DNS record (default: `{env}.poc.hometest.service.nhs.uk`, or custom via `env.hcl` overrides)
 
 All environments share core infrastructure (VPC, WAF, ACM, KMS, Cognito, Aurora PostgreSQL, ECS) deployed under `poc/core/`.
 
@@ -49,7 +49,7 @@ Create a new directory under `infrastructure/environments/poc/hometest-app/` wit
 
 ```bash
 ENV_NAME="dev2"  # Change this to your desired environment name
-mkdir -p infrastructure/environments/poc/hometest-app/${ENV_NAME}
+mkdir -p infrastructure/environments/poc/hometest-app/${ENV_NAME}/app
 ```
 
 ### Step 2: Create `env.hcl`
@@ -64,35 +64,35 @@ locals {
 }
 ```
 
-> **Note:** The environment name is also auto-derived from the directory name via `basename(get_terragrunt_dir())` in `_envcommon/hometest-app.hcl`. The `env.hcl` value should match the directory name for consistency.
+> **Note:** The environment name is also auto-derived from the parent directory name via `basename(dirname(get_terragrunt_dir()))` in `_envcommon/hometest-app.hcl`. The `env.hcl` value should match the directory name for consistency.
 
 The `environment` value is used for:
 
-- Terraform state key: `nhs-hometest-poc-{environment}-{environment}.tfstate` (pattern: `{account_name}-{environment}-{dirname}.tfstate`)
+- Terraform state key: `nhs-hometest-poc-{environment}-app.tfstate` (pattern: `{account_name}-{environment}-{basename}.tfstate`)
 - Resource naming: `nhs-hometest-{environment}-*`
-- Default DNS: `{environment}.poc.hometest.service.nhs.uk` (customisable via `domain.hcl`)
+- Default DNS: `{environment}.poc.hometest.service.nhs.uk` (customisable via domain overrides in `env.hcl`)
 - Database schema: `hometest_{environment}` (schema-per-environment in shared Aurora DB)
 - Resource tagging: `Environment = "{environment}"`
 
-### Step 3: Create `terragrunt.hcl`
+### Step 3: Create `app/terragrunt.hcl`
 
-Create `infrastructure/environments/poc/hometest-app/${ENV_NAME}/terragrunt.hcl`.
+Create `infrastructure/environments/poc/hometest-app/${ENV_NAME}/app/terragrunt.hcl`.
 
 Copy from the `dev-example` environment as a starting point:
 
 ```bash
-cp infrastructure/environments/poc/hometest-app/dev-example/terragrunt.hcl \
-   infrastructure/environments/poc/hometest-app/${ENV_NAME}/terragrunt.hcl
+cp infrastructure/environments/poc/hometest-app/dev-example/app/terragrunt.hcl \
+   infrastructure/environments/poc/hometest-app/${ENV_NAME}/app/terragrunt.hcl
 ```
 
-The minimal `terragrunt.hcl` just includes the root and shared app config:
+The minimal `app/terragrunt.hcl` just includes the root and shared app config:
 
 ```hcl
 # TERRAGRUNT CONFIGURATION FOR dev2 ENVIRONMENT
-# Deployment with: cd poc/hometest-app/dev2 && terragrunt apply
+# Deployment with: cd poc/hometest-app/dev2/app && terragrunt apply
 #
-# All shared configuration (dependencies, lambda definitions, hooks) comes from ../app.hcl.
-# Environment name ("dev2") is derived automatically from this directory name.
+# All shared configuration (dependencies, lambda definitions, hooks) comes from _envcommon/hometest-app.hcl.
+# Environment name ("dev2") is derived from the parent directory name.
 
 include "root" {
   path = find_in_parent_folders("root.hcl")
@@ -115,11 +115,11 @@ include "app" {
 
 ### Step 4: Customise the Configuration (Optional)
 
-The new `terragrunt.hcl` inherits all settings from `_envcommon/hometest-app.hcl` automatically, including all Lambda definitions, build hooks, API Gateway config, CloudFront, and SQS. Most dev environments need **no overrides at all**.
+The new `app/terragrunt.hcl` inherits all settings from `_envcommon/hometest-app.hcl` automatically, including all Lambda definitions, build hooks, API Gateway config, CloudFront, and SQS. Most dev environments need **no overrides at all**.
 
-#### 4a. Optional: Custom Domain via `domain.hcl`
+#### 4a. Optional: Custom Domain
 
-By default (without a `domain.hcl`), the environment gets URLs derived from the POC wildcard cert:
+By default, the environment gets URLs derived from the POC wildcard cert:
 
 | Service | URL pattern | Example (`dev2`) |
 |---------|-------------|-------------------|
@@ -128,13 +128,14 @@ By default (without a `domain.hcl`), the environment gets URLs derived from the 
 
 These defaults require no extra configuration — they are covered by the shared wildcard certificate (`*.poc.hometest.service.nhs.uk`) from `shared_services`.
 
-To use a custom domain outside the POC wildcard scope (e.g. `dev2.hometest.service.nhs.uk`), create a `domain.hcl` in the environment directory:
+To use a custom domain outside the POC wildcard scope (e.g. `dev2.hometest.service.nhs.uk`), add domain overrides directly in `env.hcl`:
 
 ```hcl
-# Domain overrides for dev2 environment.
-# SPA and API use custom domains outside the POC wildcard cert scope,
-# so dedicated per-env certificates are created by the hometest-app module.
 locals {
+  environment = "dev2"
+
+  # Domain overrides — custom domains outside the POC wildcard cert scope.
+  # Dedicated per-env certificates are created by the hometest-app module.
   env_domain = "dev2.hometest.service.nhs.uk"
   api_domain = "api.dev2.hometest.service.nhs.uk"
 
@@ -143,11 +144,11 @@ locals {
 }
 ```
 
-> **Note:** Without a `domain.hcl`, the shared wildcard certificate from `shared_services` is used. Custom domains require `create_cloudfront_certificate = true` and `create_api_certificate = true` so the module creates per-environment certificates.
+> **Note:** Without domain overrides, the shared wildcard certificate from `shared_services` is used. Custom domains require `create_cloudfront_certificate = true` and `create_api_certificate = true` so the module creates per-environment certificates.
 
 #### 4b. Optional: Add Environment-Specific Lambdas
 
-To add extra Lambdas (e.g. a health check) beyond the shared set, add an `inputs` block in your `terragrunt.hcl`:
+To add extra Lambdas (e.g. a health check) beyond the shared set, add an `inputs` block in your `app/terragrunt.hcl`:
 
 ```hcl
 inputs = {
@@ -191,7 +192,7 @@ When WireMock is enabled, the SPA build automatically uses the WireMock endpoint
 
 #### 4d. Optional: Use Placeholder Lambdas
 
-To deploy infrastructure without real Lambda code (useful for testing infrastructure changes), add to your `terragrunt.hcl`:
+To deploy infrastructure without real Lambda code (useful for testing infrastructure changes), add to your `app/terragrunt.hcl`:
 
 ```hcl
 inputs = {
@@ -224,7 +225,7 @@ include "goose-migrator" {
 ### Step 6: Validate the Configuration
 
 ```bash
-cd infrastructure/environments/poc/hometest-app/${ENV_NAME}
+cd infrastructure/environments/poc/hometest-app/${ENV_NAME}/app
 
 # Validate the Terragrunt config
 terragrunt validate
@@ -236,7 +237,7 @@ terragrunt plan
 ### Step 7: Deploy
 
 ```bash
-cd infrastructure/environments/poc/hometest-app/${ENV_NAME}
+cd infrastructure/environments/poc/hometest-app/${ENV_NAME}/app
 terragrunt apply
 ```
 
@@ -274,14 +275,14 @@ curl -I https://dev2.poc.hometest.service.nhs.uk/
 
 ```text
 infrastructure/environments/
-├── _envcommon/                  # Shared configuration
-│   ├── all.hcl                 # Global vars (region, project name)
-│   ├── app.hcl                 # Shared app config (lambdas, hooks, deps)
-│   └── goose-migrator.hcl     # Shared DB migrator config
-├── root.hcl                    # S3 backend, tags, AWS account check
+├── _envcommon/                          # Shared configuration
+│   ├── all.hcl                         # Global vars (region, project name)
+│   ├── hometest-app.hcl               # Shared app config (lambdas, hooks, deps)
+│   └── goose-migrator.hcl             # Shared DB migrator config
+├── root.hcl                            # S3 backend, tags, AWS account check
 └── poc/
-    ├── account.hcl              # AWS account ID and names
-    ├── core/                    # Shared (already deployed)
+    ├── account.hcl                      # AWS account ID and names
+    ├── core/                            # Shared (already deployed)
     │   ├── env.hcl
     │   ├── bootstrap/
     │   ├── network/
@@ -289,23 +290,27 @@ infrastructure/environments/
     │   ├── aurora-postgres/
     │   ├── ecs/
     │   └── lambda-goose-migrator/
-    └── hometest-app/            # Per-environment deployments
+    └── hometest-app/
+        ├── app.hcl                      # Account-level overrides (secrets, NHS Login)
         ├── dev/
-        │   ├── env.hcl
-        │   ├── domain.hcl
-        │   ├── terragrunt.hcl
+        │   ├── env.hcl                  # Environment name + domain overrides
+        │   ├── app/
+        │   │   └── terragrunt.hcl       # App deployment config
         │   └── lambda-goose-migrator/
-        ├── dev-example/         # ← Template for new environments
+        │       └── terragrunt.hcl
+        ├── dev-example/                 # ← Template for new environments
         │   ├── env.hcl
-        │   ├── terragrunt.hcl
+        │   ├── app/
+        │   │   └── terragrunt.hcl
         │   └── lambda-goose-migrator/
+        │       └── terragrunt.hcl
         ├── uat/
         ├── demo/
         ├── prod/
-        └── dev2/                # ← New environment
-            ├── env.hcl
-            ├── domain.hcl       # (optional — only for custom domains)
-            ├── terragrunt.hcl
+        └── dev2/                        # ← New environment
+            ├── env.hcl                  # Environment name + optional domain/wiremock overrides
+            ├── app/
+            │   └── terragrunt.hcl       # App deployment config
             └── lambda-goose-migrator/
                 └── terragrunt.hcl
 ```
@@ -314,28 +319,28 @@ infrastructure/environments/
 
 The Terragrunt configuration chain:
 
-1. **`env.hcl`** — Sets `environment = "dev2"` (also auto-derived from directory name)
-2. **`domain.hcl`** (optional) — Overrides default domain pattern and certificate flags
-3. **`terragrunt.hcl`** includes:
+1. **`env.hcl`** — Sets `environment = "dev2"`, plus optional domain overrides and feature flags (WireMock)
+2. **`app/terragrunt.hcl`** includes:
    - `root.hcl` — S3 backend config, AWS account validation, tags
    - `_envcommon/hometest-app.hcl` — Shared defaults, Lambda definitions, build hooks, source paths, dependencies
+3. **`hometest-app/app.hcl`** — Account-level overrides (secret names, NHS Login config), loaded by `_envcommon/hometest-app.hcl`
 4. **Dependencies** (`network`, `shared_services`, `aurora-postgres`, `ecs`) — Read outputs from core via `dependency` blocks with mock outputs for plan/validate
 5. **`inputs`** — Environment-specific values are deep-merged with the shared defaults
 
 The state file will be stored at:
 
 ```text
-s3://nhs-hometest-poc-core-s3-tfstate/nhs-hometest-poc-dev2-dev2.tfstate
+s3://nhs-hometest-poc-core-s3-tfstate/nhs-hometest-poc-dev2-app.tfstate
 ```
 
-> The key is `${account_name}-${environment}-${basename(path_relative_to_include())}.tfstate` (see `root.hcl`). Since the environment directory name matches the `environment` value, the key contains the name twice.
+> The key is `${account_name}-${environment}-${basename(path_relative_to_include())}.tfstate` (see `root.hcl`). The basename is `app` (the directory containing `terragrunt.hcl`), and environment comes from `env.hcl`.
 
 ## Destroying an Environment
 
 To tear down an environment completely:
 
 ```bash
-cd infrastructure/environments/poc/hometest-app/${ENV_NAME}
+cd infrastructure/environments/poc/hometest-app/${ENV_NAME}/app
 terragrunt destroy
 ```
 
@@ -344,8 +349,8 @@ The `empty_spa_bucket_on_destroy` hook will automatically clean all versioned ob
 ## Checklist
 
 - [ ] Created `infrastructure/environments/poc/hometest-app/{env}/env.hcl`
-- [ ] Created `infrastructure/environments/poc/hometest-app/{env}/terragrunt.hcl`
-- [ ] (Optional) Created `domain.hcl` for custom domain
+- [ ] Created `infrastructure/environments/poc/hometest-app/{env}/app/terragrunt.hcl`
+- [ ] (Optional) Added domain overrides in `env.hcl` for custom domain
 - [ ] (Optional) Created `lambda-goose-migrator/terragrunt.hcl` for DB migrations
 - [ ] (Optional) Enabled WireMock flags in `env.hcl`
 - [ ] Ran `terragrunt validate` successfully
@@ -358,17 +363,17 @@ The `empty_spa_bucket_on_destroy` hook will automatically clean all versioned ob
 
 ### "Can't find env.hcl"
 
-Ensure `env.hcl` exists in the environment directory:
+Ensure `env.hcl` exists in the environment directory (parent of `app/`):
 
 ```text
-poc/hometest-app/{env}/env.hcl              ← correct
-poc/hometest-app/{env}/hometest-app/env.hcl ← wrong
+poc/hometest-app/{env}/env.hcl         ← correct
+poc/hometest-app/{env}/app/env.hcl     ← wrong
 ```
 
 ### DNS not resolving
 
 - **Default domains** (`{env}.poc.hometest.service.nhs.uk`) use the shared wildcard ACM certificate from `shared_services` — no extra setup needed.
-- **Custom domains** (via `domain.hcl`) require `create_cloudfront_certificate = true` and `create_api_certificate = true`. CloudFront creates a Route53 alias record automatically. Allow a few minutes for DNS propagation and certificate validation.
+- **Custom domains** (via domain overrides in `env.hcl`) require `create_cloudfront_certificate = true` and `create_api_certificate = true`. CloudFront creates a Route53 alias record automatically. Allow a few minutes for DNS propagation and certificate validation.
 
 ### Lambda build failures
 
