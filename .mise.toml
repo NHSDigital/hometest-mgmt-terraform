@@ -8,10 +8,7 @@ compile = false
 
 # Disable to avoid calling Github API
 [settings.aqua]
-# github_attestations = false
 cosign = false
-# slsa = false
-# minisign = false
 
 [tools]
 # Custom registries are not included in mise-versions
@@ -117,8 +114,3 @@ aws resourcegroupstaggingapi get-resources \
 # https://terragrunt.gruntwork.io/docs/troubleshooting/performance/
 TF_PLUGIN_CACHE_DIR = "{{config_root}}/.terraform-plugin-cache"
 TG_EXPERIMENT = "dependency-fetch-output-from-state"
-
-# export MISE_AQUA_GITHUB_ATTESTATIONS=false
-# export MISE_AQUA_COSIGN=false
-# export MISE_AQUA_SLSA=false
-# export MISE_AQUA_MINISIGN=false
