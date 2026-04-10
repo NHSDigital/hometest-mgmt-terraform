@@ -120,6 +120,7 @@ The new `terragrunt.hcl` inherits all settings from `_envcommon/app.hcl` automat
 #### 4a. Optional: Custom Domain via `domain.hcl`
 
 By default, the environment gets a subdomain under the POC wildcard cert:
+
 - SPA: `{env}.poc.hometest.service.nhs.uk`
 - API: `api-{env}.poc.hometest.service.nhs.uk`
 

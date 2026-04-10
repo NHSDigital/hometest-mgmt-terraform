@@ -6,6 +6,7 @@ install_before = "7d"
 [settings.python]
 compile = false
 
+# Disable to avoid calling Github API
 [settings.aqua]
 # github_attestations = false
 cosign = false
