@@ -43,7 +43,7 @@ go = "1.26.2"
 ## Security scanning
 
 # https://github.com/aquasecurity/trivy/releases
-# "aqua:aquasecurity/trivy" = "v0.69.3"
+"aqua:aquasecurity/trivy" = "v0.69.3"
 
 # https://github.com/pypa/pipx/releases
 pipx = "1.11.0"
