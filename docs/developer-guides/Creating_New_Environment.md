@@ -64,11 +64,11 @@ locals {
 }
 ```
 
-> **Note:** The environment name is also auto-derived from the directory name via `basename(get_terragrunt_dir())` in `_envcommon/app.hcl`. The `env.hcl` value should match the directory name for consistency.
+> **Note:** The environment name is also auto-derived from the directory name via `basename(get_terragrunt_dir())` in `_envcommon/hometest-app.hcl`. The `env.hcl` value should match the directory name for consistency.
 
 The `environment` value is used for:
 
-- Terraform state key: `nhs-hometest-poc-{environment}-hometest-app.tfstate`
+- Terraform state key: `nhs-hometest-poc-{environment}-{environment}.tfstate` (pattern: `{account_name}-{environment}-{dirname}.tfstate`)
 - Resource naming: `nhs-hometest-{environment}-*`
 - Default DNS: `{environment}.poc.hometest.service.nhs.uk` (customisable via `domain.hcl`)
 - Database schema: `hometest_{environment}` (schema-per-environment in shared Aurora DB)
@@ -99,12 +99,12 @@ include "root" {
 }
 
 include "app" {
-  path           = find_in_parent_folders("_envcommon/app.hcl")
+  path           = find_in_parent_folders("_envcommon/hometest-app.hcl")
   expose         = true
   merge_strategy = "deep"
 }
 
-# Uses all defaults from _envcommon/app.hcl — no overrides needed.
+# Uses all defaults from _envcommon/hometest-app.hcl — no overrides needed.
 # To add environment-specific overrides, uncomment and extend:
 # inputs = {
 #   lambdas = {
@@ -115,7 +115,7 @@ include "app" {
 
 ### Step 4: Customise the Configuration (Optional)
 
-The new `terragrunt.hcl` inherits all settings from `_envcommon/app.hcl` automatically, including all Lambda definitions, build hooks, API Gateway config, CloudFront, and SQS. Most dev environments need **no overrides at all**.
+The new `terragrunt.hcl` inherits all settings from `_envcommon/hometest-app.hcl` automatically, including all Lambda definitions, build hooks, API Gateway config, CloudFront, and SQS. Most dev environments need **no overrides at all**.
 
 #### 4a. Optional: Custom Domain via `domain.hcl`
 
@@ -167,7 +167,7 @@ inputs = {
 }
 ```
 
-These are **deep-merged** with the shared Lambda definitions from `_envcommon/app.hcl`.
+These are **deep-merged** with the shared Lambda definitions from `_envcommon/hometest-app.hcl`.
 
 #### 4c. Optional: Enable WireMock
 
@@ -318,15 +318,17 @@ The Terragrunt configuration chain:
 2. **`domain.hcl`** (optional) — Overrides default domain pattern and certificate flags
 3. **`terragrunt.hcl`** includes:
    - `root.hcl` — S3 backend config, AWS account validation, tags
-   - `_envcommon/app.hcl` — Shared defaults, Lambda definitions, build hooks, source paths, dependencies
+   - `_envcommon/hometest-app.hcl` — Shared defaults, Lambda definitions, build hooks, source paths, dependencies
 4. **Dependencies** (`network`, `shared_services`, `aurora-postgres`, `ecs`) — Read outputs from core via `dependency` blocks with mock outputs for plan/validate
 5. **`inputs`** — Environment-specific values are deep-merged with the shared defaults
 
 The state file will be stored at:
 
 ```text
-s3://nhs-hometest-poc-core-s3-tfstate/nhs-hometest-poc-dev2-hometest-app.tfstate
+s3://nhs-hometest-poc-core-s3-tfstate/nhs-hometest-poc-dev2-dev2.tfstate
 ```
+
+> The key is `${account_name}-${environment}-${basename(path_relative_to_include())}.tfstate` (see `root.hcl`). Since the environment directory name matches the `environment` value, the key contains the name twice.
 
 ## Destroying an Environment
 
