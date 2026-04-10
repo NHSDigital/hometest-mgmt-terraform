@@ -7,9 +7,9 @@ install_before = "7d"
 compile = false
 
 [settings.aqua]
-# github_attestations = false
+github_attestations = false
 # cosign = false
-# slsa = false
+slsa = false
 # minisign = false
 
 [tools]
