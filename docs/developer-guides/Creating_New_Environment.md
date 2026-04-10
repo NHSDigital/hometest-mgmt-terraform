@@ -264,6 +264,22 @@ Click **"Run workflow"** and configure the following inputs:
 | `targets` | string | _(empty)_ | Comma-separated list of resources to target in the app stack only (e.g. `module.lambdas["order-status-lambda"]`). Leave empty for full deployment. Does not apply to the migrator. |
 | `skip_migrator` | boolean | `false` | Skip the goose migrator deployment entirely (deploy app stack only). Equivalent to `SKIP_MIGRATOR=true` locally. |
 
+> **Important:** The `subenv` input is a fixed choice list. To deploy a new environment from the pipeline, you must first add it to the `options` list under `inputs.subenv` in `.github/workflows/deploy-tf-hometest-app.yaml`:
+>
+> ```yaml
+> subenv:
+>   description: "Terraform subenv to deploy"
+>   required: true
+>   type: choice
+>   default: dev
+>   options:
+>     - dev
+>     - uat
+>     - demo
+>     - staging
+>     - dev2  # ← add your new environment here
+> ```
+
 > **Tip:** For a first deployment of a new environment, use `action: plan` first to review the changes, then re-run with `action: apply`.
 
 Both local and pipeline deployments will:
