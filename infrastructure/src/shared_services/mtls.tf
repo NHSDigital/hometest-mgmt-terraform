@@ -158,8 +158,8 @@ resource "aws_s3_bucket_policy" "mtls_truststore" {
         }
       },
       {
-        Sid       = "AllowAPIGatewayRead"
-        Effect    = "Allow"
+        Sid    = "AllowAPIGatewayRead"
+        Effect = "Allow"
         Principal = {
           Service = "apigateway.amazonaws.com"
         }
