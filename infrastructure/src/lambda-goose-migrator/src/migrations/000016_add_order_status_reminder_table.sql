@@ -35,14 +35,8 @@ IF NOT EXISTS idx_order_status_reminder_status_triggered_at
 ON order_status_reminder
 (status, triggered_at);
 
-CREATE INDEX
-IF NOT EXISTS idx_order_status_reminder_order_uid
-ON order_status_reminder
-(order_uid);
-
 
 -- +goose Down
-DROP INDEX IF EXISTS idx_order_status_reminder_order_uid;
 DROP INDEX IF EXISTS idx_order_status_reminder_status_triggered_at;
 DROP TABLE IF EXISTS order_status_reminder;
 DROP TYPE IF EXISTS reminder_status;
