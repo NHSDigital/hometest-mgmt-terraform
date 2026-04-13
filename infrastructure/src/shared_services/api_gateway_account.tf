@@ -50,7 +50,7 @@ resource "aws_iam_role_policy" "api_gateway_cloudwatch" {
           "logs:GetLogEvents",
           "logs:FilterLogEvents"
         ]
-        Resource = "*"
+        Resource = "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:*"
       }
     ]
   })
