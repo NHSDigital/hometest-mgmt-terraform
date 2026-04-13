@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE IF NOT EXISTS session
+CREATE TABLE session
 (
   session_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   refresh_token_id uuid NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS session
   CONSTRAINT chk_session_nhs_number_format CHECK (nhs_number ~ '^[0-9]{10}$')
 );
 
-CREATE INDEX IF NOT EXISTS idx_session_max_expires_at
+CREATE INDEX idx_session_max_expires_at
 ON session (max_expires_at);
 
 
