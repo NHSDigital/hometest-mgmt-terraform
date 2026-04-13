@@ -327,6 +327,18 @@ variable "cors_allowed_origin" {
   default     = null
 }
 
+variable "api_mutual_tls_truststore_uri" {
+  description = "S3 URI of the truststore file containing client CA certificates for API Gateway mTLS (e.g., s3://bucket/truststore.pem). When set, API Gateway verifies client certificates."
+  type        = string
+  default     = null
+}
+
+variable "api_mutual_tls_truststore_version" {
+  description = "Version ID of the truststore object in S3. When set, pins mTLS to a specific truststore version."
+  type        = string
+  default     = null
+}
+
 variable "acm_regional_certificate_arn" {
   description = "ARN of the shared regional ACM certificate (from shared_services) for API Gateway custom domain. Used when create_api_certificate = false (default for POC wildcard cert pattern)."
   type        = string

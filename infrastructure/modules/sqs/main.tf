@@ -55,8 +55,53 @@ module "dlq" {
 }
 
 ################################################################################
+# DLQ — Enforce HTTPS-only access
+################################################################################
+
+resource "aws_sqs_queue_policy" "dlq_enforce_ssl" {
+  count     = var.create_dlq ? 1 : 0
+  queue_url = module.dlq[0].queue_url
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "DenyNonSSLAccess"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "sqs:*"
+        Resource  = module.dlq[0].queue_arn
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
+      }
+    ]
+  })
+}
+
+################################################################################
 # Main SQS Queue
 ################################################################################
+
+locals {
+  # Always enforce HTTPS — merge with any caller-provided policy statements
+  ssl_enforcement_statement = {
+    DenyNonSSLAccess = {
+      effect     = "Deny"
+      principals = [{ type = "*", identifiers = ["*"] }]
+      actions    = ["sqs:*"]
+      conditions = [{
+        test     = "Bool"
+        variable = "aws:SecureTransport"
+        values   = ["false"]
+      }]
+    }
+  }
+
+  merged_queue_policy_statements = merge(local.ssl_enforcement_statement, var.queue_policy_statements)
+}
 
 module "queue" {
   source  = "terraform-aws-modules/sqs/aws"
@@ -92,9 +137,9 @@ module "queue" {
     sourceQueueArns   = [module.dlq[0].queue_arn]
   } : null
 
-  # Access policy
-  create_queue_policy     = var.create_queue_policy
-  queue_policy_statements = var.queue_policy_statements
+  # Access policy — always enabled to enforce HTTPS-only access
+  create_queue_policy     = true
+  queue_policy_statements = local.merged_queue_policy_statements
 
   tags = local.common_tags
 }

@@ -316,6 +316,8 @@ dependency "shared_services" {
     api_config_secret_arn           = "arn:aws:secretsmanager:eu-west-2:123456789012:secret:mock-secret"
     api_config_secret_name          = "mock/secret/name"
     cognito_user_pool_arn           = "arn:aws:cognito-idp:eu-west-2:123456789012:userpool/eu-west-2_mockpool"
+    mtls_truststore_uri             = null
+    mtls_truststore_version         = null
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -688,6 +690,10 @@ inputs = {
 
   api_custom_domain_name       = local.api_domain
   acm_regional_certificate_arn = dependency.shared_services.outputs.acm_regional_certificate_arn
+
+  # Mutual TLS (mTLS) — automatically wired from shared_services when enable_mtls = true
+  api_mutual_tls_truststore_uri     = dependency.shared_services.outputs.mtls_truststore_uri
+  api_mutual_tls_truststore_version = dependency.shared_services.outputs.mtls_truststore_version
 
   # CORS — API Gateway OPTIONS responses and gateway error responses use this origin.
   # Must match the SPA domain exactly (credentials require a specific origin, not '*').

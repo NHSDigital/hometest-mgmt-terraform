@@ -122,6 +122,28 @@ variable "require_mfa" {
   default     = true
 }
 
+################################################################################
+# mTLS Configuration
+################################################################################
+
+variable "enable_mtls" {
+  description = "Enable mutual TLS infrastructure — creates CA, client cert, S3 truststore, and Secrets Manager entries"
+  type        = bool
+  default     = false
+}
+
+variable "mtls_ca_validity_hours" {
+  description = "Validity period for the mTLS CA certificate in hours (default: 10 years)"
+  type        = number
+  default     = 87600
+}
+
+variable "mtls_client_validity_hours" {
+  description = "Validity period for the mTLS client certificate in hours (default: 1 year)"
+  type        = number
+  default     = 8760
+}
+
 #------------------------------------------------------------------------------
 # Cognito User Pool Configuration
 #------------------------------------------------------------------------------
