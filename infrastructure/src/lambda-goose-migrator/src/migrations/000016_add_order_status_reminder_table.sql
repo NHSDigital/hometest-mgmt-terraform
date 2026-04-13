@@ -1,19 +1,10 @@
 -- +goose Up
-CREATE TABLE
-IF NOT EXISTS reminder_status_type
-(
-  status_code varchar(50) PRIMARY KEY,
-  description text NOT NULL
+CREATE TYPE reminder_status AS ENUM (
+  'SCHEDULED',
+  'QUEUED',
+  'FAILED',
+  'CANCELLED'
 );
-
-INSERT INTO reminder_status_type
-(status_code, description)
-VALUES
-('SCHEDULED', 'Reminder scheduled to be sent, should be the initial status for a reminder'),
-('QUEUED', 'Reminder queued for sending'),
-('FAILED', 'Reminder failed to send'),
-('CANCELLED', 'Reminder cancelled')
-ON CONFLICT DO NOTHING;
 
 CREATE TABLE
 IF NOT EXISTS order_status_reminder
@@ -27,8 +18,7 @@ IF NOT EXISTS order_status_reminder
   (status_code),
   reminder_number smallint NOT NULL CHECK
   (reminder_number >= 1),
-  status varchar(50) NOT NULL REFERENCES reminder_status_type
-  (status_code),
+  status reminder_status NOT NULL,
   triggered_at timestamp
   with time zone NOT NULL,
   sent_at timestamp
@@ -55,4 +45,4 @@ ON order_status_reminder
 DROP INDEX IF EXISTS idx_order_status_reminder_order_uid;
 DROP INDEX IF EXISTS idx_order_status_reminder_status_triggered_at;
 DROP TABLE IF EXISTS order_status_reminder;
-DROP TABLE IF EXISTS reminder_status_type;
+DROP TYPE IF EXISTS reminder_status;
