@@ -56,6 +56,14 @@ This repository contains Terraform infrastructure code with Terragrunt for manag
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+## KMS key layout
+
+Key Location Purpose
+tfstate bootstrap Terraform state encryption
+logs bootstrap All log encryption (S3 access logs, VPC flow logs, DNS query logs)
+main shared_services General app encryption (CloudWatch, Lambda env vars, S3, CloudFront, secrets)
+pii_data shared_services PII data (Aurora storage + master secret, SQS queues, app_user secret)
+
 ## Directory Structure
 
 ```text

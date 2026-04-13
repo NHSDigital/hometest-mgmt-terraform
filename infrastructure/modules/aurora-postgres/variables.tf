@@ -49,7 +49,7 @@ variable "vpc_id" {
 variable "engine_version" {
   description = "PostgreSQL engine version"
   type        = string
-  default     = "18.1"
+  default     = "17.9"
 }
 
 variable "serverlessv2_min_capacity" {
@@ -70,6 +70,12 @@ variable "serverlessv2_max_capacity" {
 
 variable "kms_key_id" {
   description = "The ARN for the KMS encryption key. If creating an encrypted replica, set this to the destination KMS ARN"
+  type        = string
+  default     = null
+}
+
+variable "master_user_secret_kms_key_id" {
+  description = "The ARN of the KMS key used to encrypt the master user password secret in Secrets Manager"
   type        = string
   default     = null
 }

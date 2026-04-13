@@ -99,6 +99,11 @@ variable "security_group_ids" {
   type        = list(string)
 }
 
+variable "kms_key_arn" {
+  description = "ARN of the customer-managed KMS key for encrypting Secrets Manager secrets"
+  type        = string
+}
+
 variable "use_iam_auth" {
   description = "Whether the goose migrator Lambda itself connects to Aurora using IAM auth instead of Secrets Manager password. The master user typically uses password auth, so this is usually false."
   type        = bool

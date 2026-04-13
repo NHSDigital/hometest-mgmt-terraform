@@ -32,7 +32,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "dns_query_logs" {
 
   rule {
     apply_server_side_encryption_by_default {
-      kms_master_key_id = aws_kms_key.dns_query_logs[0].arn
+      kms_master_key_id = var.logs_kms_key_arn
       sse_algorithm     = "aws:kms"
     }
     bucket_key_enabled = true
@@ -130,102 +130,6 @@ resource "aws_s3_bucket_policy" "dns_query_logs" {
       }
     ]
   })
-}
-
-#------------------------------------------------------------------------------
-# KMS Key for DNS Query Logs Encryption
-#------------------------------------------------------------------------------
-
-resource "aws_kms_key" "dns_query_logs" {
-  count = var.enable_dns_query_logging ? 1 : 0
-
-  description             = "KMS key for DNS Query Logs encryption"
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "Enable IAM User Permissions"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "kms:*"
-        Resource = "*"
-      },
-      {
-        Sid    = "Allow CloudWatch Logs"
-        Effect = "Allow"
-        Principal = {
-          Service = "logs.${var.aws_region}.amazonaws.com"
-        }
-        Action = [
-          "kms:Encrypt*",
-          "kms:Decrypt*",
-          "kms:ReEncrypt*",
-          "kms:GenerateDataKey*",
-          "kms:Describe*"
-        ]
-        Resource = "*"
-        Condition = {
-          ArnLike = {
-            "kms:EncryptionContext:aws:logs:arn" = [
-              "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/route53/*",
-              "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kinesisfirehose/*"
-            ]
-          }
-        }
-      },
-      {
-        Sid    = "Allow Firehose"
-        Effect = "Allow"
-        Principal = {
-          Service = "firehose.amazonaws.com"
-        }
-        Action = [
-          "kms:Encrypt*",
-          "kms:Decrypt*",
-          "kms:ReEncrypt*",
-          "kms:GenerateDataKey*",
-          "kms:Describe*"
-        ]
-        Resource = "*"
-        Condition = {
-          StringEquals = {
-            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
-          }
-        }
-      },
-      {
-        Sid    = "Allow S3"
-        Effect = "Allow"
-        Principal = {
-          Service = "s3.amazonaws.com"
-        }
-        Action = [
-          "kms:Encrypt*",
-          "kms:Decrypt*",
-          "kms:ReEncrypt*",
-          "kms:GenerateDataKey*",
-          "kms:Describe*"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-
-  tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-dns-query-logs-kms"
-  })
-}
-
-resource "aws_kms_alias" "dns_query_logs" {
-  count = var.enable_dns_query_logging ? 1 : 0
-
-  name          = "alias/${local.resource_prefix}-dns-query-logs"
-  target_key_id = aws_kms_key.dns_query_logs[0].key_id
 }
 
 #------------------------------------------------------------------------------
@@ -358,7 +262,7 @@ resource "aws_iam_role_policy" "dns_query_firehose" {
           "kms:Decrypt",
           "kms:GenerateDataKey"
         ]
-        Resource = aws_kms_key.dns_query_logs[0].arn
+        Resource = var.logs_kms_key_arn
       },
       {
         Sid    = "CloudWatchLogs"
@@ -377,7 +281,7 @@ resource "aws_cloudwatch_log_group" "dns_query_firehose" {
 
   name              = "/aws/kinesisfirehose/${local.resource_prefix}-dns-query-logs"
   retention_in_days = 7
-  kms_key_id        = aws_kms_key.dns_query_logs[0].arn
+  kms_key_id        = var.logs_kms_key_arn
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-dns-query-firehose-logs"

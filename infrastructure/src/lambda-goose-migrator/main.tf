@@ -81,6 +81,7 @@ resource "aws_secretsmanager_secret" "app_user" {
   name                    = var.app_user_secret_name
   description             = "Database credentials for app_user_${var.db_schema} (schema-scoped)"
   recovery_window_in_days = 0
+  kms_key_id              = var.kms_key_arn
 
   tags = merge(local.common_tags, {
     Name = var.app_user_secret_name
