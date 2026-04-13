@@ -21,10 +21,9 @@ on:
         description: "Terraform subenv to deploy"
         required: true
         type: choice
-        default: dev-mikmio
+        default: dev
         options:
           # - dev-example
-          - dev-mikmio
           - dev
           - uat
           - demo
