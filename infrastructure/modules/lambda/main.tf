@@ -309,13 +309,10 @@ resource "aws_cloudwatch_log_metric_filter" "logged_errors" {
   pattern        = "?ERROR ?Error ?Exception ?errorType"
 
   metric_transformation {
-    name          = "LoggedErrors"
+    name          = "${local.function_name}-LoggedErrors"
     namespace     = "HomeTest/Lambda"
     value         = "1"
     default_value = "0"
-    dimensions = {
-      FunctionName = local.function_name
-    }
   }
 }
 
@@ -326,16 +323,12 @@ resource "aws_cloudwatch_metric_alarm" "lambda_logged_errors" {
   alarm_description   = "Alert when Lambda function logs errors (caught exceptions, console.error)"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = var.alarm_evaluation_periods
-  metric_name         = "LoggedErrors"
+  metric_name         = "${local.function_name}-LoggedErrors"
   namespace           = "HomeTest/Lambda"
   period              = var.alarm_period
   statistic           = "Sum"
   threshold           = var.alarm_logged_error_threshold
   treat_missing_data  = "notBreaching"
-
-  dimensions = {
-    FunctionName = local.function_name
-  }
 
   alarm_actions = var.alarm_actions
   ok_actions    = var.alarm_actions

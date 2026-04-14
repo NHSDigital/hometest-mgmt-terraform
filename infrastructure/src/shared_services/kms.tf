@@ -93,6 +93,18 @@ resource "aws_kms_key" "main" {
         }
       },
       {
+        Sid    = "AllowCloudWatchAlarms"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudwatch.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey*"
+        ]
+        Resource = "*"
+      },
+      {
         Sid    = "Allow SSO Roles to Decrypt State"
         Effect = "Allow"
         Principal = {
