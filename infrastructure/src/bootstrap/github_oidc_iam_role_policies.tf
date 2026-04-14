@@ -92,6 +92,7 @@ data "aws_iam_policy_document" "infrastructure_policy" {
       # Monitoring
       "logs:*",
       "cloudwatch:*",
+      "chatbot:*",
 
       # Resource Management
       "resource-groups:*",

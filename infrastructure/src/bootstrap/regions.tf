@@ -141,7 +141,9 @@ resource "aws_iam_policy" "deny_regions" {
           "ce:*",
           "cur:*",
           # Account management
-          "account:*"
+          "account:*",
+          # AWS Chatbot is global (no regional endpoint)
+          "chatbot:*"
         ]
         Resource = "*"
       }
