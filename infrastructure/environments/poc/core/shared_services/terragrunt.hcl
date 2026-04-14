@@ -78,6 +78,9 @@ inputs = {
   network_firewall_name = dependency.network.outputs.network_firewall_enabled ? dependency.network.outputs.network_firewall_name : null
 
   enable_slack_alerts = true
+
+  # OK actions — set to true for prod to get notified when alarms recover
+  enable_ok_actions = false
   # https://app.slack.com/client/TJ00QR03U
   slack_workspace_id = "TJ00QR03U"
   # hometest-ops-alerts-critical

@@ -63,6 +63,12 @@ variable "sns_alerts_critical_topic_arn" {
   default     = null
 }
 
+variable "enable_ok_actions" {
+  description = "Send notifications when alarms return to OK state (enable for prod, disable for dev to reduce noise)"
+  type        = bool
+  default     = false
+}
+
 variable "waf_cloudfront_arn" {
   description = "ARN of CloudFront WAF Web ACL (from shared_services)"
   type        = string

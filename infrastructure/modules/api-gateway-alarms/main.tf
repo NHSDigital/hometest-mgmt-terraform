@@ -65,7 +65,7 @@ resource "aws_cloudwatch_metric_alarm" "api_5xx" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name      = "${each.value}-5xx-high"
@@ -121,7 +121,7 @@ resource "aws_cloudwatch_metric_alarm" "api_4xx" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name      = "${each.value}-4xx-high"
@@ -152,7 +152,7 @@ resource "aws_cloudwatch_metric_alarm" "api_latency" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name      = "${each.value}-latency-high"
@@ -183,7 +183,7 @@ resource "aws_cloudwatch_metric_alarm" "api_integration_latency" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name      = "${each.value}-integration-latency-high"

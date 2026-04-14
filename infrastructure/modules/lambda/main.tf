@@ -197,7 +197,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     ResourceType = "cloudwatch-alarm"
@@ -227,7 +227,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_throttles" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     ResourceType = "cloudwatch-alarm"
@@ -257,7 +257,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     ResourceType = "cloudwatch-alarm"
@@ -287,7 +287,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_concurrent_executions" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     ResourceType = "cloudwatch-alarm"
@@ -331,7 +331,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_logged_errors" {
   treat_missing_data  = "notBreaching"
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     ResourceType = "cloudwatch-alarm"

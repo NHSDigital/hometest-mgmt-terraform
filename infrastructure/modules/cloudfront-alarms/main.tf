@@ -40,7 +40,7 @@ resource "aws_cloudwatch_metric_alarm" "cloudfront_5xx" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-cloudfront-5xx-high"
@@ -69,7 +69,7 @@ resource "aws_cloudwatch_metric_alarm" "cloudfront_4xx" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-cloudfront-4xx-high"
@@ -100,7 +100,7 @@ resource "aws_cloudwatch_metric_alarm" "cloudfront_origin_latency" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-cloudfront-origin-latency-high"

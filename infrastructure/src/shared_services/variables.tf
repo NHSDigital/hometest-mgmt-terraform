@@ -132,6 +132,12 @@ variable "enable_slack_alerts" {
   default     = false
 }
 
+variable "enable_ok_actions" {
+  description = "Send notifications when alarms return to OK state (enable for prod, disable for dev to reduce noise)"
+  type        = bool
+  default     = false
+}
+
 variable "slack_workspace_id" {
   description = "Slack workspace (team) ID. Authorize workspace in AWS Chatbot console first."
   type        = string

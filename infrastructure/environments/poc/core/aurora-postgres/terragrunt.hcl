@@ -91,4 +91,7 @@ inputs = {
 
   # Alerting — creates CloudWatch alarms for CPU, memory, connections, deadlocks, capacity
   sns_alerts_critical_topic_arn = dependency.shared_services.outputs.sns_alerts_critical_topic_arn
+
+  # OK actions — set to true for prod to get notified when alarms recover
+  enable_ok_actions = false
 }

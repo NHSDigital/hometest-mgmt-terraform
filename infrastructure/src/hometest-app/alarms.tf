@@ -20,7 +20,8 @@ module "api_gateway_alarms" {
 
   # P1 alarms (5XX) → critical, P2 alarms (4XX, latency) → warning
   # Using critical topic for all; override per-alarm in production with tiered approach
-  alarm_actions = [var.sns_alerts_critical_topic_arn]
+  alarm_actions     = [var.sns_alerts_critical_topic_arn]
+  enable_ok_actions = var.enable_ok_actions
 
   tags = local.common_tags
 }
@@ -35,13 +36,18 @@ module "cloudfront_alarms" {
   source = "../../modules/cloudfront-alarms"
   count  = var.sns_alerts_critical_topic_arn != null ? 1 : 0
 
+  providers = {
+    aws = aws.us_east_1
+  }
+
   project_name          = var.project_name
   aws_account_shortname = var.aws_account_shortname
   environment           = var.environment
 
   distribution_id = module.cloudfront_spa.distribution_id
 
-  alarm_actions = [var.sns_alerts_critical_topic_arn]
+  alarm_actions     = [var.sns_alerts_critical_topic_arn]
+  enable_ok_actions = var.enable_ok_actions
 
   tags = local.common_tags
 }

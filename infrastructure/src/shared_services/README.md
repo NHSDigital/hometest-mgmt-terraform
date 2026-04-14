@@ -246,6 +246,7 @@ inputs = {
 | <a name="input_enable_cognito"></a> [enable\_cognito](#input\_enable\_cognito) | Enable AWS Cognito User Pool for authentication | `bool` | `false` | no |
 | <a name="input_enable_cognito_identity_pool"></a> [enable\_cognito\_identity\_pool](#input\_enable\_cognito\_identity\_pool) | Enable Cognito Identity Pool for federated identities | `bool` | `false` | no |
 | <a name="input_enable_mtls"></a> [enable\_mtls](#input\_enable\_mtls) | Enable mutual TLS infrastructure — creates CA, client cert, S3 truststore, and Secrets Manager entries | `bool` | `false` | no |
+| <a name="input_enable_ok_actions"></a> [enable\_ok\_actions](#input\_enable\_ok\_actions) | Send notifications when alarms return to OK state (enable for prod, disable for dev to reduce noise) | `bool` | `false` | no |
 | <a name="input_enable_slack_alerts"></a> [enable\_slack\_alerts](#input\_enable\_slack\_alerts) | Enable AWS Chatbot Slack integration for alert notifications | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (core for shared services) | `string` | `"core"` | no |
 | <a name="input_kms_deletion_window_days"></a> [kms\_deletion\_window\_days](#input\_kms\_deletion\_window\_days) | Number of days before KMS key is deleted | `number` | `30` | no |

@@ -40,7 +40,7 @@ resource "aws_cloudwatch_metric_alarm" "waf_blocked_spike" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-${var.waf_name_suffix}-blocked-spike"
@@ -72,7 +72,7 @@ resource "aws_cloudwatch_metric_alarm" "waf_rate_limited" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-${var.waf_name_suffix}-rate-limited"
@@ -104,7 +104,7 @@ resource "aws_cloudwatch_metric_alarm" "waf_sqli_detected" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-${var.waf_name_suffix}-sqli-detected"

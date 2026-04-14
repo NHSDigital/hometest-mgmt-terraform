@@ -68,6 +68,7 @@ module "lambdas" {
   alarm_actions = var.sns_alerts_critical_topic_arn != null ? [var.sns_alerts_critical_topic_arn] : (
     var.sns_alerts_topic_arn != null ? [var.sns_alerts_topic_arn] : []
   )
+  enable_ok_actions = var.enable_ok_actions
 
   reserved_concurrent_executions = each.value.reserved_concurrent_executions
 

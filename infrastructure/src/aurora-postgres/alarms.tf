@@ -16,7 +16,8 @@ module "aurora_alarms" {
   # Capacity threshold based on configured max ACU
   alarm_max_capacity_threshold = var.serverlessv2_max_capacity * 0.8
 
-  alarm_actions = [var.sns_alerts_critical_topic_arn]
+  alarm_actions     = [var.sns_alerts_critical_topic_arn]
+  enable_ok_actions = var.enable_ok_actions
 
   tags = merge(local.common_tags, {
     Component = "aurora-alarms"

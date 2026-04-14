@@ -19,7 +19,8 @@ module "network_alarms" {
 
   firewall_name = var.network_firewall_name
 
-  alarm_actions = [module.sns_alerts_warning.topic_arn]
+  alarm_actions     = [module.sns_alerts_warning.topic_arn]
+  enable_ok_actions = var.enable_ok_actions
 
   tags = local.common_tags
 }

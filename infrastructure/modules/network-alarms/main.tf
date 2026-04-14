@@ -40,7 +40,7 @@ resource "aws_cloudwatch_metric_alarm" "nat_port_allocation_errors" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-natgw-${each.key}-port-alloc-errors"
@@ -70,7 +70,7 @@ resource "aws_cloudwatch_metric_alarm" "nat_packets_drop" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-natgw-${each.key}-packets-drop"
@@ -101,7 +101,7 @@ resource "aws_cloudwatch_metric_alarm" "firewall_dropped_packets" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-nfw-dropped-packets"

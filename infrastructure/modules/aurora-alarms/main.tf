@@ -38,7 +38,7 @@ resource "aws_cloudwatch_metric_alarm" "aurora_cpu" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-aurora-cpu-high"
@@ -66,7 +66,7 @@ resource "aws_cloudwatch_metric_alarm" "aurora_memory" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-aurora-memory-low"
@@ -94,7 +94,7 @@ resource "aws_cloudwatch_metric_alarm" "aurora_connections" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-aurora-connections-high"
@@ -122,7 +122,7 @@ resource "aws_cloudwatch_metric_alarm" "aurora_deadlocks" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-aurora-deadlocks"
@@ -152,7 +152,7 @@ resource "aws_cloudwatch_metric_alarm" "aurora_replica_lag" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-aurora-replica-lag-high"
@@ -180,7 +180,7 @@ resource "aws_cloudwatch_metric_alarm" "aurora_capacity" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-aurora-capacity-high"
@@ -208,7 +208,7 @@ resource "aws_cloudwatch_metric_alarm" "aurora_storage" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-aurora-storage-low"

@@ -38,6 +38,12 @@ variable "alarm_actions" {
   default     = []
 }
 
+variable "enable_ok_actions" {
+  description = "Send notifications when alarm returns to OK state (set true for prod, false for dev to reduce noise)"
+  type        = bool
+  default     = false
+}
+
 variable "alarm_period" {
   description = "Period in seconds over which to evaluate each metric"
   type        = number

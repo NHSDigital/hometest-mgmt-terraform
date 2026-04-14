@@ -167,7 +167,7 @@ resource "aws_cloudwatch_metric_alarm" "queue_age" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = local.common_tags
 }
@@ -191,7 +191,7 @@ resource "aws_cloudwatch_metric_alarm" "queue_depth" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = local.common_tags
 }
@@ -215,7 +215,7 @@ resource "aws_cloudwatch_metric_alarm" "dlq_depth" {
   }
 
   alarm_actions = var.alarm_actions
-  ok_actions    = var.alarm_actions
+  ok_actions    = var.enable_ok_actions ? var.alarm_actions : []
 
   tags = local.dlq_tags
 }

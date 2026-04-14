@@ -218,7 +218,7 @@ After deployment, you'll have access to:
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 6.37.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.8.1 |
 
 ## Providers
 
@@ -226,7 +226,7 @@ After deployment, you'll have access to:
 | ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.37.0 |
 | <a name="provider_aws.us_east_1"></a> [aws.us\_east\_1](#provider\_aws.us\_east\_1) | ~> 6.37.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | ~> 3.6 |
+| <a name="provider_random"></a> [random](#provider\_random) | ~> 3.8.1 |
 
 ## Modules
 
@@ -329,6 +329,7 @@ After deployment, you'll have access to:
 | <a name="input_create_cloudfront_certificate"></a> [create\_cloudfront\_certificate](#input\_create\_cloudfront\_certificate) | When true, create a dedicated us-east-1 ACM certificate for var.custom\_domain\_name.<br/>Use for environments where the SPA domain is not covered by the shared wildcard cert.<br/><br/>POC pattern  (create\_cloudfront\_certificate = false):<br/>  Shared cert: *.poc.hometest.service.nhs.uk  (from shared\_services, us-east-1)<br/>  SPA:         dev.poc.hometest.service.nhs.uk  ← covered<br/><br/>Custom pattern (create\_cloudfront\_certificate = true):<br/>  Shared cert: *.poc.hometest.service.nhs.uk  does NOT cover dev.hometest.service.nhs.uk<br/>  SPA:         dev.hometest.service.nhs.uk     ← dedicated cert created here in us-east-1 | `bool` | `false` | no |
 | <a name="input_custom_domain_name"></a> [custom\_domain\_name](#input\_custom\_domain\_name) | Custom domain name for the environment (e.g., dev1.hometest.service.nhs.uk) | `string` | `null` | no |
 | <a name="input_enable_cloudfront_logging"></a> [enable\_cloudfront\_logging](#input\_enable\_cloudfront\_logging) | Enable CloudFront access logging | `bool` | `false` | no |
+| <a name="input_enable_ok_actions"></a> [enable\_ok\_actions](#input\_enable\_ok\_actions) | Send notifications when alarms return to OK state (enable for prod, disable for dev to reduce noise) | `bool` | `false` | no |
 | <a name="input_enable_vpc_access"></a> [enable\_vpc\_access](#input\_enable\_vpc\_access) | Enable VPC access for Lambda functions | `bool` | `false` | no |
 | <a name="input_enable_wiremock"></a> [enable\_wiremock](#input\_enable\_wiremock) | Enable WireMock ECS Fargate service for API stubbing and Playwright tests | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (dev, dev1, dev2, staging, prod) | `string` | n/a | yes |

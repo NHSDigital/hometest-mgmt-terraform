@@ -389,8 +389,12 @@ inputs = {
   pii_data_kms_key_arn          = dependency.shared_services.outputs.pii_data_kms_key_arn
   sns_alerts_topic_arn          = dependency.shared_services.outputs.sns_alerts_topic_arn
   sns_alerts_critical_topic_arn = dependency.shared_services.outputs.sns_alerts_critical_topic_arn
-  waf_cloudfront_arn            = dependency.shared_services.outputs.waf_cloudfront_arn
-  waf_regional_arn              = dependency.shared_services.outputs.waf_regional_arn
+
+  # OK actions — set to true for prod to get notified when alarms recover
+  enable_ok_actions = false
+
+  waf_cloudfront_arn = dependency.shared_services.outputs.waf_cloudfront_arn
+  waf_regional_arn   = dependency.shared_services.outputs.waf_regional_arn
 
   # Lambda Configuration
   enable_vpc_access  = true

@@ -35,6 +35,7 @@ module "sqs_order_placement" {
   alarm_actions = var.sns_alerts_critical_topic_arn != null ? [var.sns_alerts_critical_topic_arn] : (
     var.sns_alerts_topic_arn != null ? [var.sns_alerts_topic_arn] : []
   )
+  enable_ok_actions = var.enable_ok_actions
 
   tags = local.common_tags
 }
@@ -65,6 +66,7 @@ module "sqs_notify_messages" {
   alarm_actions = var.sns_alerts_critical_topic_arn != null ? [var.sns_alerts_critical_topic_arn] : (
     var.sns_alerts_topic_arn != null ? [var.sns_alerts_topic_arn] : []
   )
+  enable_ok_actions = var.enable_ok_actions
 
   tags = local.common_tags
 }
@@ -96,6 +98,7 @@ module "sqs_order_results" {
   alarm_actions = var.sns_alerts_critical_topic_arn != null ? [var.sns_alerts_critical_topic_arn] : (
     var.sns_alerts_topic_arn != null ? [var.sns_alerts_topic_arn] : []
   )
+  enable_ok_actions = var.enable_ok_actions
 
   tags = local.common_tags
 }
@@ -133,6 +136,7 @@ module "sqs_notifications" {
   alarm_actions = var.sns_alerts_critical_topic_arn != null ? [var.sns_alerts_critical_topic_arn] : (
     var.sns_alerts_topic_arn != null ? [var.sns_alerts_topic_arn] : []
   )
+  enable_ok_actions = var.enable_ok_actions
 
   tags = local.common_tags
 }
@@ -189,6 +193,7 @@ module "sqs_events" {
   alarm_actions = var.sns_alerts_critical_topic_arn != null ? [var.sns_alerts_critical_topic_arn] : (
     var.sns_alerts_topic_arn != null ? [var.sns_alerts_topic_arn] : []
   )
+  enable_ok_actions = var.enable_ok_actions
 
   tags = local.common_tags
 }
