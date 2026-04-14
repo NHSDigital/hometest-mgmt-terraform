@@ -64,6 +64,18 @@ resource "aws_kms_key" "main" {
         Resource = "*"
       },
       {
+        Sid    = "AllowAPIGatewayDecrypt"
+        Effect = "Allow"
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+      },
+      {
         Sid    = "AllowCloudFrontService"
         Effect = "Allow"
         Principal = {

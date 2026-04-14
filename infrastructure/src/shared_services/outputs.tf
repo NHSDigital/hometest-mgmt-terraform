@@ -194,7 +194,7 @@ output "mtls_truststore_uri" {
 
 output "mtls_truststore_version" {
   description = "Version ID of the mTLS truststore object in S3"
-  value       = var.enable_mtls ? aws_s3_object.mtls_truststore[0].version_id : null
+  value       = var.enable_mtls && aws_s3_object.mtls_truststore[0].version_id != "null" ? aws_s3_object.mtls_truststore[0].version_id : null
 }
 
 output "mtls_client_credentials_secret_arn" {

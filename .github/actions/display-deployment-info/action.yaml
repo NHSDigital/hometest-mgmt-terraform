@@ -53,7 +53,7 @@ runs:
 
           # Extra workflow-specific rows first
           if [[ -n "$INPUT_EXTRA_ROWS" ]]; then
-            echo "$INPUT_EXTRA_ROWS"
+            printf '%s\n' "$INPUT_EXTRA_ROWS" | sed '/^$/d'
           fi
 
           echo "| Triggered by | [@${GITHUB_ACTOR}](${GITHUB_SERVER_URL}/${GITHUB_ACTOR}) |"

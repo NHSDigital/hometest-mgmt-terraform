@@ -119,9 +119,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "mtls_truststore" 
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.main.arn
     }
-    bucket_key_enabled = true
+    bucket_key_enabled       = true
+    blocked_encryption_types = ["SSE-C"]
   }
 }
 
@@ -158,6 +160,21 @@ resource "aws_s3_bucket_policy" "mtls_truststore" {
         }
       },
       {
+        Sid       = "EnforceTLSVersion"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          aws_s3_bucket.mtls_truststore[0].arn,
+          "${aws_s3_bucket.mtls_truststore[0].arn}/*"
+        ]
+        Condition = {
+          NumericLessThan = {
+            "s3:TlsVersion" = "1.2"
+          }
+        }
+      },
+      {
         Sid    = "AllowAPIGatewayRead"
         Effect = "Allow"
         Principal = {
@@ -165,6 +182,18 @@ resource "aws_s3_bucket_policy" "mtls_truststore" {
         }
         Action   = "s3:GetObject"
         Resource = "${aws_s3_bucket.mtls_truststore[0].arn}/*"
+      },
+      {
+        Sid       = "DenyUnencryptedPut"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.mtls_truststore[0].arn}/*"
+        Condition = {
+          StringNotEquals = {
+            "s3:x-amz-server-side-encryption" = "aws:kms"
+          }
+        }
       }
     ]
   })
@@ -177,10 +206,17 @@ resource "aws_s3_bucket_policy" "mtls_truststore" {
 resource "aws_s3_object" "mtls_truststore" {
   count = local.mtls_enabled ? 1 : 0
 
-  bucket       = aws_s3_bucket.mtls_truststore[0].id
-  key          = "truststore.pem"
-  content      = tls_self_signed_cert.mtls_ca[0].cert_pem
-  content_type = "application/x-pem-file"
+  bucket                 = aws_s3_bucket.mtls_truststore[0].id
+  key                    = "truststore.pem"
+  content                = tls_self_signed_cert.mtls_ca[0].cert_pem
+  content_type           = "application/x-pem-file"
+  server_side_encryption = "aws:kms"
+  kms_key_id             = aws_kms_key.main.arn
+
+  # Ensure versioning is enabled before uploading so that version_id is a real
+  # version string rather than the literal "null" that S3 returns for
+  # unversioned objects.
+  depends_on = [aws_s3_bucket_versioning.mtls_truststore]
 
   tags = merge(local.common_tags, {
     ResourceType = "truststore"

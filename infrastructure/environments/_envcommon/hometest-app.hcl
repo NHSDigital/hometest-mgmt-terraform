@@ -319,6 +319,7 @@ dependency "shared_services" {
     mtls_truststore_uri             = null
     mtls_truststore_version         = null
   }
+  mock_outputs_merge_with_state           = true
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
