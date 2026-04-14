@@ -7,7 +7,7 @@
 
 module "network_alarms" {
   source = "../../modules/network-alarms"
-  count  = length(var.nat_gateway_ids) > 0 ? 1 : 0
+  count  = length(var.nat_gateway_ids) > 0 || var.network_firewall_name != null ? 1 : 0
 
   project_name          = var.project_name
   aws_account_shortname = var.aws_account_shortname

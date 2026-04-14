@@ -86,6 +86,8 @@ All three severity tiers currently point to the same channel (`#hometest-ops-ale
 
 Applied to both the regional WAF (API Gateway/ALB) and CloudFront WAF.
 
+> **Note**: CloudFront WAF alarms are created in **us-east-1** via `providers = { aws = aws.us_east_1 }` because CloudFront WAF metrics are published there.
+
 #### Network Alarms (`modules/network-alarms`)
 
 | Alarm | Metric | Threshold | Severity |
@@ -124,8 +126,11 @@ Each Lambda function gets these alarms automatically:
 | Throttles | Throttles | ≥ 1 sum in 1 min | Critical |
 | Duration (p99) | Duration (p99) | ≥ timeout × 80% | Critical |
 | Concurrent Executions | ConcurrentExecutions | ≥ reserved × 80% | Critical |
+| Logged Errors | Custom metric (CloudWatch Logs metric filter) | ≥ 5 sum in 5 min | Critical |
 
 The concurrency alarm is only created when `reserved_concurrent_executions > 0`.
+
+The **Logged Errors** alarm uses a CloudWatch Logs metric filter to catch errors that are logged (e.g. `console.error`, caught exceptions) but don't fail the Lambda invocation. The filter matches `?ERROR ?Error ?Exception ?errorType` patterns.
 
 #### SQS Alarms (built into `modules/sqs`)
 
@@ -156,6 +161,8 @@ Each queue also has a dead-letter queue (DLQ) with its own age alarm.
 | 4XX Error Rate | 4xxErrorRate | > 10% in 5 min | Critical |
 | Origin Latency (p99) | OriginLatency (p99) | > 5000 ms in 5 min | Critical |
 
+> **Note**: CloudFront alarms are created in **us-east-1** via `providers = { aws = aws.us_east_1 }` because CloudFront metrics are published there.
+
 ---
 
 ## Threshold Tuning
@@ -166,6 +173,19 @@ All alarm thresholds are configurable via module variables. Default values are c
 - **Production**: Review thresholds against actual traffic patterns. Tighten error rate thresholds and shorten evaluation periods.
 
 To override a threshold, set the corresponding variable in the terragrunt inputs for the relevant layer.
+
+### OK Actions (Recovery Notifications)
+
+By default, alarms do **not** send notifications when returning to OK state (`enable_ok_actions = false`). This reduces noise in dev/POC environments where alarms may fire on first deploy before metrics exist.
+
+To enable recovery notifications (recommended for production):
+
+```hcl
+# In terragrunt inputs for each layer (shared_services, hometest-app, aurora-postgres)
+enable_ok_actions = true
+```
+
+This is configured per-layer so you can enable it selectively (e.g. prod only).
 
 ---
 

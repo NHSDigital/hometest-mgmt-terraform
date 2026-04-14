@@ -100,7 +100,7 @@ locals {
     }
   }
 
-  merged_queue_policy_statements = merge(local.ssl_enforcement_statement, var.queue_policy_statements)
+  merged_queue_policy_statements = merge(var.queue_policy_statements, local.ssl_enforcement_statement)
 }
 
 module "queue" {

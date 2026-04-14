@@ -115,7 +115,7 @@ resource "aws_iam_policy" "deny_regions" {
           "ce:*",
           "cur:*",
           "account:*",
-          "chatbot:*"
+          "chatbot:*" # Global service — API endpoint is us-east-1 only, region condition would block all Chatbot operations
         ]
         Resource = "*"
         Condition = {

@@ -180,8 +180,11 @@ resource "aws_s3_bucket_policy" "mtls_truststore" {
         Principal = {
           Service = "apigateway.amazonaws.com"
         }
-        Action   = "s3:GetObject"
-        Resource = "${aws_s3_bucket.mtls_truststore[0].arn}/*"
+        Action = [
+          "s3:GetObject",
+          "s3:GetObjectVersion"
+        ]
+        Resource = "${aws_s3_bucket.mtls_truststore[0].arn}/${aws_s3_object.mtls_truststore[0].key}"
       },
       {
         Sid       = "DenyUnencryptedPut"

@@ -74,6 +74,12 @@ resource "aws_kms_key" "main" {
           "kms:DescribeKey"
         ]
         Resource = "*"
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = var.aws_account_id
+            "kms:ViaService"    = "s3.${var.aws_region}.amazonaws.com"
+          }
+        }
       },
       {
         Sid    = "AllowCloudFrontService"
