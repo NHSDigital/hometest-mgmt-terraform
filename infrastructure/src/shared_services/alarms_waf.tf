@@ -35,10 +35,6 @@ module "waf_alarms_regional" {
 module "waf_alarms_cloudfront" {
   source = "../../modules/waf-alarms"
 
-  providers = {
-    aws = aws.us_east_1
-  }
-
   project_name          = var.project_name
   aws_account_shortname = var.aws_account_shortname
   environment           = var.environment

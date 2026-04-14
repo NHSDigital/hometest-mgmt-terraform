@@ -36,10 +36,6 @@ module "cloudfront_alarms" {
   source = "../../modules/cloudfront-alarms"
   count  = var.sns_alerts_critical_topic_arn != null ? 1 : 0
 
-  providers = {
-    aws = aws.us_east_1
-  }
-
   project_name          = var.project_name
   aws_account_shortname = var.aws_account_shortname
   environment           = var.environment
