@@ -383,7 +383,7 @@ module "wiremock_service" {
   # ---------------------------------------------------------------------------
   # IAM — Task Execution Role (pulls image, writes logs)
   # ---------------------------------------------------------------------------
-  task_exec_iam_role_name        = "${local.resource_prefix}-wm-exec"
+  task_exec_iam_role_name        = "${local.wiremock_short_uid}-exec"
   task_exec_iam_role_description = "ECS task execution role for WireMock - pulls images and writes logs"
 
   task_exec_iam_statements = [
@@ -397,7 +397,7 @@ module "wiremock_service" {
   # ---------------------------------------------------------------------------
   # IAM — Task Role (container runtime permissions — minimal for WireMock)
   # ---------------------------------------------------------------------------
-  tasks_iam_role_name        = "${local.resource_prefix}-wm-task"
+  tasks_iam_role_name        = "${local.wiremock_short_uid}-task"
   tasks_iam_role_description = "ECS task role for WireMock - no extra permissions needed"
 
   tasks_iam_role_statements = null
