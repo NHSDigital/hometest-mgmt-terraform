@@ -4,13 +4,13 @@ This document describes the monitoring, alerting, and notification infrastructur
 
 ## Architecture Overview
 
-```
-CloudWatch Alarms → SNS Topics (tiered) → Lambda → Slack Webhook → #hometest-ops-alerts
+```bash
+CloudWatch Alarms → SNS Topics (tiered) → AWS Chatbot → Slack (#hometest-ops-alerts)
                                         → Email subscriptions
 GitHub Actions    → Slack Webhook (secret) → #hometest-ops-alerts
 ```
 
-All CloudWatch alarms publish to one of three tiered SNS topics in `shared_services`. A Lambda function subscribes to each topic and forwards formatted messages to Slack via an incoming webhook stored in AWS Secrets Manager.
+All CloudWatch alarms publish to one of three tiered SNS topics in `shared_services`. AWS Chatbot subscribes to each topic and forwards formatted messages to the configured Slack channel.
 
 GitHub Actions deployment notifications use a separate webhook stored as a repository secret.
 
@@ -30,31 +30,30 @@ All topics also send to the email subscriptions configured in `sns_alerts_email_
 
 ## Slack Integration
 
-### Infrastructure Alerts (SNS → Lambda → Webhook)
+### Infrastructure Alerts (SNS → AWS Chatbot → Slack)
 
 - **Module**: `infrastructure/modules/slack-alerts`
 - **Deployed in**: `shared_services` layer
-- **Mechanism**: A Node.js Lambda function reads the webhook URL from Secrets Manager and posts formatted alarm messages to Slack
-- **Secrets Manager secret**: `nhs-hometest/slack/hometest-ops-alerts/incoming-webhook`
-- **Slack channel**: `#hometest-ops-alerts`
+- **Mechanism**: AWS Chatbot Slack channel configurations subscribe to SNS topics and post formatted alarm messages to Slack
+- **Slack channel**: `#hometest-ops-alerts` (all tiers currently routed to one channel)
 
-The Lambda colour-codes messages by severity:
+AWS Chatbot natively renders CloudWatch alarm details including alarm name, state, reason, metric, and account context.
 
-| Colour | Severity | Trigger |
-|---|---|---|
-| 🔴 Red | CRITICAL | Topic name contains `critical` |
-| 🟠 Orange | SECURITY | Topic name contains `security` |
-| 🟡 Yellow | WARNING | Topic name contains `warning` |
-| 🟢 Green | INFO | Fallback |
+#### Prerequisites
+
+1. **Authorize the Slack workspace** in the [AWS Chatbot console](https://console.aws.amazon.com/chatbot/) — this is a **one-time manual step** per AWS account + Slack workspace
+2. Obtain the **Slack workspace ID** (`T0XXXXXXX`) and **channel ID(s)** (`C0XXXXXXX`) — right-click the channel in Slack → View channel details → copy the ID at the bottom
 
 #### Terragrunt Configuration
 
 ```hcl
 # infrastructure/environments/<account>/core/shared_services/terragrunt.hcl
 inputs = {
-  enable_slack_alerts        = true
-  slack_webhook_secret_name  = "nhs-hometest/slack/hometest-ops-alerts/incoming-webhook"
-  slack_channel_name         = "hometest-ops-alerts"
+  enable_slack_alerts       = true
+  slack_workspace_id        = "T0XXXXXXX"          # Slack workspace (team) ID
+  slack_channel_id_critical = "C0XXXXXXX"           # Channel for critical alerts
+  slack_channel_id_warning  = "C0XXXXXXX"           # Channel for warning alerts (same channel for now)
+  slack_channel_id_security = "C0XXXXXXX"           # Channel for security alerts (same channel for now)
 }
 ```
 
@@ -62,7 +61,7 @@ To disable Slack alerts for an environment, set `enable_slack_alerts = false`. E
 
 #### Splitting Channels (Future)
 
-The architecture supports routing different severity tiers to separate Slack channels by deploying multiple instances of the `slack-alerts` module with different `sns_topic_arns` and `slack_webhook_secret_name` / `slack_channel_name` values. Each channel would need its own incoming webhook stored in Secrets Manager.
+All three severity tiers currently point to the same channel (`#hometest-ops-alerts`). To split by severity, create additional Slack channels and set distinct channel IDs for each `slack_channel_id_*` variable.
 
 ### Deployment Notifications (GitHub Actions → Webhook)
 
@@ -184,14 +183,13 @@ To override a threshold, set the corresponding variable in the terragrunt inputs
 
 ### Slack messages not arriving
 
-1. Verify the Lambda is deployed: `aws lambda get-function --function-name <prefix>-slack-notifier`
-2. Check Lambda logs: CloudWatch log group `/aws/lambda/<prefix>-slack-notifier`
-3. Verify the Secrets Manager secret exists and contains a valid URL:
-   ```bash
-   aws secretsmanager get-secret-value --secret-id nhs-hometest/slack/hometest-ops-alerts/incoming-webhook
-   ```
-4. Check SNS subscriptions: `aws sns list-subscriptions-by-topic --topic-arn <topic-arn>` — the Lambda should appear as a subscriber
-5. Test with a manual publish:
+1. Verify the Slack workspace is authorized in the [AWS Chatbot console](https://console.aws.amazon.com/chatbot/)
+2. Check the Chatbot channel configuration exists: `aws chatbot describe-slack-channel-configurations`
+3. Verify the workspace ID and channel ID match your Slack workspace/channel
+4. Check SNS subscriptions: `aws sns list-subscriptions-by-topic --topic-arn <topic-arn>` — Chatbot should appear as a subscriber
+5. Check the Chatbot CloudWatch log group for errors (logging level must be `INFO` or `ERROR`)
+6. Test with a manual publish:
+
    ```bash
    aws sns publish --topic-arn <topic-arn> --subject "Test Alert" \
      --message '{"AlarmName":"test","NewStateValue":"ALARM","NewStateReason":"Manual test"}'
@@ -202,6 +200,7 @@ To override a threshold, set the corresponding variable in the terragrunt inputs
 1. Verify the `SLACK_WEBHOOK_URL` repository secret is set in GitHub → Settings → Secrets and variables → Actions
 2. Check the workflow run logs for the `notify-slack` step output
 3. Test the webhook manually:
+
    ```bash
    curl -X POST -H 'Content-type: application/json' --data '{"text":"test"}' <webhook-url>
    ```

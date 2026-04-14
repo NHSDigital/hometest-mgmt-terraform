@@ -23,7 +23,7 @@ dependency "network" {
     route53_zone_id          = "Z0123456789ABCDEFGHIJ"
     nat_gateway_ids          = ["nat-mock12345"]
     network_firewall_enabled = false
-    network_firewall_name    = null
+    network_firewall_name    = "test"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -76,4 +76,14 @@ inputs = {
   # Network alarm inputs — NAT Gateway and Network Firewall monitoring
   nat_gateway_ids       = dependency.network.outputs.nat_gateway_ids
   network_firewall_name = dependency.network.outputs.network_firewall_name
+
+  enable_slack_alerts = true
+  # https://app.slack.com/client/TJ00QR03U
+  slack_workspace_id = "TJ00QR03U"
+  # hometest-ops-alerts-critical
+  slack_channel_id_critical = "C0ASQ5V0BNJ"
+  # hometest-ops-alerts-warning
+  slack_channel_id_warning = "C0ASKRSVA7M"
+  # hometest-ops-alerts-security
+  slack_channel_id_security = "C0ATLFGG36U"
 }

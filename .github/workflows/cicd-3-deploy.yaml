@@ -286,7 +286,7 @@ jobs:
   notify-slack:
     name: "Slack Deployment Notification"
     runs-on: ubuntu-latest
-    if: always() && secrets.SLACK_WEBHOOK_URL != ''
+    if: always()
     needs: [deploy-bootstrap, deploy-network, deploy-shared-services, deploy-aurora, deploy-ecs]
     timeout-minutes: 2
     steps:

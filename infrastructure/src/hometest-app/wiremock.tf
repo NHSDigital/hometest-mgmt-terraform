@@ -37,7 +37,6 @@ resource "random_id" "wiremock" {
 
 locals {
   wiremock_name           = "${local.resource_prefix}-wiremock"
-  wiremock_short_name     = "${local.resource_prefix}-wm"
   wiremock_uid            = var.enable_wiremock ? "wm-${random_id.wiremock[0].hex}" : ""
   wiremock_container_port = 8080
   wiremock_domain         = var.enable_wiremock && var.wiremock_domain_name != null ? var.wiremock_domain_name : null
