@@ -70,11 +70,17 @@ variable "kms_key_id" {
   default     = ""
 }
 
+variable "master_user_secret_kms_key_id" {
+  description = "The ARN of the KMS key used to encrypt the master user password secret in Secrets Manager"
+  type        = string
+  default     = null
+}
+
 # Aurora module requires engine_version for the database engine version
 variable "engine_version" {
   description = "PostgreSQL engine version"
   type        = string
-  default     = "17.7"
+  default     = "17.9"
 }
 # Aurora module requires db_subnet_group_name if not creating a new subnet group
 variable "db_subnet_group_name" {

@@ -39,6 +39,7 @@ module "lambda_iam" {
   ssm_parameter_arns = var.lambda_ssm_parameter_arns
   kms_key_arns = concat(
     var.kms_key_arn != null ? [var.kms_key_arn] : [],
+    var.pii_data_kms_key_arn != null ? [var.pii_data_kms_key_arn] : [],
     var.lambda_additional_kms_key_arns
   )
   # s3_bucket_arns      = concat([var.deployment_bucket_arn], var.lambda_s3_bucket_arns)

@@ -21,8 +21,8 @@ on:
         options:
           - bootstrap
           - network
-          - aurora-postgres
           - shared_services
+          - aurora-postgres
           - ecs
           - all
       action:

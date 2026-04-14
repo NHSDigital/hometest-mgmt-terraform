@@ -14,9 +14,20 @@ terraform {
   source = "../../../..//src/network"
 }
 
+dependency "bootstrap" {
+  config_path = "../bootstrap"
+
+  mock_outputs = {
+    logs_kms_key_arn = "arn:aws:kms:eu-west-2:123456789012:key/mock-logs-key-id"
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "destroy"]
+}
+
 # dev is non-production - az_count = 1 uses a single NAT GW and single firewall endpoint (~$65/month saving vs per-AZ)
 # For production environments, remove this override to restore az_count = 3 (per-AZ NAT gateways + HA)
 inputs = {
+  logs_kms_key_arn = dependency.bootstrap.outputs.logs_kms_key_arn
+
   # Network Firewall - Enable for egress/ingress filtering
   enable_network_firewall      = true
   az_count                     = 1

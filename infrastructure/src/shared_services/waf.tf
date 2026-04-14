@@ -11,6 +11,47 @@ resource "aws_wafv2_web_acl" "regional" {
     allow {}
   }
 
+  # Allow WireMock traffic through WAF without inspection.
+  # WireMock stubs return arbitrary payloads that can trigger managed rules
+  # (e.g. Common Rule Set body-size checks, SQL-like strings in mock data).
+  # Matching on the Host header prefix means any wiremock-<env> subdomain is
+  # covered without maintaining a per-environment list.
+  dynamic "rule" {
+    for_each = var.waf_wiremock_allowed_host_prefix != null ? [1] : []
+    content {
+      name     = "AllowWireMockTraffic"
+      priority = 0
+
+      action {
+        allow {}
+      }
+
+      statement {
+        byte_match_statement {
+          search_string         = var.waf_wiremock_allowed_host_prefix
+          positional_constraint = "STARTS_WITH"
+
+          field_to_match {
+            single_header {
+              name = "host"
+            }
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "LOWERCASE"
+          }
+        }
+      }
+
+      visibility_config {
+        cloudwatch_metrics_enabled = true
+        metric_name                = "${local.resource_prefix}-allow-wiremock"
+        sampled_requests_enabled   = true
+      }
+    }
+  }
+
   # AWS Managed Rules - Common Rule Set
   rule {
     name     = "AWSManagedRulesCommonRuleSet"

@@ -3,15 +3,15 @@
 ################################################################################
 
 resource "aws_subnet" "public" {
-  count = length(local.azs)
+  count = length(local.public_azs)
 
   vpc_id                  = aws_vpc.main.id
   cidr_block              = local.public_subnets[count.index]
-  availability_zone       = local.azs[count.index]
+  availability_zone       = local.public_azs[count.index]
   map_public_ip_on_launch = false # Security: Don't auto-assign public IPs
 
   tags = merge(local.common_tags, {
-    Name                     = "${local.resource_prefix}-public-${local.azs[count.index]}"
+    Name                     = "${local.resource_prefix}-public-${local.public_azs[count.index]}"
     Tier                     = "public"
     "kubernetes.io/role/elb" = "1" # For ALB if using EKS
   })
@@ -44,7 +44,7 @@ resource "aws_route" "public_to_firewall_private" {
 }
 
 resource "aws_route_table_association" "public" {
-  count = length(local.azs)
+  count = length(local.public_azs)
 
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id

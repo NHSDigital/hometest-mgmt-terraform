@@ -133,7 +133,7 @@ The module uses the `terraform-aws-modules/lambda/aws` module with a custom buil
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 6.37.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6 |
@@ -141,20 +141,20 @@ The module uses the `terraform-aws-modules/lambda/aws` module with a custom buil
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.37.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | ~> 3.6 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_goose_migrator_lambda"></a> [goose\_migrator\_lambda](#module\_goose\_migrator\_lambda) | terraform-aws-modules/lambda/aws | 8.7.0 |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_iam_policy.lambda_goose_migrator_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_role.lambda_goose_migrator](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.lambda_goose_migrator_attach](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
@@ -169,7 +169,7 @@ The module uses the `terraform-aws-modules/lambda/aws` module with a custom buil
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_app_user_secret_name"></a> [app\_user\_secret\_name](#input\_app\_user\_secret\_name) | Secrets Manager secret name to store the schema-scoped app\_user credentials | `string` | `""` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | AWS account ID | `string` | n/a | yes |
 | <a name="input_aws_account_shortname"></a> [aws\_account\_shortname](#input\_aws\_account\_shortname) | AWS account short name/alias for resource naming | `string` | n/a | yes |
@@ -183,6 +183,7 @@ The module uses the `terraform-aws-modules/lambda/aws` module with a custom buil
 | <a name="input_db_username"></a> [db\_username](#input\_db\_username) | Database username | `string` | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (e.g., dev, staging, prod) | `string` | n/a | yes |
 | <a name="input_grant_rds_iam"></a> [grant\_rds\_iam](#input\_grant\_rds\_iam) | Whether to GRANT rds\_iam to the app\_user so that app lambdas can use IAM token authentication. Independent of how the migrator itself connects. | `bool` | `false` | no |
+| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | ARN of the customer-managed KMS key for encrypting Secrets Manager secrets | `string` | n/a | yes |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Project name used for resource naming | `string` | n/a | yes |
 | <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | List of security group IDs for Lambda VPC config | `list(string)` | n/a | yes |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | List of subnet IDs for Lambda VPC config | `list(string)` | n/a | yes |
@@ -192,7 +193,7 @@ The module uses the `terraform-aws-modules/lambda/aws` module with a custom buil
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_app_user_secret_arn"></a> [app\_user\_secret\_arn](#output\_app\_user\_secret\_arn) | ARN of the Secrets Manager secret containing app\_user credentials |
 | <a name="output_app_user_secret_name"></a> [app\_user\_secret\_name](#output\_app\_user\_secret\_name) | Name of the Secrets Manager secret containing app\_user credentials |
 | <a name="output_app_username"></a> [app\_username](#output\_app\_username) | The database username for the schema-scoped app\_user |

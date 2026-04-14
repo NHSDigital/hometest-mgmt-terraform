@@ -367,3 +367,12 @@ variable "aws_allowed_regions" {
   type        = list(string)
   default     = ["eu-west-2", "us-east-1"]
 }
+
+################################################################################
+# Encryption Configuration
+################################################################################
+
+variable "logs_kms_key_arn" {
+  description = "ARN of the KMS key for logs encryption (from bootstrap module)"
+  type        = string
+}
