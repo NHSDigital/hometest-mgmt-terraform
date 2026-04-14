@@ -142,7 +142,6 @@ CloudWatch Alarm → SNS Topic → AWS Chatbot → Slack Channel
 
 Want me to implement any of these as Terraform modules/resources?
 
-
 All changes are in place. Here's a complete summary of everything that was created and modified:
 
 ---
@@ -193,6 +192,7 @@ All changes are in place. Here's a complete summary of everything that was creat
 ### Setup Required
 
 To activate Slack integration:
+
 1. Authorize Slack workspace in **AWS Chatbot console** (one-time)
 2. Set these Terragrunt variables for shared_services:
    - `enable_slack_alerts = true`

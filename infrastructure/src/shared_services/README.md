@@ -111,7 +111,14 @@ inputs = {
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
+| <a name="module_network_alarms"></a> [network\_alarms](#module\_network\_alarms) | ../../modules/network-alarms | n/a |
+| <a name="module_slack_alerts"></a> [slack\_alerts](#module\_slack\_alerts) | ../../modules/slack-alerts | n/a |
 | <a name="module_sns_alerts"></a> [sns\_alerts](#module\_sns\_alerts) | ../../modules/sns | n/a |
+| <a name="module_sns_alerts_critical"></a> [sns\_alerts\_critical](#module\_sns\_alerts\_critical) | ../../modules/sns | n/a |
+| <a name="module_sns_alerts_security"></a> [sns\_alerts\_security](#module\_sns\_alerts\_security) | ../../modules/sns | n/a |
+| <a name="module_sns_alerts_warning"></a> [sns\_alerts\_warning](#module\_sns\_alerts\_warning) | ../../modules/sns | n/a |
+| <a name="module_waf_alarms_cloudfront"></a> [waf\_alarms\_cloudfront](#module\_waf\_alarms\_cloudfront) | ../../modules/waf-alarms | n/a |
+| <a name="module_waf_alarms_regional"></a> [waf\_alarms\_regional](#module\_waf\_alarms\_regional) | ../../modules/waf-alarms | n/a |
 
 ## Resources
 
@@ -239,13 +246,20 @@ inputs = {
 | <a name="input_enable_cognito"></a> [enable\_cognito](#input\_enable\_cognito) | Enable AWS Cognito User Pool for authentication | `bool` | `false` | no |
 | <a name="input_enable_cognito_identity_pool"></a> [enable\_cognito\_identity\_pool](#input\_enable\_cognito\_identity\_pool) | Enable Cognito Identity Pool for federated identities | `bool` | `false` | no |
 | <a name="input_enable_mtls"></a> [enable\_mtls](#input\_enable\_mtls) | Enable mutual TLS infrastructure — creates CA, client cert, S3 truststore, and Secrets Manager entries | `bool` | `false` | no |
+| <a name="input_enable_slack_alerts"></a> [enable\_slack\_alerts](#input\_enable\_slack\_alerts) | Enable AWS Chatbot Slack integration for alert notifications | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment name (core for shared services) | `string` | `"core"` | no |
 | <a name="input_kms_deletion_window_days"></a> [kms\_deletion\_window\_days](#input\_kms\_deletion\_window\_days) | Number of days before KMS key is deleted | `number` | `30` | no |
 | <a name="input_mtls_ca_validity_hours"></a> [mtls\_ca\_validity\_hours](#input\_mtls\_ca\_validity\_hours) | Validity period for the mTLS CA certificate in hours (default: 10 years) | `number` | `87600` | no |
 | <a name="input_mtls_client_validity_hours"></a> [mtls\_client\_validity\_hours](#input\_mtls\_client\_validity\_hours) | Validity period for the mTLS client certificate in hours (default: 1 year) | `number` | `8760` | no |
+| <a name="input_nat_gateway_ids"></a> [nat\_gateway\_ids](#input\_nat\_gateway\_ids) | List of NAT Gateway IDs from the network module | `list(string)` | `[]` | no |
+| <a name="input_network_firewall_name"></a> [network\_firewall\_name](#input\_network\_firewall\_name) | Name of the Network Firewall (null if not enabled) | `string` | `null` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project | `string` | n/a | yes |
 | <a name="input_require_mfa"></a> [require\_mfa](#input\_require\_mfa) | Require MFA for developer role assumption | `bool` | `true` | no |
 | <a name="input_route53_zone_id"></a> [route53\_zone\_id](#input\_route53\_zone\_id) | Route53 zone ID for DNS validation | `string` | n/a | yes |
+| <a name="input_slack_channel_id_critical"></a> [slack\_channel\_id\_critical](#input\_slack\_channel\_id\_critical) | Slack channel ID for critical (P1) alerts | `string` | `""` | no |
+| <a name="input_slack_channel_id_security"></a> [slack\_channel\_id\_security](#input\_slack\_channel\_id\_security) | Slack channel ID for security alerts (WAF blocks, SQLi, rate limiting) | `string` | `""` | no |
+| <a name="input_slack_channel_id_warning"></a> [slack\_channel\_id\_warning](#input\_slack\_channel\_id\_warning) | Slack channel ID for warning (P2) alerts | `string` | `""` | no |
+| <a name="input_slack_workspace_id"></a> [slack\_workspace\_id](#input\_slack\_workspace\_id) | Slack workspace (team) ID. Authorize workspace in AWS Chatbot console first. | `string` | `""` | no |
 | <a name="input_sns_alerts_email_subscriptions"></a> [sns\_alerts\_email\_subscriptions](#input\_sns\_alerts\_email\_subscriptions) | List of email addresses to subscribe to the shared alerts SNS topic (requires subscription confirmation) | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | `{}` | no |
 | <a name="input_waf_log_retention_days"></a> [waf\_log\_retention\_days](#input\_waf\_log\_retention\_days) | Days to retain WAF logs | `number` | `30` | no |
@@ -301,7 +315,10 @@ inputs = {
 | <a name="output_pii_data_kms_key_arn"></a> [pii\_data\_kms\_key\_arn](#output\_pii\_data\_kms\_key\_arn) | ARN of the PII data KMS key (for RDS, SQS, Secrets Manager) |
 | <a name="output_pii_data_kms_key_id"></a> [pii\_data\_kms\_key\_id](#output\_pii\_data\_kms\_key\_id) | ID of the PII data KMS key |
 | <a name="output_shared_config"></a> [shared\_config](#output\_shared\_config) | All shared service configuration for app deployments |
+| <a name="output_sns_alerts_critical_topic_arn"></a> [sns\_alerts\_critical\_topic\_arn](#output\_sns\_alerts\_critical\_topic\_arn) | ARN of the critical alerts SNS topic (P1 — Lambda errors, DLQ, 5XX, deadlocks) |
+| <a name="output_sns_alerts_security_topic_arn"></a> [sns\_alerts\_security\_topic\_arn](#output\_sns\_alerts\_security\_topic\_arn) | ARN of the security alerts SNS topic (WAF SQLi, rate limiting) |
 | <a name="output_sns_alerts_topic_arn"></a> [sns\_alerts\_topic\_arn](#output\_sns\_alerts\_topic\_arn) | ARN of the shared alerts SNS topic |
+| <a name="output_sns_alerts_warning_topic_arn"></a> [sns\_alerts\_warning\_topic\_arn](#output\_sns\_alerts\_warning\_topic\_arn) | ARN of the warning alerts SNS topic (P2 — latency, capacity, WAF blocks) |
 | <a name="output_tfstate_readonly_policy_arn"></a> [tfstate\_readonly\_policy\_arn](#output\_tfstate\_readonly\_policy\_arn) | ARN of the Terraform state read-only IAM policy |
 | <a name="output_waf_cloudfront_arn"></a> [waf\_cloudfront\_arn](#output\_waf\_cloudfront\_arn) | ARN of the CloudFront WAF Web ACL (for CloudFront distributions) |
 | <a name="output_waf_cloudfront_id"></a> [waf\_cloudfront\_id](#output\_waf\_cloudfront\_id) | ID of the CloudFront WAF Web ACL |

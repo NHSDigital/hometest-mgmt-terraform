@@ -132,7 +132,7 @@ resource "aws_vpc_security_group_egress_rule" "wiremock_alb_to_vpc" {
 resource "aws_lb" "wiremock" { # NOSONAR - WireMock ALB is a test stub, access logs not required #checkov:skip=CKV_AWS_91
   count = local.wiremock_use_dedicated_alb ? 1 : 0
 
-  name               = "${local.wiremock_short_name}-alb"
+  name               = "${local.wiremock_uid}-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.wiremock_alb[0].id]

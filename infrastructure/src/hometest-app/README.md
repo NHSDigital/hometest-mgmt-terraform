@@ -225,11 +225,14 @@ After deployment, you'll have access to:
 | ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.37.0 |
 | <a name="provider_aws.us_east_1"></a> [aws.us\_east\_1](#provider\_aws.us\_east\_1) | ~> 6.37.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | n/a |
 
 ## Modules
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
+| <a name="module_api_gateway_alarms"></a> [api\_gateway\_alarms](#module\_api\_gateway\_alarms) | ../../modules/api-gateway-alarms | n/a |
+| <a name="module_cloudfront_alarms"></a> [cloudfront\_alarms](#module\_cloudfront\_alarms) | ../../modules/cloudfront-alarms | n/a |
 | <a name="module_cloudfront_spa"></a> [cloudfront\_spa](#module\_cloudfront\_spa) | ../../modules/cloudfront-spa | n/a |
 | <a name="module_lambda_iam"></a> [lambda\_iam](#module\_lambda\_iam) | ../../modules/lambda-iam | n/a |
 | <a name="module_lambdas"></a> [lambdas](#module\_lambdas) | ../../modules/lambda | n/a |
@@ -295,6 +298,7 @@ After deployment, you'll have access to:
 | [aws_vpc_security_group_ingress_rule.wiremock_alb_http](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule) | resource |
 | [aws_vpc_security_group_ingress_rule.wiremock_alb_https](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule) | resource |
 | [aws_wafv2_web_acl_association.apis](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association) | resource |
+| [random_id.wiremock](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) | resource |
 | [aws_vpc.selected](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc) | data source |
 
 ## Inputs
@@ -350,7 +354,9 @@ After deployment, you'll have access to:
 | <a name="input_pii_data_kms_key_arn"></a> [pii\_data\_kms\_key\_arn](#input\_pii\_data\_kms\_key\_arn) | ARN of PII data KMS key for SQS and database encryption (from shared\_services) | `string` | n/a | yes |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project | `string` | n/a | yes |
 | <a name="input_route53_zone_id"></a> [route53\_zone\_id](#input\_route53\_zone\_id) | Route53 hosted zone ID (from network) | `string` | n/a | yes |
+| <a name="input_sns_alerts_critical_topic_arn"></a> [sns\_alerts\_critical\_topic\_arn](#input\_sns\_alerts\_critical\_topic\_arn) | ARN of critical alerts SNS topic for P1 alerts (from shared\_services) | `string` | `null` | no |
 | <a name="input_sns_alerts_topic_arn"></a> [sns\_alerts\_topic\_arn](#input\_sns\_alerts\_topic\_arn) | ARN of shared alerts SNS topic (from shared\_services) | `string` | `null` | no |
+| <a name="input_sns_alerts_warning_topic_arn"></a> [sns\_alerts\_warning\_topic\_arn](#input\_sns\_alerts\_warning\_topic\_arn) | ARN of warning alerts SNS topic for P2 alerts (from shared\_services) | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | `{}` | no |
 | <a name="input_use_placeholder_lambda"></a> [use\_placeholder\_lambda](#input\_use\_placeholder\_lambda) | Use placeholder Lambda code for initial deployment (when S3 code doesn't exist yet) | `bool` | `false` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID (from network) | `string` | `null` | no |
