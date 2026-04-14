@@ -90,12 +90,13 @@ runs:
       env:
         LOCK_FLAG: ${{ inputs.lock_enabled == 'false' && '-lock=false' || '' }}
         TARGET_FLAGS: ${{ steps.target-flags.outputs.flags }}
+        WORKING_DIR: ${{ inputs.working_directory }}
       run: |
         set -o pipefail
         mise exec -- terragrunt plan -out=tfplan $LOCK_FLAG $TARGET_FLAGS 2>&1 | tee /tmp/tg-plan-output.txt
         PLAN_SUMMARY=$(grep -E 'Plan:|No changes\.' /tmp/tg-plan-output.txt | tail -1)
         if [[ -n "$PLAN_SUMMARY" ]]; then
-          echo "### Terragrunt Plan — \`${{ inputs.working_directory }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Terragrunt Plan — \`${WORKING_DIR}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
           echo "$PLAN_SUMMARY" >> "$GITHUB_STEP_SUMMARY"
           echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
@@ -107,12 +108,13 @@ runs:
       shell: bash
       env:
         TARGET_FLAGS: ${{ steps.target-flags.outputs.flags }}
+        WORKING_DIR: ${{ inputs.working_directory }}
       run: |
         set -o pipefail
         mise exec -- terragrunt plan -destroy -out=tfplan $TARGET_FLAGS 2>&1 | tee /tmp/tg-plan-output.txt
         PLAN_SUMMARY=$(grep -E 'Plan:|No changes\.' /tmp/tg-plan-output.txt | tail -1)
         if [[ -n "$PLAN_SUMMARY" ]]; then
-          echo "### Terragrunt Destroy Plan — \`${{ inputs.working_directory }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Terragrunt Destroy Plan — \`${WORKING_DIR}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
           echo "$PLAN_SUMMARY" >> "$GITHUB_STEP_SUMMARY"
           echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
@@ -122,12 +124,14 @@ runs:
       if: inputs.action == 'apply'
       working-directory: ${{ inputs.working_directory }}
       shell: bash
+      env:
+        WORKING_DIR: ${{ inputs.working_directory }}
       run: |
         set -o pipefail
         mise exec -- terragrunt apply -auto-approve tfplan 2>&1 | tee /tmp/tg-apply-output.txt
         APPLY_SUMMARY=$(grep -E 'Apply complete!|No changes\.' /tmp/tg-apply-output.txt | tail -1)
         if [[ -n "$APPLY_SUMMARY" ]]; then
-          echo "### Terragrunt Apply — \`${{ inputs.working_directory }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Terragrunt Apply — \`${WORKING_DIR}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
           echo "$APPLY_SUMMARY" >> "$GITHUB_STEP_SUMMARY"
           echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
@@ -139,12 +143,13 @@ runs:
       shell: bash
       env:
         TARGET_FLAGS: ${{ steps.target-flags.outputs.flags }}
+        WORKING_DIR: ${{ inputs.working_directory }}
       run: |
         set -o pipefail
         mise exec -- terragrunt destroy -auto-approve $TARGET_FLAGS 2>&1 | tee /tmp/tg-destroy-output.txt
         DESTROY_SUMMARY=$(grep -E 'Destroy complete!|No changes\.' /tmp/tg-destroy-output.txt | tail -1)
         if [[ -n "$DESTROY_SUMMARY" ]]; then
-          echo "### Terragrunt Destroy — \`${{ inputs.working_directory }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Terragrunt Destroy — \`${WORKING_DIR}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
           echo "$DESTROY_SUMMARY" >> "$GITHUB_STEP_SUMMARY"
           echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
