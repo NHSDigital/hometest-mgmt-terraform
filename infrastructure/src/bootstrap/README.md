@@ -128,7 +128,7 @@ remote_state {
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------| ---- | ------- |:--------:|
+|------|-------------|------|---------|:--------:|
 | `aws_region` | AWS region for resources | `string` | `"eu-west-2"` | no |
 | `project_name` | Project name for resource naming | `string` | n/a | yes |
 | `environment` | Environment (mgmt, dev, staging, prod) | `string` | `"mgmt"` | no |
