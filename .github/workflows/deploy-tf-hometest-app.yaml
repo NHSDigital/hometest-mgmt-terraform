@@ -24,6 +24,7 @@ on:
         default: dev-mikmio
         options:
           - dev-mikmio
+          - dev-mikmio-stub
           # - dev-example
           - dev
           - uat
