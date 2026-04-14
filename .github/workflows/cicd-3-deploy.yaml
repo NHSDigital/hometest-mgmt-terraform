@@ -306,10 +306,11 @@ jobs:
             echo "result=success" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: "Notify Slack"
+      - name: "Notify Slack on failure"
+        if: steps.status.outputs.result == 'failure'
         uses: ./hometest-mgmt-terraform/.github/actions/notify-slack
         with:
           slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          status: ${{ steps.status.outputs.result }}
+          status: failure
           environment: ${{ inputs.environment || 'poc' }}
           module: "hometest-mgmt-terraform"
