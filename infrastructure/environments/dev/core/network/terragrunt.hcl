@@ -81,6 +81,7 @@ inputs = {
   allowed_egress_domains = [
     ".nhs.uk",                # NHS domains
     ".gov.uk",                # Government domains
+    ".os.uk",                 # Ordnance Survey API (postcode/address lookup)
     ".github.com",            # GitHub
     ".githubusercontent.com", # GitHub content
     # Add more domains as needed for your application
