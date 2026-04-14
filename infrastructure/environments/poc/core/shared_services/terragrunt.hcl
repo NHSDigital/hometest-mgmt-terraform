@@ -68,5 +68,5 @@ inputs = {
     "england.HomeTestInfraAdmins@nhs.net"
   ]
 
-  enable_mtls = true # Set to true to enable mTLS support for API Gateway custom domain (requires additional client cert configuration)
+  enable_mtls = false # Set to true to enable mTLS support for API Gateway custom domain (requires additional client cert configuration)
 }

@@ -67,7 +67,12 @@ locals {
   wiremock_use_spot          = lookup(local._env_flags, "wiremock_use_spot", true)
   wiremock_cpu               = lookup(local._env_flags, "wiremock_cpu", 256)
   wiremock_memory            = lookup(local._env_flags, "wiremock_memory", 512)
-  # enable_wiremock = false
+
+  # mTLS on the API Gateway custom domain — opt-in per environment.
+  # WARNING: enabling mTLS on the browser-facing API domain will break SPA CORS
+  # because browsers never send client certificates on preflight OPTIONS requests.
+  # Only enable for domains used exclusively by machine-to-machine traffic.
+  enable_api_mtls = lookup(local._env_flags, "enable_api_mtls", false)
 
   base_domain = "${local.account_vars.locals.aws_account_shortname}.hometest.service.nhs.uk"
   env_domain  = lookup(local._domain_overrides, "env_domain", "${local.environment}.${local.base_domain}")
@@ -692,9 +697,12 @@ inputs = {
   api_custom_domain_name       = local.api_domain
   acm_regional_certificate_arn = dependency.shared_services.outputs.acm_regional_certificate_arn
 
-  # Mutual TLS (mTLS) — automatically wired from shared_services when enable_mtls = true
-  api_mutual_tls_truststore_uri     = dependency.shared_services.outputs.mtls_truststore_uri
-  api_mutual_tls_truststore_version = dependency.shared_services.outputs.mtls_truststore_version
+  # Mutual TLS (mTLS) — only wired when enable_api_mtls = true in env.hcl.
+  # Disabled by default: the SPA makes browser requests to this API domain,
+  # and browsers cannot satisfy mTLS client-certificate requirements on CORS
+  # preflight (OPTIONS) requests, causing "CORS request did not succeed".
+  api_mutual_tls_truststore_uri     = local.enable_api_mtls ? dependency.shared_services.outputs.mtls_truststore_uri : null
+  api_mutual_tls_truststore_version = local.enable_api_mtls ? dependency.shared_services.outputs.mtls_truststore_version : null
 
   # CORS — API Gateway OPTIONS responses and gateway error responses use this origin.
   # Must match the SPA domain exactly (credentials require a specific origin, not '*').
