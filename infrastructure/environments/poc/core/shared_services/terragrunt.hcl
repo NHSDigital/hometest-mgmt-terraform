@@ -75,7 +75,7 @@ inputs = {
 
   # Network alarm inputs — NAT Gateway and Network Firewall monitoring
   nat_gateway_ids       = dependency.network.outputs.nat_gateway_ids
-  network_firewall_name = dependency.network.outputs.network_firewall_name
+  network_firewall_name = dependency.network.outputs.network_firewall_enabled ? dependency.network.outputs.network_firewall_name : null
 
   enable_slack_alerts = true
   # https://app.slack.com/client/TJ00QR03U
