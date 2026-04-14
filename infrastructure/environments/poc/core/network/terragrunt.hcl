@@ -43,4 +43,9 @@ inputs = {
   az_count                     = 1
   enable_firewall_flow_logs    = false
   firewall_logs_retention_days = 7
+
+  # Allow specific domains for egress (HTTPS/TLS traffic)
+  # Note: AWS service domains (.amazonaws.com) are automatically allowed
+  # Defined in _envcommon/all.hcl for consistency across environments
+  allowed_egress_domains = local.global_vars.locals.allowed_egress_domains
 }

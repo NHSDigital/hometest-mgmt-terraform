@@ -347,32 +347,15 @@ When `enable_network_firewall = true`, AWS Network Firewall is deployed for adva
 
 ### Rule Evaluation Order (Strict Order)
 1. **AWS Services** (Priority 100): `.amazonaws.com`, `.aws.amazon.com` - Always allowed
-2. **Allowed Ingress IPs** (Priority 150): Custom IP/CIDR list from `allowed_ingress_ips` for inbound traffic
-3. **Allowed Egress IPs** (Priority 200): Custom IP/CIDR list from `allowed_egress_ips` for outbound traffic
-4. **Allowed Domains** (Priority 300): Custom domain list from `allowed_egress_domains`
-5. **Default Deny** (Priority 65535): Drop all other traffic (when enabled)
+2. **Allowed Egress IPs** (Priority 200): Custom IP/CIDR list from `allowed_egress_ips` for outbound traffic
+3. **Allowed Domains** (Priority 300): Custom domain list from `allowed_egress_domains`
+4. **Default Deny** (Priority 65535): Drop all other traffic (when enabled)
 
 ### Example Configuration
 
 ```hcl
 enable_network_firewall = true
 firewall_default_deny   = true
-
-# Allow specific inbound connections
-allowed_ingress_ips = [
-  {
-    ip          = "0.0.0.0/0"
-    port        = "443"
-    protocol    = "TCP"
-    description = "HTTPS from anywhere"
-  },
-  {
-    ip          = "0.0.0.0/0"
-    port        = "80"
-    protocol    = "TCP"
-    description = "HTTP from anywhere"
-  }
-]
 
 # Allow specific outbound connections
 allowed_egress_ips = [
