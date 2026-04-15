@@ -61,7 +61,7 @@ infrastructure/environments/poc/
 
 To deploy demo, run the `deploy-tf-hometest-app` workflow with:
 
-- **subenv**: `demo`
+- **env**: `demo`
 - **action**: `apply`
 - **hometest_service_ref**: a tag or specific commit SHA (e.g. `v1.2.0`)
 
@@ -88,12 +88,12 @@ cp -r infrastructure/environments/poc/hometest-app/dev-example \
 
 To deploy, run the `deploy-tf-hometest-app` workflow with:
 
-- **subenv**: your environment name (e.g. `dev-jane`)
+- **env**: your environment name (e.g. `dev-jane`)
 - **action**: `apply`
 
 To tear down when finished:
 
-- **subenv**: your environment name
+- **env**: your environment name
 - **action**: `destroy`
 
 ---

@@ -258,17 +258,17 @@ Click **"Run workflow"** and configure the following inputs:
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
 | `hometest_service_ref` | string | `main` | Branch, tag, or SHA to checkout for `hometest-service`. Unlike local deployment which uses your local copy, the pipeline checks out the specified ref from the remote repo. |
-| `environment` | choice | `poc` | AWS account to deploy to (`poc` or `dev`). |
-| `subenv` | choice | `dev` | Environment within the account (e.g. `dev`, `uat`, `demo`, `staging`). |
+| `account` | choice | `poc` | AWS account to deploy to (`poc` or `dev`). |
+| `env` | choice | `dev` | Target environment (e.g. `dev`, `uat`, `demo`, `staging`). |
 | `action` | choice | `plan` | Terraform action: `plan` (preview), `apply` (deploy), or `destroy` (teardown). |
 | `targets` | string | _(empty)_ | Comma-separated list of resources to target in the app stack only (e.g. `module.lambdas["order-status-lambda"]`). Leave empty for full deployment. Does not apply to the migrator. |
 | `skip_migrator` | boolean | `false` | Skip the goose migrator deployment entirely (deploy app stack only). Equivalent to `SKIP_MIGRATOR=true` locally. |
 
-> **Important:** The `subenv` input is a fixed choice list. To deploy a new environment from the pipeline, you must first add it to the `options` list under `inputs.subenv` in `.github/workflows/deploy-tf-hometest-app.yaml`:
+> **Important:** The `env` input is a fixed choice list. To deploy a new environment from the pipeline, you must first add it to the `options` list under `inputs.env` in `.github/workflows/deploy-tf-hometest-app.yaml`:
 >
 > ```yaml
-> subenv:
->   description: "Terraform subenv to deploy"
+> env:
+>   description: "Target environment to deploy"
 >   required: true
 >   type: choice
 >   default: dev
