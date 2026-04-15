@@ -18,6 +18,8 @@ resource "aws_security_group" "lambda" {
 
   lifecycle {
     create_before_destroy = true
+    # Ignore changes to description to prevent recreation
+    ignore_changes = [description]
   }
 }
 
@@ -28,6 +30,11 @@ resource "aws_vpc_security_group_egress_rule" "lambda_https" {
   to_port           = 443
   ip_protocol       = "tcp"
   cidr_ipv4         = "0.0.0.0/0"
+
+  lifecycle {
+    # Prevent errors if rule already exists
+    create_before_destroy = true
+  }
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-lambda-https-egress"
@@ -42,6 +49,10 @@ resource "aws_vpc_security_group_egress_rule" "lambda_dns_udp" {
   ip_protocol       = "udp"
   cidr_ipv4         = var.vpc_cidr
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-lambda-dns-udp-egress"
   })
@@ -54,6 +65,10 @@ resource "aws_vpc_security_group_egress_rule" "lambda_dns_tcp" {
   to_port           = 53
   ip_protocol       = "tcp"
   cidr_ipv4         = var.vpc_cidr
+
+  lifecycle {
+    create_before_destroy = true
+  }
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-lambda-dns-tcp-egress"
@@ -77,6 +92,7 @@ resource "aws_security_group" "lambda_rds" {
 
   lifecycle {
     create_before_destroy = true
+    ignore_changes        = [description]
   }
 }
 
@@ -89,6 +105,10 @@ resource "aws_vpc_security_group_egress_rule" "lambda_rds_postgres" {
   to_port           = 5432
   ip_protocol       = "tcp"
   cidr_ipv4         = each.value
+
+  lifecycle {
+    create_before_destroy = true
+  }
 
   tags = merge(local.common_tags, {
     Name = "${local.resource_prefix}-lambda-rds-postgres-egress"
