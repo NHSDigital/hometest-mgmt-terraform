@@ -3,51 +3,42 @@ name: "Deploy Terraform HomeTest App"
 run-name: "Deploy account: ${{ inputs.account || 'poc' }}, env: ${{ inputs.env || 'dev' }}, tf: ${{ inputs.action || 'plan' }}"
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       hometest_service_ref:
         description: "Branch, tag, or SHA to checkout for hometest-service"
         required: false
+        type: string
         default: "main"
       account:
-        description: "Target AWS account"
+        description: "Target AWS account (poc or dev)"
         required: true
-        type: choice
-        options:
-          - poc
-          - dev
-        default: poc
+        type: string
       env:
-        description: "Target environment to deploy"
+        description: "Target environment to deploy (dev, uat, demo, staging, dev-*)"
         required: true
-        type: choice
-        default: dev
-        options:
-          # - dev-example
-          - dev
-          - uat
-          - demo
-          - staging
+        type: string
       action:
-        description: "Terraform action to perform"
+        description: "Terraform action: plan, apply, or destroy"
         required: true
-        type: choice
-        options:
-          - plan
-          - apply
-          - destroy
-          # - destroy-plan
-        default: plan
+        type: string
       targets:
-        description: "Comma-separated list of resources to target in the app stack only (e.g., module.lambdas[\"order-status-lambda\"]). Does not apply to migrator. Leave empty for full deployment."
+        description: "Comma-separated list of resources to target in the app stack only. Leave empty for full deployment."
         required: false
         type: string
         default: ""
       skip_migrator:
-        description: "Skip the goose migrator deployment entirely (deploy app stack only). Equivalent to SKIP_MIGRATOR=true locally."
+        description: "Skip the goose migrator deployment entirely (deploy app stack only)."
         required: false
         type: boolean
         default: false
+    secrets:
+      AWS_ROLE_ARN:
+        required: true
+      NHS_HOMETEST_SERVICE_DEPLOY_KEY_SSH_PRIV:
+        required: true
+      SLACK_WEBHOOK_URL:
+        required: false
 
 env:
   AWS_REGION: "eu-west-2"

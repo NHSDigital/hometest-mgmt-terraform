@@ -251,7 +251,7 @@ When deploying locally, the build hooks reference your **local clone** of the `h
 
 You can also trigger a deployment from the GitHub Actions UI:
 
-**[Deploy Terraform HomeTest App](https://github.com/NHSDigital/hometest-mgmt-terraform/actions/workflows/deploy-tf-hometest-app.yaml)** (workflow file: `.github/workflows/deploy-tf-hometest-app.yaml`)
+**[Deploy HomeTest App](https://github.com/NHSDigital/hometest-mgmt-terraform/actions/workflows/deploy-hometest-app.yaml)** (workflow file: `.github/workflows/deploy-hometest-app.yaml`)
 
 Click **"Run workflow"** and configure the following inputs:
 
@@ -264,7 +264,7 @@ Click **"Run workflow"** and configure the following inputs:
 | `targets` | string | _(empty)_ | Comma-separated list of resources to target in the app stack only (e.g. `module.lambdas["order-status-lambda"]`). Leave empty for full deployment. Does not apply to the migrator. |
 | `skip_migrator` | boolean | `false` | Skip the goose migrator deployment entirely (deploy app stack only). Equivalent to `SKIP_MIGRATOR=true` locally. |
 
-> **Important:** The `env` input is a fixed choice list. To deploy a new environment from the pipeline, you must first add it to the `options` list under `inputs.env` in `.github/workflows/deploy-tf-hometest-app.yaml`:
+> **Important:** The `env` input is a fixed choice list. To deploy a new environment from the pipeline, you must first add it to the `options` list under `inputs.env` in `.github/workflows/deploy-hometest-app.yaml`:
 >
 > ```yaml
 > env:

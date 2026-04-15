@@ -67,7 +67,7 @@ All three severity tiers currently point to the same channel (`#hometest-ops-ale
 
 - **Action**: `.github/actions/notify-slack`
 - **Secret**: `SLACK_WEBHOOK_URL` (GitHub Actions repository secret)
-- **Triggers**: End of `cicd-3-deploy` and `deploy-tf-hometest-app` workflows
+- **Triggers**: End of `cicd-deploy-poc`, `cicd-deploy-dev`, `deploy-hometest-app`, and `deploy-demo` workflows
 - **Content**: Deployment status (success/failure/cancelled), environment, module, actor, and a link to the run
 
 ---
