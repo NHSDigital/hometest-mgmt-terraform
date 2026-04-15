@@ -10,6 +10,14 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# LOCALS - Load global configuration
+# ---------------------------------------------------------------------------------------------------------------------
+
+locals {
+  global_vars = read_terragrunt_config(find_in_parent_folders("_envcommon/all.hcl"))
+}
+
 terraform {
   source = "../../../..//src/network"
 }
@@ -35,22 +43,6 @@ inputs = {
   firewall_logs_retention_days = 7
 
   firewall_default_deny = true
-
-  # Allow specific inbound connections (e.g., from ALB, API Gateway)
-  allowed_ingress_ips = [
-    {
-      ip          = "0.0.0.0/0"
-      port        = "443"
-      protocol    = "TCP"
-      description = "HTTPS from anywhere"
-    },
-    {
-      ip          = "0.0.0.0/0"
-      port        = "80"
-      protocol    = "TCP"
-      description = "HTTP from anywhere"
-    }
-  ]
 
   # Allow specific outbound connections
   allowed_egress_ips = [
@@ -78,11 +70,6 @@ inputs = {
 
   # Allow specific domains for egress (HTTPS/TLS traffic)
   # Note: AWS service domains (.amazonaws.com) are automatically allowed
-  allowed_egress_domains = [
-    ".nhs.uk",               # NHS domains
-    ".gov.uk",               # Government domains
-    ".github.com",           # GitHub
-    ".githubusercontent.com" # GitHub content
-    # Add more domains as needed for your application
-  ]
+  # Defined in _envcommon/all.hcl for consistency across environments
+  allowed_egress_domains = local.global_vars.locals.allowed_egress_domains
 }
