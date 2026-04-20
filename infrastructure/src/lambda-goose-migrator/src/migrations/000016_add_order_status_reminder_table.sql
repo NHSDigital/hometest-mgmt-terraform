@@ -1,5 +1,6 @@
 -- +goose Up
-CREATE TYPE reminder_status AS ENUM (
+CREATE TYPE reminder_status AS ENUM
+(
   'SCHEDULED',
   'QUEUED',
   'FAILED',
