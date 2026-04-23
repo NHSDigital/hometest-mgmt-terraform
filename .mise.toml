@@ -1,5 +1,5 @@
 [settings]
-locked = true
+locked = false
 lockfile = true
 install_before = "7d"
 
@@ -53,7 +53,7 @@ go = "1.26.2"
 pipx = "1.11.0"
 
 # https://github.com/bridgecrewio/checkov/releases
-"pipx:checkov" = "3.2.524"
+"aqua:bridgecrewio/checkov" = "3.2.524"
 
 # https://github.com/gitleaks/gitleaks/releases
 gitleaks = "8.30.1"
