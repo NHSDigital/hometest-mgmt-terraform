@@ -1,5 +1,5 @@
 [settings]
-locked = true
+locked = false
 lockfile = true
 install_before = "7d"
 
@@ -37,7 +37,7 @@ terraform-docs = "0.22.0"
 awscli = "2.34.26"
 
 # https://devguide.python.org/versions/
-python = "3.14.2"
+"core:python" = "3.14.2"
 
 # https://go.dev/dl/
 go = "1.26.2"
