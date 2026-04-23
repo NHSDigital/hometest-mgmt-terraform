@@ -53,7 +53,7 @@ go = "1.26.2"
 pipx = "1.11.0"
 
 # https://github.com/bridgecrewio/checkov/releases
-"pipx:checkov" = "3.2.517"
+"pipx:checkov" = "3.2.524"
 
 # https://github.com/gitleaks/gitleaks/releases
 gitleaks = "8.30.1"
