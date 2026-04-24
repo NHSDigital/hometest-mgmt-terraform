@@ -7,23 +7,26 @@ locals {
 }
 
 module "goose_migrator_lambda" {
-  source  = "terraform-aws-modules/lambda/aws"
-  version = "8.7.0"
+  source = "../../modules/lambda"
 
-  function_name          = "${local.resource_prefix}-lambda-goose-migrator"
-  handler                = "bootstrap" # Do not change - for custom runtimes, this must be 'bootstrap'
-  runtime                = "provided.al2023"
-  create_role            = false
-  lambda_role            = aws_iam_role.lambda_goose_migrator.arn
-  timeout                = 300
-  memory_size            = 128
-  publish                = true
+  project_name          = var.project_name
+  aws_account_shortname = var.aws_account_shortname
+  function_name         = "lambda-goose-migrator"
+  environment           = var.environment
+  lambda_role_arn       = aws_iam_role.lambda_goose_migrator.arn
+
+  filename         = var.goose_migrator_zip_path
+  source_code_hash = filebase64sha256(var.goose_migrator_zip_path)
+
+  handler     = "bootstrap"
+  runtime     = "provided.al2023"
+  timeout     = 300
+  memory_size = 128
+
+  architectures = ["arm64"]
+
   vpc_subnet_ids         = var.subnet_ids
   vpc_security_group_ids = var.security_group_ids
-
-  tags = merge(local.common_tags, {
-    Name = "${local.resource_prefix}-lambda-goose-migrator"
-  })
 
   environment_variables = {
     DB_USERNAME          = var.db_username
@@ -38,25 +41,7 @@ module "goose_migrator_lambda" {
     GRANT_RDS_IAM        = tostring(var.grant_rds_iam)
   }
 
-  architectures = ["arm64"]
-
-  recreate_missing_package = true
-
-  source_path = [
-    {
-      path = "${path.module}/src"
-      commands = [
-        "go mod tidy",
-        "GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o bootstrap main.go",
-        ":zip",
-      ]
-      patterns = [
-        "!.*",
-        "bootstrap",
-        "migrations/.*",
-      ]
-    }
-  ]
+  tags = local.common_tags
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

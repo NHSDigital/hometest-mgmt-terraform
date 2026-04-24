@@ -33,7 +33,12 @@ locals {
   app_user_secret_name = "nhs-hometest/${local.environment}/app-user-db-secret"
 
   # Resolved paths
-  scripts_dir = "${get_repo_root()}/scripts"
+  scripts_dir          = "${get_repo_root()}/scripts"
+  migrator_build_cache = "${get_repo_root()}/.migrator-build-cache"
+
+  # Path to service directory
+  hometest_service_dir = trimspace(run_cmd("realpath", "${get_repo_root()}/../hometest-service"))
+
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -42,6 +47,22 @@ locals {
 
 terraform {
   source = "${get_repo_root()}/infrastructure//src/lambda-goose-migrator"
+
+  # ---------------------------------------------------------------------------
+  # BUILD HOOK — compile the Go binary and package the zip before plan/apply
+  # ---------------------------------------------------------------------------
+
+  before_hook "build_goose_migrator" {
+    commands = ["plan", "apply"]
+    execute = [
+      "bash", "-c",
+      <<-EOF
+        cd '${local.hometest_service_dir}' && \
+        MIGRATOR_CACHE_DIR='${local.migrator_build_cache}' \
+        mise exec -- '${local.hometest_service_dir}/lambdas/goose-migrator-lambda/scripts/build.sh'
+      EOF
+    ]
+  }
 
   # ---------------------------------------------------------------------------
   # HOOKS — invoke the goose-migrator Lambda automatically after apply / before destroy
@@ -153,6 +174,8 @@ dependency "shared_services" {
 
 inputs = {
   environment = local.environment
+
+  goose_migrator_zip_path = "${local.hometest_service_dir}/lambdas/goose-migrator-lambda/goose-migrator-lambda.zip"
 
   # Database connection info from Aurora cluster
   db_username   = dependency.aurora-postgres.outputs.cluster_master_username
