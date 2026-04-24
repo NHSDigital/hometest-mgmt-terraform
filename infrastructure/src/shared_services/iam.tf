@@ -80,13 +80,25 @@ resource "aws_iam_role_policy" "developer_lambda" {
         }
       },
       {
+        Sid    = "SecretsManagerRead"
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.project_name}/*"
+      },
+      {
         Sid    = "KMSAccess"
         Effect = "Allow"
         Action = [
           "kms:Decrypt",
           "kms:GenerateDataKey"
         ]
-        Resource = aws_kms_key.main.arn
+        Resource = [
+          aws_kms_key.main.arn,
+          aws_kms_key.pii_data.arn
+        ]
       }
     ]
   })
@@ -273,8 +285,14 @@ resource "aws_iam_policy" "developer_deployment" {
       {
         Sid      = "RDSQueryEditor"
         Effect   = "Allow"
-        Action   = ["dbqms:*", "rds-data:*", "secretsmanager:GetSecretValue"]
+        Action   = ["dbqms:*", "rds-data:*"]
         Resource = "*"
+      },
+      {
+        Sid      = "SecretsManagerRead"
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
+        Resource = "arn:aws:secretsmanager:*:${var.aws_account_id}:secret:${var.project_name}/*"
       }
     ]
   })
