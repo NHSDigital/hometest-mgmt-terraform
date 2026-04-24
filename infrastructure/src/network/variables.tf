@@ -189,10 +189,35 @@ variable "allowed_egress_ips" {
   validation {
     condition = alltrue([
       for rule in var.allowed_egress_ips :
-      can(regex("^[^\";\n\r\\\\]*$", rule.description))
+      can(regex("^(?i)(tcp|udp|ip)$", rule.protocol))
     ])
-    error_message = "Descriptions cannot contain quotes (\"), semicolons (;), newlines, or backslashes (\\) as they break Suricata rule syntax."
+    error_message = "Protocol must be TCP, UDP, or IP (case-insensitive)."
   }
+
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_egress_ips :
+      rule.port == "ANY" || (can(regex("^[0-9]+$", rule.port)) && tonumber(rule.port) >= 1 && tonumber(rule.port) <= 65535)
+    ])
+    error_message = "Port must be 'ANY' or a valid port number (1-65535)."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_egress_ips :
+      can(regex("^[0-9./]+$", rule.ip)) && can(cidrhost(rule.ip, 0))
+    ])
+    error_message = "IP must be a valid IPv4 address or CIDR block (e.g., '10.0.0.1/32' or '192.168.0.0/24')."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_egress_ips :
+      can(regex("^[^\";\n\r\\\\(\\) ]*$", rule.description))
+    ])
+    error_message = "Descriptions cannot contain quotes (\"), semicolons (;), newlines, backslashes (\\), parentheses, or spaces as they break Suricata rule syntax."
+  }
+
 
   # Example:
   # allowed_egress_ips = [
@@ -224,9 +249,33 @@ variable "allowed_ingress_ips" {
   validation {
     condition = alltrue([
       for rule in var.allowed_ingress_ips :
-      can(regex("^[^\";\n\r\\\\]*$", rule.description))
+      can(regex("^(?i)(tcp|udp|ip)$", rule.protocol))
     ])
-    error_message = "Descriptions cannot contain quotes (\"), semicolons (;), newlines, or backslashes (\\) as they break Suricata rule syntax."
+    error_message = "Protocol must be TCP, UDP, or IP (case-insensitive)."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_ingress_ips :
+      rule.port == "ANY" || (can(regex("^[0-9]+$", rule.port)) && tonumber(rule.port) >= 1 && tonumber(rule.port) <= 65535)
+    ])
+    error_message = "Port must be 'ANY' or a valid port number (1-65535)."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_ingress_ips :
+      can(regex("^[0-9./]+$", rule.ip)) && can(cidrhost(rule.ip, 0))
+    ])
+    error_message = "IP must be a valid IPv4 address or CIDR block (e.g., '10.0.0.1/32' or '192.168.0.0/24')."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_ingress_ips :
+      can(regex("^[^\";\n\r\\\\(\\) ]*$", rule.description))
+    ])
+    error_message = "Descriptions cannot contain quotes (\"), semicolons (;), newlines, backslashes (\\), parentheses, or spaces as they break Suricata rule syntax."
   }
 
   # Example:
