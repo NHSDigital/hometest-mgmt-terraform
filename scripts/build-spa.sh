@@ -178,6 +178,8 @@ calculate_source_hash() {
   # because Next.js bakes NEXT_PUBLIC_* vars into the static output at build time.
   all_hashes+="BACKEND_URL:${BACKEND_URL}|"
   all_hashes+="NHS_LOGIN_AUTHORIZE_URL:${NHS_LOGIN_AUTHORIZE_URL}|"
+  all_hashes+="NHS_LOGIN_CLIENT_ID:${NHS_LOGIN_CLIENT_ID}|"
+  all_hashes+="NHS_LOGIN_SCOPE:${NHS_LOGIN_SCOPE}|"
   all_hashes+="USE_WIREMOCK_AUTH:${USE_WIREMOCK_AUTH}|"
 
   # Combine all hashes into final hash
@@ -324,6 +326,8 @@ echo "Output dir:       $DIST_DIR"
 echo "Cache directory:  $CACHE_DIR"
 echo "Backend URL:      $BACKEND_URL"
 echo "NHS Login URL:    $NHS_LOGIN_AUTHORIZE_URL"
+echo "NHS Login Client: $NHS_LOGIN_CLIENT_ID"
+echo "NHS Login Scope:  $NHS_LOGIN_SCOPE"
 echo "WireMock auth:    $USE_WIREMOCK_AUTH"
 echo ""
 
@@ -381,6 +385,10 @@ if needs_rebuild; then
     echo "Duration: ${duration}s"
     echo "Hash: $new_hash"
     echo "Backend URL: $BACKEND_URL"
+    echo "NHS Login Authorize URL: $NHS_LOGIN_AUTHORIZE_URL"
+    echo "NHS Login Client ID: $NHS_LOGIN_CLIENT_ID"
+    echo "NHS Login Scope: $NHS_LOGIN_SCOPE"
+    echo "Use WireMock Auth: $USE_WIREMOCK_AUTH"
     echo "Output: $DIST_DIR ($file_count files)"
   } > "$BUILD_LOG"
 else
