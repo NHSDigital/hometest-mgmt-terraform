@@ -186,6 +186,14 @@ variable "allowed_egress_ips" {
   }))
   default = []
 
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_egress_ips :
+      can(regex("^[^\";\n\r\\\\]*$", rule.description))
+    ])
+    error_message = "Descriptions cannot contain quotes (\"), semicolons (;), newlines, or backslashes (\\) as they break Suricata rule syntax."
+  }
+
   # Example:
   # allowed_egress_ips = [
   #   {

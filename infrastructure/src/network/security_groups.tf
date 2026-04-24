@@ -32,7 +32,7 @@ resource "aws_vpc_security_group_egress_rule" "lambda_https" {
   cidr_ipv4         = "0.0.0.0/0"
 
   lifecycle {
-    # Prevent errors if rule already exists
+    # Create replacement rule before destroying old one during updates
     create_before_destroy = true
   }
 
