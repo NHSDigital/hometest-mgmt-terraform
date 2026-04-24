@@ -213,9 +213,9 @@ variable "allowed_egress_ips" {
   validation {
     condition = alltrue([
       for rule in var.allowed_egress_ips :
-      can(regex("^[^\";\n\r\\\\(\\) ]*$", rule.description))
+      can(regex("^[^\";\n\r\\\\]*$", rule.description))
     ])
-    error_message = "Descriptions cannot contain quotes (\"), semicolons (;), newlines, backslashes (\\), parentheses, or spaces as they break Suricata rule syntax."
+    error_message = "Descriptions cannot contain quotes (\"), semicolons (;), newlines, or backslashes (\\) as they break Suricata rule syntax."
   }
 
 
@@ -273,9 +273,9 @@ variable "allowed_ingress_ips" {
   validation {
     condition = alltrue([
       for rule in var.allowed_ingress_ips :
-      can(regex("^[^\";\n\r\\\\(\\) ]*$", rule.description))
+      can(regex("^[^\";\n\r\\\\]*$", rule.description))
     ])
-    error_message = "Descriptions cannot contain quotes (\"), semicolons (;), newlines, backslashes (\\), parentheses, or spaces as they break Suricata rule syntax."
+    error_message = "Descriptions cannot contain quotes (\"), semicolons (;), newlines, or backslashes (\\) as they break Suricata rule syntax."
   }
 
   # Example:
