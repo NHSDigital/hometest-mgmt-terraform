@@ -29,6 +29,41 @@ cd ../app
 terragrunt apply
 ```
 
+## Contents
+
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [AWS SSO Setup](#aws-sso-setup)
+  - [First-time configuration](#first-time-configuration)
+  - [Login and export profile](#login-and-export-profile)
+- [Quick Start](#quick-start)
+- [Step-by-Step Guide](#step-by-step-guide)
+  - [Step 1: Create the Environment Directory](#step-1-create-the-environment-directory)
+  - [Step 2: Create env.hcl](#step-2-create-envhcl)
+  - [Step 3: Create app/terragrunt.hcl](#step-3-create-appterragrunthcl)
+  - [Step 4: Customise the Configuration (Optional)](#step-4-customise-the-configuration-optional)
+  - [Step 5: Create the Database Migrator](#step-5-create-the-database-migrator)
+  - [Step 6: Validate the Configuration](#step-6-validate-the-configuration)
+  - [Step 7: Deploy](#step-7-deploy)
+  - [Step 8: Verify the Deployment](#step-8-verify-the-deployment)
+- [Quick Deploy (Iterative Development)](#quick-deploy-iterative-development)
+  - [Deploy Only Lambdas](#deploy-only-lambdas)
+  - [Deploy Only UI](#deploy-only-ui)
+  - [Deploy Both (Skip Nothing, But Target Lambdas)](#deploy-both-skip-nothing-but-target-lambdas)
+  - [Force Rebuild](#force-rebuild)
+  - [Environment Variables Reference](#environment-variables-reference)
+- [File Structure After Creation](#file-structure-after-creation)
+- [How It Works](#how-it-works)
+- [Destroying an Environment](#destroying-an-environment)
+- [Checklist](#checklist)
+- [Troubleshooting](#troubleshooting)
+  - ["Can't find env.hcl"](#cant-find-envhcl)
+  - [DNS not resolving](#dns-not-resolving)
+  - [Lambda build failures](#lambda-build-failures)
+  - [SPA build failures](#spa-build-failures)
+  - [NoCredentialProviders or authentication errors](#nocredentialproviders-or-authentication-errors)
+  - [State lock errors](#state-lock-errors)
+
 ## Overview
 
 Each environment deploys its own isolated set of:

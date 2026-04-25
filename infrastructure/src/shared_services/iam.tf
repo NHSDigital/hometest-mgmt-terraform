@@ -130,6 +130,22 @@ resource "aws_iam_policy" "developer_deployment" {
         Resource = "arn:aws:iam::${var.aws_account_id}:role/${var.project_name}-*"
       },
       {
+        Sid    = "IAMPolicyMgmt"
+        Effect = "Allow"
+        Action = [
+          "iam:CreatePolicy",
+          "iam:DeletePolicy",
+          "iam:GetPolicy",
+          "iam:GetPolicyVersion",
+          "iam:ListPolicyVersions",
+          "iam:CreatePolicyVersion",
+          "iam:DeletePolicyVersion",
+          "iam:TagPolicy",
+          "iam:UntagPolicy"
+        ]
+        Resource = "arn:aws:iam::${var.aws_account_id}:policy/${var.project_name}-*"
+      },
+      {
         Sid      = "LambdaMgmt"
         Effect   = "Allow"
         Action   = ["lambda:*"]
