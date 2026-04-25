@@ -17,7 +17,7 @@ All environments share core infrastructure (VPC, WAF, ACM, KMS, Cognito, Aurora 
 ## Prerequisites
 
 - Core infrastructure already deployed (`network`, `shared_services`, `aurora-postgres`, `lambda-goose-migrator`, and optionally `ecs` for WireMock)
-- AWS SSO access configured (`aws sso login --profile Admin-PoC`)
+- AWS SSO access configured and logged in (see [AWS SSO Setup](#aws-sso-setup) below)
 - Terraform 1.14.8 and Terragrunt 1.0.0 installed (run `mise install`)
 - The `hometest-service` repo cloned alongside this repo (for Lambda and SPA source code)
 
@@ -27,6 +27,59 @@ parent-dir/
 └── hometest-service/           (application code)
     ├── lambdas/
     └── ui/
+```
+
+## AWS SSO Setup
+
+### First-time configuration
+
+If you haven't configured the AWS SSO profile yet, run the interactive wizard:
+
+```bash
+aws configure sso
+```
+
+When prompted, enter the following values:
+
+| Prompt | Value |
+|--------|-------|
+| SSO session name | `nhs` |
+| SSO start URL | `https://d-9c67018f89.awsapps.com/start/#` |
+| SSO region | `eu-west-2` |
+| SSO registration scopes | `sso:account:access` |
+
+The wizard will open a browser for authentication. After authenticating, select the **PoC account** and **Hometest-NonProd-Developers** role. When asked for a profile name, enter `PoC-Dev`.
+
+This creates the following in `~/.aws/config`:
+
+```ini
+[sso-session nhs]
+sso_start_url = https://d-9c67018f89.awsapps.com/start/#
+sso_region = eu-west-2
+sso_registration_scopes = sso:account:access
+
+[profile PoC-Dev]
+sso_session = nhs
+sso_account_id = 781863586270
+sso_role_name = Hometest-NonProd-Developers
+region = eu-west-2
+```
+
+### Login and export profile
+
+Before running any `terragrunt` command, you must log in and export the profile:
+
+```bash
+aws sso login --profile PoC-Dev
+export AWS_PROFILE=PoC-Dev
+```
+
+> **Important:** You must `export AWS_PROFILE` in every new terminal session. Without it, Terraform/Terragrunt will not pick up your SSO credentials and you'll get `NoCredentialProviders` errors.
+
+Verify credentials are working:
+
+```bash
+aws sts get-caller-identity
 ```
 
 ## Quick Start
@@ -241,6 +294,9 @@ There are two ways to deploy an environment: **locally** or via **GitHub Actions
 #### Option A: Deploy Locally
 
 ```bash
+# Ensure AWS credentials are active
+export AWS_PROFILE=PoC-Dev
+
 cd infrastructure/environments/poc/hometest-app/${ENV_NAME}/app
 terragrunt apply
 ```
@@ -290,6 +346,103 @@ Both local and pipeline deployments will:
 4. Upload the SPA to S3 and invalidate CloudFront cache (via `upload_spa` after hook)
 
 > **Note:** Build hooks use content hashing to skip rebuilds when source code hasn't changed. To force a rebuild, set `FORCE_LAMBDA_REBUILD=true` or `FORCE_SPA_REBUILD=true`.
+
+## Quick Deploy (Iterative Development)
+
+Once your environment is fully deployed, you can rapidly redeploy just lambdas, just the UI, or both without running a full `terragrunt apply`. This is useful when iterating on `hometest-service` code.
+
+| What changed | Command | How it works |
+|--------------|---------|--------------|
+| Lambda code only | `SKIP_SPA=true terragrunt apply -target='module.lambdas["<name>"].aws_lambda_function.this' -auto-approve` | Skips SPA build/upload, targets only the lambda resource → Terraform re-uploads the zip |
+| UI code only | `SKIP_LAMBDAS=true terragrunt apply -refresh-only -auto-approve` | Skips lambda build, Terraform is a no-op, but the `upload_spa` after-hook still runs → S3 sync + CloudFront invalidation |
+| Both | `terragrunt apply -target='module.lambdas["<name>"].aws_lambda_function.this' -auto-approve` | Builds both, targets lambda for Terraform, SPA hooks run regardless of `-target` |
+
+All commands below assume you are in the environment's `app/` directory:
+
+```bash
+export AWS_PROFILE=PoC-Dev
+cd infrastructure/environments/poc/hometest-app/${ENV_NAME}/app
+```
+
+### Deploy Only Lambdas
+
+Skip the SPA build/upload and target only the lambda resources that changed:
+
+```bash
+# All (and only) lambdas
+SKIP_SPA=true terragrunt apply \
+  -target='module.lambdas["*"].aws_lambda_function.this' \
+  -auto-approve
+
+# Single lambda (~30s build + ~20s targeted apply)
+SKIP_SPA=true terragrunt apply \
+  -target='module.lambdas["login-lambda"].aws_lambda_function.this' \
+  -auto-approve
+
+# Multiple lambdas
+SKIP_SPA=true terragrunt apply \
+  -target='module.lambdas["login-lambda"].aws_lambda_function.this' \
+  -target='module.lambdas["order-service-lambda"].aws_lambda_function.this' \
+  -auto-approve
+```
+
+**Available lambda target names** (from `_envcommon/hometest-app.hcl`):
+
+| Lambda | Target |
+|--------|--------|
+| Eligibility Lookup | `module.lambdas["eligibility-lookup-lambda"].aws_lambda_function.this` |
+| Order Router | `module.lambdas["order-router-lambda"].aws_lambda_function.this` |
+| Login | `module.lambdas["login-lambda"].aws_lambda_function.this` |
+| Session | `module.lambdas["session-lambda"].aws_lambda_function.this` |
+| Order Result | `module.lambdas["order-result-lambda"].aws_lambda_function.this` |
+| Order Service | `module.lambdas["order-service-lambda"].aws_lambda_function.this` |
+| Get Order | `module.lambdas["get-order-lambda"].aws_lambda_function.this` |
+| Get Results | `module.lambdas["get-results-lambda"].aws_lambda_function.this` |
+| Order Status | `module.lambdas["order-status-lambda"].aws_lambda_function.this` |
+| Postcode Lookup | `module.lambdas["postcode-lookup-lambda"].aws_lambda_function.this` |
+
+### Deploy Only UI
+
+Skip the lambda build. Use `-refresh-only` so Terraform is a no-op, but the `upload_spa` after-hook still runs (builds the SPA, syncs to S3, invalidates CloudFront):
+
+```bash
+SKIP_LAMBDAS=true terragrunt apply -refresh-only -auto-approve
+```
+
+### Deploy Both (Skip Nothing, But Target Lambdas)
+
+If you changed both lambda and UI code but want to skip evaluating the full Terraform graph:
+
+```bash
+terragrunt apply \
+  -target='module.lambdas["login-lambda"].aws_lambda_function.this' \
+  -auto-approve
+```
+
+The SPA build + upload hooks run regardless of `-target` (they are before/after hooks, not Terraform resources).
+
+### Force Rebuild
+
+Override the content-hash build cache:
+
+```bash
+# Force rebuild lambdas only
+FORCE_LAMBDA_REBUILD=true SKIP_SPA=true terragrunt apply \
+  -target='module.lambdas["login-lambda"].aws_lambda_function.this' \
+  -auto-approve
+
+# Force rebuild everything
+FORCE_LAMBDA_REBUILD=true FORCE_SPA_REBUILD=true terragrunt apply
+```
+
+### Environment Variables Reference
+
+| Variable | Effect |
+|----------|--------|
+| `SKIP_SPA=true` | Skip SPA build (before-hook) and upload (after-hook) |
+| `SKIP_LAMBDAS=true` | Skip lambda build (before-hook) |
+| `FORCE_LAMBDA_REBUILD=true` | Ignore lambda build cache — always rebuild |
+| `FORCE_SPA_REBUILD=true` | Ignore SPA build cache — always rebuild |
 
 ### Step 8: Verify the Deployment
 
@@ -422,8 +575,8 @@ Ensure the `hometest-service` repo is cloned alongside this repo and builds work
 
 ```bash
 cd ../hometest-service/lambdas
-npm ci
-npm run build
+pnpm install
+pnpm run build
 ```
 
 To force a rebuild: `FORCE_LAMBDA_REBUILD=true terragrunt apply`
@@ -432,11 +585,26 @@ To force a rebuild: `FORCE_LAMBDA_REBUILD=true terragrunt apply`
 
 ```bash
 cd ../hometest-service/ui
-npm ci
-npm run build
+pnpm install
+pnpm run build
 ```
 
 To force a rebuild: `FORCE_SPA_REBUILD=true terragrunt apply`
+
+### `NoCredentialProviders` or authentication errors
+
+Ensure you have exported the correct AWS profile:
+
+```bash
+aws sso login --profile PoC-Dev
+export AWS_PROFILE=PoC-Dev
+```
+
+Verify credentials are working:
+
+```bash
+aws sts get-caller-identity
+```
 
 ### State lock errors
 

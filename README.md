@@ -200,7 +200,7 @@ mise install
 aws configure sso
 
 # Resulting ~/.aws/config profile:
-# [profile Admin-PoC]
+# [profile PoC-Admin]
 # sso_session = nhs
 # sso_account_id = 781863586270
 # sso_role_name = Admin
@@ -211,8 +211,8 @@ aws configure sso
 # sso_region = eu-west-2
 # sso_registration_scopes = sso:account:access
 
-aws sso login --profile Admin-PoC
-export AWS_PROFILE=Admin-PoC
+aws sso login --profile PoC-Admin
+export AWS_PROFILE=PoC-Admin
 ```
 
 ## Getting Started

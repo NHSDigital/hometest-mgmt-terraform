@@ -156,11 +156,14 @@ resource "aws_iam_policy" "developer_deployment" {
           "apigateway:POST",
           "apigateway:PUT",
           "apigateway:PATCH",
-          "apigateway:DELETE"
+          "apigateway:DELETE",
+          "apigateway:SetWebACL"
         ]
         Resource = [
           "arn:aws:apigateway:*::/restapis",
           "arn:aws:apigateway:*::/restapis/*",
+          "arn:aws:apigateway:*::/domainnames",
+          "arn:aws:apigateway:*::/domainnames/*",
           "arn:aws:apigateway:*::/tags/*"
         ]
       },

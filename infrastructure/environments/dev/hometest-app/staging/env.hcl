@@ -3,9 +3,6 @@
 locals {
   environment = "staging"
 
-  # Alerts disabled — only demo has alerts enabled
-  enable_alerts = false
-
   # Domain overrides for staging environment.
   env_domain = "staging.hometest.service.nhs.uk"
   api_domain = "api.staging.hometest.service.nhs.uk"

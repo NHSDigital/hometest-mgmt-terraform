@@ -3,8 +3,8 @@
 locals {
   environment = "prod"
 
-  # Alerts disabled — only demo has alerts enabled
-  enable_alerts = false
+  # Alerts enabled for prod environment
+  enable_alerts = true
 
   # Domain overrides for prod environment.
   # SPA is served from the apex domain; API from the api. subdomain.

@@ -195,18 +195,15 @@ jobs:
             mise-hometest-service-${{ runner.os }}-mgmt-
             mise-hometest-service-${{ runner.os }}-
 
-      - name: "Restore node_modules cache"
+      - name: "Restore pnpm store cache"
         uses: actions/cache/restore@v5
         with:
           path: |
-            hometest-service/node_modules
-            hometest-service/ui/node_modules
-            hometest-service/lambdas/node_modules
-            hometest-service/tests/node_modules
-          key: node-modules-${{ runner.os }}-mgmt-${{ hashFiles('hometest-service/**/package-lock.json') }}
+            ~/.local/share/pnpm/store
+          key: pnpm-store-${{ runner.os }}-mgmt-${{ hashFiles('hometest-service/**/pnpm-lock.yaml') }}
           restore-keys: |
-            node-modules-${{ runner.os }}-mgmt-
-            node-modules-${{ runner.os }}-
+            pnpm-store-${{ runner.os }}-mgmt-
+            pnpm-store-${{ runner.os }}-
 
       - name: Install mise tools
         uses: ./hometest-mgmt-terraform/.github/actions/install-mise
@@ -231,16 +228,13 @@ jobs:
             hometest-service/.mise-cache
           key: mise-hometest-service-${{ runner.os }}-mgmt-${{ hashFiles('hometest-service/.mise.toml') }}
 
-      - name: "Save node_modules cache"
+      - name: "Save pnpm store cache"
         if: always()
         uses: actions/cache/save@v5
         with:
           path: |
-            hometest-service/node_modules
-            hometest-service/ui/node_modules
-            hometest-service/lambdas/node_modules
-            hometest-service/tests/node_modules
-          key: node-modules-${{ runner.os }}-mgmt-${{ hashFiles('hometest-service/**/package-lock.json') }}
+            ~/.local/share/pnpm/store
+          key: pnpm-store-${{ runner.os }}-mgmt-${{ hashFiles('hometest-service/**/pnpm-lock.yaml') }}
 
       - name: "Post deployment summary"
         if: always()

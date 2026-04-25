@@ -212,7 +212,7 @@ terragrunt apply
 
 - Region: eu-west-2 (London)
 - Authentication: AWS SSO with OIDC
-- Profile: Admin-PoC
+- Profile: PoC-Admin
 - Terraform plugin cache: `.terraform-plugin-cache/` (set via `TF_PLUGIN_CACHE_DIR`)
 - Terragrunt experiment: `dependency-fetch-output-from-state` enabled
 - `AWS_PAGER=""` — always set this environment variable to disable the AWS CLI pager (prevents output being piped through `less`)

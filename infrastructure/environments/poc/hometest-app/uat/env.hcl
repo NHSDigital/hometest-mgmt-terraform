@@ -3,9 +3,6 @@
 locals {
   environment = "uat"
 
-  # Alerts disabled — only demo has alerts enabled
-  enable_alerts = false
-
   # Domain overrides for uat environment.
   env_domain = "uat.hometest.service.nhs.uk"
   api_domain = "api.uat.hometest.service.nhs.uk"
