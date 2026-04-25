@@ -215,7 +215,7 @@ build_lambdas() {
   cd "$LAMBDAS_DIR"
 
   # NODE_ENV controls minification in esbuild: production=minified, development=unminified+sourcemaps
-  NODE_ENV="$NODE_ENV" pnpm run build --silent 2>/dev/null || NODE_ENV="$NODE_ENV" pnpm run build
+  NODE_ENV="$NODE_ENV" pnpm --silent run build 2>/dev/null || NODE_ENV="$NODE_ENV" pnpm run build
 }
 
 package_lambdas() {

@@ -2,6 +2,33 @@
 
 This guide walks through the steps to create a new environment (e.g. `dev2`, `staging`, `test`) for the NHS HomeTest Service.
 
+## TL;DR
+
+```bash
+# 1. Login to AWS CLI
+aws sso login --profile PoC-Dev
+
+# 2. Export AWS profile (or add to ~/.zshrc)
+export AWS_PROFILE=PoC-Dev
+
+# 3. Copy the template environment
+ENV_NAME="dev2"  # Change to your environment name
+cp -r infrastructure/environments/poc/hometest-app/dev-example \
+      infrastructure/environments/poc/hometest-app/${ENV_NAME}
+
+# 4. Update the environment name in env.hcl
+sed -i '' "s/environment = \".*\"/environment = \"${ENV_NAME}\"/" \
+  infrastructure/environments/poc/hometest-app/${ENV_NAME}/env.hcl
+
+# 5. Deploy the database migrator
+cd infrastructure/environments/poc/hometest-app/${ENV_NAME}/lambda-goose-migrator
+terragrunt apply
+
+# 6. Deploy the app
+cd ../app
+terragrunt apply
+```
+
 ## Overview
 
 Each environment deploys its own isolated set of:
@@ -253,9 +280,9 @@ inputs = {
 }
 ```
 
-### Step 5: Create the Database Migrator (Optional)
+### Step 5: Create the Database Migrator
 
-Each environment can have its own Goose database migrator. Create the subdirectory and config:
+Each environment requires its own Goose database migrator to set up the per-environment database schema. Create the subdirectory and config:
 
 ```bash
 mkdir -p infrastructure/environments/poc/hometest-app/${ENV_NAME}/lambda-goose-migrator
@@ -302,6 +329,13 @@ terragrunt apply
 ```
 
 When deploying locally, the build hooks reference your **local clone** of the `hometest-service` repo (expected at `../hometest-service/` relative to this repo's root). This means your local Lambda and SPA source code is what gets built and deployed — useful for testing changes before they're merged.
+
+> **Don't forget the database migrator!** After deploying the app, you must also deploy the goose migrator to set up the database schema for your environment:
+>
+> ```bash
+> cd infrastructure/environments/poc/hometest-app/${ENV_NAME}/lambda-goose-migrator
+> terragrunt apply
+> ```
 
 #### Option B: Deploy via GitHub Actions
 
@@ -370,9 +404,7 @@ Skip the SPA build/upload and target only the lambda resources that changed:
 
 ```bash
 # All (and only) lambdas
-SKIP_SPA=true terragrunt apply \
-  -target='module.lambdas["*"].aws_lambda_function.this' \
-  -auto-approve
+SKIP_SPA=true terragrunt apply -target='module.lambdas' -auto-approve
 
 # Single lambda (~30s build + ~20s targeted apply)
 SKIP_SPA=true terragrunt apply \
@@ -545,7 +577,7 @@ The `empty_spa_bucket_on_destroy` hook will automatically clean all versioned ob
 - [ ] Created `infrastructure/environments/poc/hometest-app/{env}/env.hcl`
 - [ ] Created `infrastructure/environments/poc/hometest-app/{env}/app/terragrunt.hcl`
 - [ ] (Optional) Added domain overrides in `env.hcl` for custom domain
-- [ ] (Optional) Created `lambda-goose-migrator/terragrunt.hcl` for DB migrations
+- [ ] Created `lambda-goose-migrator/terragrunt.hcl` for DB migrations
 - [ ] (Optional) Enabled WireMock flags in `env.hcl`
 - [ ] Ran `terragrunt validate` successfully
 - [ ] Ran `terragrunt plan` and reviewed changes

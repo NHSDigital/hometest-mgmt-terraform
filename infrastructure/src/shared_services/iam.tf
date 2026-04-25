@@ -241,7 +241,7 @@ resource "aws_iam_policy" "developer_deployment" {
         ]
         Resource = "arn:aws:kms:*:${var.aws_account_id}:key/*"
         Condition = {
-          StringLike = {
+          "ForAnyValue:StringLike" = {
             "kms:ResourceAliases" = "alias/${var.project_name}-*"
           }
         }
@@ -292,9 +292,21 @@ resource "aws_iam_policy" "developer_deployment" {
         Resource = "*"
       },
       {
-        Sid      = "SecretsManagerRead"
-        Effect   = "Allow"
-        Action   = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
+        Sid    = "SecretsManagerMgmt"
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:CreateSecret",
+          "secretsmanager:DeleteSecret",
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:PutSecretValue",
+          "secretsmanager:UpdateSecret",
+          "secretsmanager:TagResource",
+          "secretsmanager:UntagResource",
+          "secretsmanager:GetResourcePolicy",
+          "secretsmanager:PutResourcePolicy",
+          "secretsmanager:DeleteResourcePolicy"
+        ]
         Resource = "arn:aws:secretsmanager:*:${var.aws_account_id}:secret:${var.project_name}/*"
       }
     ]

@@ -310,7 +310,7 @@ build_spa() {
   echo "  NEXT_PUBLIC_USE_WIREMOCK_AUTH=$NEXT_PUBLIC_USE_WIREMOCK_AUTH"
 
   # Run the build
-  pnpm run build --silent 2>/dev/null || pnpm run build
+  pnpm --silent run build 2>/dev/null || pnpm run build
 }
 
 # -----------------------------------------------------------------------------
