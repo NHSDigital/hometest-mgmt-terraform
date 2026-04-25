@@ -450,6 +450,9 @@ Skip the SPA build/upload and target only the lambda resources that changed:
 # All (and only) lambdas
 SKIP_SPA=true terragrunt apply -target='module.lambdas' -auto-approve
 
+## Or use the mise shortcut:
+mise run deploy-lambdas
+
 # Single lambda (~30s build + ~20s targeted apply)
 SKIP_SPA=true terragrunt apply \
   -target='module.lambdas["login-lambda"].aws_lambda_function.this' \
@@ -479,10 +482,13 @@ SKIP_SPA=true terragrunt apply \
 
 ### Deploy Only UI
 
-Skip the lambda build. Use `-refresh-only` so Terraform is a no-op, but the `upload_spa` after-hook still runs (builds the SPA, syncs to S3, invalidates CloudFront):
+Skip the lambda build. Use `-target=provider.aws` so Terraform is a no-op, but the `upload_spa` after-hook still runs (builds the SPA, syncs to S3, invalidates CloudFront):
 
 ```bash
 SKIP_LAMBDAS=true terragrunt apply -target=provider.aws -auto-approve
+
+# Or use the mise shortcut:
+mise run deploy-ui
 ```
 
 ### Deploy Both (Skip Nothing, But Target Lambdas)
@@ -490,9 +496,10 @@ SKIP_LAMBDAS=true terragrunt apply -target=provider.aws -auto-approve
 If you changed both lambda and UI code but want to skip evaluating the full Terraform graph:
 
 ```bash
-terragrunt apply \
-  -target='module.lambdas' \
-  -auto-approve
+terragrunt apply -target='module.lambdas' -auto-approve
+
+# Or use the mise shortcut:
+mise run deploy-all
 ```
 
 The SPA build + upload hooks run regardless of `-target` (they are before/after hooks, not Terraform resources).

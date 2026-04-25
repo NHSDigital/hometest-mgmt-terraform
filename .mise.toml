@@ -105,6 +105,21 @@ echo "$dirs" | xargs rm -rf
 echo "Done."
 '''
 
+[tasks.deploy-lambdas]
+description = "Quick deploy: rebuild and deploy only lambdas (skips SPA). Run from the environment's app/ directory."
+dir = "{{cwd}}"
+run = "SKIP_SPA=true terragrunt apply -target='module.lambdas' -auto-approve"
+
+[tasks.deploy-ui]
+description = "Quick deploy: rebuild and deploy only the SPA (skips lambdas). Run from the environment's app/ directory."
+dir = "{{cwd}}"
+run = "SKIP_LAMBDAS=true terragrunt apply -target=provider.aws -auto-approve"
+
+[tasks.deploy-all]
+description = "Quick deploy: rebuild and deploy both lambdas and SPA. Run from the environment's app/ directory."
+dir = "{{cwd}}"
+run = "terragrunt apply -target='module.lambdas' -auto-approve"
+
 [tasks.find-untagged]
 description = "List AWS resources missing the 'Project' tag"
 run = '''
