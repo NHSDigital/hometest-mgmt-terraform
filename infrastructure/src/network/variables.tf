@@ -176,6 +176,32 @@ variable "firewall_default_deny" {
   default     = true
 }
 
+variable "firewall_rule_group_capacities" {
+  description = "Capacity units for each Network Firewall rule group. Capacity CANNOT be changed after creation (requires rule group recreation). Set values higher than your expected rule count to allow headroom for growth."
+  type = object({
+    aws_services  = optional(number, 50)
+    egress_ip     = optional(number, 100)
+    egress_domain = optional(number, 100)
+    ingress_ip    = optional(number, 100)
+    drop_all      = optional(number, 10)
+  })
+  default = {}
+
+  validation {
+    condition = alltrue([
+      for k, v in var.firewall_rule_group_capacities :
+      v == null || (v >= 1 && v <= 30000)
+    ])
+    error_message = "Each capacity value must be between 1 and 30000."
+  }
+}
+
+variable "firewall_alert_sns_topic_arn" {
+  description = "ARN of the SNS topic for Network Firewall CloudWatch alarm notifications. If empty, alarms are created without actions."
+  type        = string
+  default     = ""
+}
+
 variable "allowed_egress_ips" {
   description = "List of allowed egress IP addresses with port and protocol. These IPs will be permitted through the firewall."
   type = list(object({
@@ -185,6 +211,39 @@ variable "allowed_egress_ips" {
     description = string # Description for documentation
   }))
   default = []
+
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_egress_ips :
+      can(regex("^(?i)(tcp|udp|ip)$", rule.protocol))
+    ])
+    error_message = "Protocol must be TCP, UDP, or IP (case-insensitive)."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_egress_ips :
+      rule.port == "ANY" || (can(regex("^[0-9]+$", rule.port)) && tonumber(rule.port) >= 1 && tonumber(rule.port) <= 65535)
+    ])
+    error_message = "Port must be 'ANY' or a valid port number (1-65535)."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_egress_ips :
+      can(regex("^[0-9./]+$", rule.ip)) && can(cidrhost(rule.ip, 0))
+    ])
+    error_message = "IP must be a valid IPv4 address or CIDR block (e.g., '10.0.0.1/32' or '192.168.0.0/24')."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_egress_ips :
+      can(regex("^[^\";\n\r\\\\]*$", rule.description))
+    ])
+    error_message = "Descriptions cannot contain quotes (\"), semicolons (;), newlines, or backslashes (\\) as they break Suricata rule syntax."
+  }
+
 
   # Example:
   # allowed_egress_ips = [
@@ -203,21 +262,6 @@ variable "allowed_egress_ips" {
   # ]
 }
 
-variable "allowed_egress_domains" {
-  description = "List of allowed egress domains (for HTTPS/TLS traffic). Supports wildcards like '.example.com'."
-  type        = list(string)
-  default     = []
-
-  # Example:
-  # allowed_egress_domains = [
-  #   ".github.com",
-  #   ".githubusercontent.com",
-  #   "api.stripe.com",
-  #   ".nhs.uk",
-  #   ".gov.uk"
-  # ]
-}
-
 variable "allowed_ingress_ips" {
   description = "List of allowed ingress IP addresses with port and protocol. These IPs will be permitted through the firewall for inbound traffic."
   type = list(object({
@@ -228,20 +272,69 @@ variable "allowed_ingress_ips" {
   }))
   default = []
 
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_ingress_ips :
+      can(regex("^(?i)(tcp|udp|ip)$", rule.protocol))
+    ])
+    error_message = "Protocol must be TCP, UDP, or IP (case-insensitive)."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_ingress_ips :
+      rule.port == "ANY" || (can(regex("^[0-9]+$", rule.port)) && tonumber(rule.port) >= 1 && tonumber(rule.port) <= 65535)
+    ])
+    error_message = "Port must be 'ANY' or a valid port number (1-65535)."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_ingress_ips :
+      can(regex("^[0-9./]+$", rule.ip)) && can(cidrhost(rule.ip, 0))
+    ])
+    error_message = "IP must be a valid IPv4 address or CIDR block (e.g., '10.0.0.1/32' or '192.168.0.0/24')."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule in var.allowed_ingress_ips :
+      can(regex("^[^\";\n\r\\\\]*$", rule.description))
+    ])
+    error_message = "Descriptions cannot contain quotes (\"), semicolons (;), newlines, or backslashes (\\) as they break Suricata rule syntax."
+  }
+
   # Example:
   # allowed_ingress_ips = [
   #   {
-  #     ip          = "0.0.0.0/0"
+  #     ip          = "203.0.113.10/32"
   #     port        = "443"
   #     protocol    = "TCP"
-  #     description = "HTTPS from anywhere"
-  #   },
-  #   {
-  #     ip          = "0.0.0.0/0"
-  #     port        = "80"
-  #     protocol    = "TCP"
-  #     description = "HTTP from anywhere"
+  #     description = "External monitoring service"
   #   }
+  # ]
+}
+
+variable "allowed_egress_domains" {
+  description = "List of allowed egress domains (for HTTPS/TLS traffic). Supports wildcards like '.example.com'."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for d in var.allowed_egress_domains :
+      can(regex("^[.a-zA-Z0-9-]+\\.[a-zA-Z]{2,}$", d))
+    ])
+    error_message = "Each domain must be a valid domain name (e.g., 'api.example.com') or wildcard (e.g., '.example.com')."
+  }
+
+  # Example:
+  # allowed_egress_domains = [
+  #   ".github.com",
+  #   ".githubusercontent.com",
+  #   "api.stripe.com",
+  #   ".nhs.uk",
+  #   ".gov.uk"
   # ]
 }
 

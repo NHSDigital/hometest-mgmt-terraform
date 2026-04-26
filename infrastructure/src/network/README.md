@@ -358,6 +358,7 @@ When `enable_network_firewall = true`, AWS Network Firewall is deployed for adva
 enable_network_firewall = true
 firewall_default_deny   = true
 
+
 # Allow specific inbound connections
 allowed_ingress_ips = [
   {
@@ -449,7 +450,7 @@ resource "aws_lambda_function" "example" {
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | aws_region | AWS region for resources | `string` | n/a | yes |
 | aws_account_id | AWS account ID | `string` | n/a | yes |
 | aws_account_shortname | AWS account short name for resource naming | `string` | n/a | yes |
@@ -471,7 +472,7 @@ resource "aws_lambda_function" "example" {
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | vpc_id | The ID of the VPC |
 | vpc_cidr_block | The CIDR block of the VPC |
 | public_subnet_ids | List of public subnet IDs |
@@ -512,7 +513,7 @@ resource "aws_lambda_function" "example" {
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | terraform | >= 1.14.0 |
 | aws | ~> 6.28.0 |
 
@@ -577,6 +578,7 @@ No modules.
 | [aws_route.private_nat](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.private_to_firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.public_internet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.public_to_firewall_private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route53_health_check.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_health_check) | resource |
 | [aws_route53_hosted_zone_dnssec.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_hosted_zone_dnssec) | resource |
 | [aws_route53_key_signing_key.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_key_signing_key) | resource |

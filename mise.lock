@@ -12,9 +12,13 @@ url = "https://github.com/aquasecurity/trivy/releases/download/v0.69.3/trivy_0.6
 checksum = "sha256:a2f2179afd4f8bb265ca3c7aefb56a666bc4a9a411663bc0f22c3549fbc643a5"
 url = "https://github.com/aquasecurity/trivy/releases/download/v0.69.3/trivy_0.69.3_macOS-ARM64.tar.gz"
 
-[tools."aqua:aquasecurity/trivy"."platforms.macos-x64"]
-checksum = "sha256:fec4a9f7569b624dd9d044fca019e5da69e032700edbb1d7318972c448ec2f4e"
-url = "https://github.com/aquasecurity/trivy/releases/download/v0.69.3/trivy_0.69.3_macOS-64bit.tar.gz"
+[[tools."aqua:bridgecrewio/checkov"]]
+version = "3.2.524"
+backend = "aqua:bridgecrewio/checkov"
+
+[tools."aqua:bridgecrewio/checkov"."platforms.linux-x64"]
+checksum = "sha256:075ee47b0220033dd05d8bc7b1f0548b76aa1e89a407f0e70ee0f45d714e7c0f"
+url = "https://github.com/bridgecrewio/checkov/releases/download/3.2.524/checkov_linux_X86_64.zip"
 
 [tools."aqua:aquasecurity/trivy"."platforms.windows-x64"]
 checksum = "sha256:74362dc711383255308230ecbeb587eb1e4e83a8d332be5b0259afac6e0c2224"
@@ -50,9 +54,6 @@ url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.34.26.zip"
 [tools.awscli."platforms.macos-arm64"]
 url = "https://awscli.amazonaws.com/AWSCLIV2-2.34.26.pkg"
 
-[tools.awscli."platforms.macos-x64"]
-url = "https://awscli.amazonaws.com/AWSCLIV2-2.34.26.pkg"
-
 [[tools.gitleaks]]
 version = "8.30.1"
 backend = "aqua:gitleaks/gitleaks"
@@ -65,14 +66,6 @@ url = "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8
 checksum = "sha256:b40ab0ae55c505963e365f271a8d3846efbc170aa17f2607f13df610a9aeb6a5"
 url = "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_darwin_arm64.tar.gz"
 
-[tools.gitleaks."platforms.macos-x64"]
-checksum = "sha256:dfe101a4db2255fc85120ac7f3d25e4342c3c20cf749f2c20a18081af1952709"
-url = "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_darwin_x64.tar.gz"
-
-[tools.gitleaks."platforms.windows-x64"]
-checksum = "sha256:d29144deff3a68aa93ced33dddf84b7fdc26070add4aa0f4513094c8332afc4e"
-url = "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_windows_x64.zip"
-
 [[tools.go]]
 version = "1.26.2"
 backend = "core:go"
@@ -84,14 +77,6 @@ url = "https://dl.google.com/go/go1.26.2.linux-amd64.tar.gz"
 [tools.go."platforms.macos-arm64"]
 checksum = "sha256:32af1522bf3e3ff3975864780a429cc0b41d190ec7bf90faa661d6d64566e7af"
 url = "https://dl.google.com/go/go1.26.2.darwin-arm64.tar.gz"
-
-[tools.go."platforms.macos-x64"]
-checksum = "sha256:bc3f1500d9968c36d705442d90ba91addf9271665033748b82532682e90a7966"
-url = "https://dl.google.com/go/go1.26.2.darwin-amd64.tar.gz"
-
-[tools.go."platforms.windows-x64"]
-checksum = "sha256:98eb3570bade15cb826b0909338df6cc6d2cf590bc39c471142002db3832b708"
-url = "https://dl.google.com/go/go1.26.2.windows-amd64.zip"
 
 [[tools."go:github.com/pressly/goose/v3/cmd/goose"]]
 version = "3.27.0"
@@ -141,14 +126,6 @@ url = "https://releases.hashicorp.com/terraform/1.14.8/terraform_1.14.8_linux_am
 checksum = "sha256:5593670a2d42323847bfb216db17c73a44df201a62f7587928bae16adeabba23"
 url = "https://releases.hashicorp.com/terraform/1.14.8/terraform_1.14.8_darwin_arm64.zip"
 
-[tools.terraform."platforms.macos-x64"]
-checksum = "sha256:26dd7593d22e9d99ec09380f0869718f649be7b7f954d888611335e6a84961f8"
-url = "https://releases.hashicorp.com/terraform/1.14.8/terraform_1.14.8_darwin_amd64.zip"
-
-[tools.terraform."platforms.windows-x64"]
-checksum = "sha256:a237008008019589c600ecb0ae0842c9ea4ca5601f7c54ddbc64d274037b0abb"
-url = "https://releases.hashicorp.com/terraform/1.14.8/terraform_1.14.8_windows_amd64.zip"
-
 [[tools.terraform-docs]]
 version = "0.22.0"
 backend = "aqua:terraform-docs/terraform-docs"
@@ -160,14 +137,6 @@ url = "https://github.com/terraform-docs/terraform-docs/releases/download/v0.22.
 [tools.terraform-docs."platforms.macos-arm64"]
 checksum = "sha256:a8a698c8c1bd0a77189fd15a6f9ac9d99445b1e22f5376a8f7c830fa7407592d"
 url = "https://github.com/terraform-docs/terraform-docs/releases/download/v0.22.0/terraform-docs-v0.22.0-darwin-arm64.tar.gz"
-
-[tools.terraform-docs."platforms.macos-x64"]
-checksum = "sha256:797ed9afaaafde69f33f8cfa00602e7c57249c63c58b014122a69726584eb8ef"
-url = "https://github.com/terraform-docs/terraform-docs/releases/download/v0.22.0/terraform-docs-v0.22.0-darwin-amd64.tar.gz"
-
-[tools.terraform-docs."platforms.windows-x64"]
-checksum = "sha256:23f6539f10ef5c34f73a7ccfeb7474ea82bc3e591e46e59c994b10f54be83025"
-url = "https://github.com/terraform-docs/terraform-docs/releases/download/v0.22.0/terraform-docs-v0.22.0-windows-amd64.zip"
 
 [[tools.terragrunt]]
 version = "1.0.0"
@@ -181,14 +150,6 @@ url = "https://github.com/gruntwork-io/terragrunt/releases/download/v1.0.0/terra
 checksum = "sha256:37ac71758f470323cb3ab2d076550a8f03b274e8854d66f80a9d4008c65be6d5"
 url = "https://github.com/gruntwork-io/terragrunt/releases/download/v1.0.0/terragrunt_darwin_arm64.tar.gz"
 
-[tools.terragrunt."platforms.macos-x64"]
-checksum = "sha256:a3e6adf02ce169739224f4d8b1f56103ebe122fb1b6b1290efa5c2064db2cc66"
-url = "https://github.com/gruntwork-io/terragrunt/releases/download/v1.0.0/terragrunt_darwin_amd64.tar.gz"
-
-[tools.terragrunt."platforms.windows-x64"]
-checksum = "sha256:6188c71192c7b24a805bfb3304eda82c0e2e46d391514f6ea4e48b760c59a209"
-url = "https://github.com/gruntwork-io/terragrunt/releases/download/v1.0.0/terragrunt_windows_amd64.exe.tar.gz"
-
 [[tools.tflint]]
 version = "0.61.0"
 backend = "aqua:terraform-linters/tflint"
@@ -200,14 +161,6 @@ url = "https://github.com/terraform-linters/tflint/releases/download/v0.61.0/tfl
 [tools.tflint."platforms.macos-arm64"]
 checksum = "sha256:6593fa24cb6e14d2d0cf7af7fd02a271242f1038af6ecb5384f6738e105a0fea"
 url = "https://github.com/terraform-linters/tflint/releases/download/v0.61.0/tflint_darwin_arm64.zip"
-
-[tools.tflint."platforms.macos-x64"]
-checksum = "sha256:9cd3106c7b74f83cbcd90e0593dfaa1ce14dc5260fe32d946915fd0004aec2f4"
-url = "https://github.com/terraform-linters/tflint/releases/download/v0.61.0/tflint_darwin_amd64.zip"
-
-[tools.tflint."platforms.windows-x64"]
-checksum = "sha256:f114a26a519f580a9d27204b1210ba5869ed8219d7e23a732d41774d612af3b0"
-url = "https://github.com/terraform-linters/tflint/releases/download/v0.61.0/tflint_windows_amd64.zip"
 
 [[tools.vale]]
 version = "3.14.1"
@@ -221,9 +174,14 @@ url = "https://github.com/vale-cli/vale/releases/download/v3.14.1/vale_3.14.1_Li
 checksum = "sha256:1a4a0923f59b293d691bd901300cc4da50a6bbfd962503239b5efe9563e0bd8e"
 url = "https://github.com/vale-cli/vale/releases/download/v3.14.1/vale_3.14.1_macOS_arm64.tar.gz"
 
-[tools.vale."platforms.macos-x64"]
-checksum = "sha256:98970ca11179b3166d7d7a10119d10121784cf6d4c40397ee065cbc1651d51d6"
-url = "https://github.com/vale-cli/vale/releases/download/v3.14.1/vale_3.14.1_macOS_64-bit.tar.gz"
+[[tools.python]]
+version = "3.14.2"
+backend = "core:python"
+
+[tools.python."platforms.linux-x64"]
+checksum = "sha256:c2926d6707f4339e3bf30e90437b387712b47e60e9e55bff1dcb36bf7688b01d"
+url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260127/cpython-3.14.2+20260127-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz"
+provenance = "github-attestations"
 
 [tools.vale."platforms.windows-x64"]
 checksum = "sha256:e75228aa7eec07dab8875830c039d7d1216514793d0c46d95740a96dc2f96ae1"
