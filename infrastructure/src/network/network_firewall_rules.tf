@@ -5,7 +5,7 @@
 resource "aws_networkfirewall_rule_group" "allow_aws_services" {
   count = var.enable_network_firewall ? 1 : 0
 
-  capacity = 50
+  capacity = var.firewall_rule_group_capacities.aws_services
   name     = "${local.resource_prefix}-allow-aws-services"
   type     = "STATEFUL"
 
@@ -47,7 +47,7 @@ resource "aws_networkfirewall_rule_group" "allow_aws_services" {
 resource "aws_networkfirewall_rule_group" "egress_ip_filter" {
   count = var.enable_network_firewall && length(var.allowed_egress_ips) > 0 ? 1 : 0
 
-  capacity = 100
+  capacity = var.firewall_rule_group_capacities.egress_ip
   name     = "${local.resource_prefix}-egress-ip-filter"
   type     = "STATEFUL"
 
@@ -85,7 +85,7 @@ resource "aws_networkfirewall_rule_group" "egress_ip_filter" {
 resource "aws_networkfirewall_rule_group" "egress_domain_filter" {
   count = var.enable_network_firewall && length(var.allowed_egress_domains) > 0 ? 1 : 0
 
-  capacity = 100
+  capacity = var.firewall_rule_group_capacities.egress_domain
   name     = "${local.resource_prefix}-egress-domain-filter"
   type     = "STATEFUL"
 
@@ -124,7 +124,7 @@ resource "aws_networkfirewall_rule_group" "egress_domain_filter" {
 resource "aws_networkfirewall_rule_group" "drop_all" {
   count = var.enable_network_firewall && var.firewall_default_deny ? 1 : 0
 
-  capacity = 10
+  capacity = var.firewall_rule_group_capacities.drop_all
   name     = "${local.resource_prefix}-drop-all"
   type     = "STATEFUL"
 
@@ -159,7 +159,7 @@ resource "aws_networkfirewall_rule_group" "drop_all" {
 resource "aws_networkfirewall_rule_group" "ingress_ip_filter" {
   count = var.enable_network_firewall && length(var.allowed_ingress_ips) > 0 ? 1 : 0
 
-  capacity = 100
+  capacity = var.firewall_rule_group_capacities.ingress_ip
   name     = "${local.resource_prefix}-ingress-ip-filter"
   type     = "STATEFUL"
 

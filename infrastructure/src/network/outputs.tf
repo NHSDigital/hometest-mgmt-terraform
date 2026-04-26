@@ -295,6 +295,15 @@ output "egress_filtering_config" {
   }
 }
 
+output "network_firewall_alarm_arns" {
+  description = "ARNs of the Network Firewall CloudWatch alarms"
+  value = var.enable_network_firewall ? {
+    dropped_packets_high  = aws_cloudwatch_metric_alarm.firewall_dropped_packets_high[0].arn
+    passed_packets_zero   = aws_cloudwatch_metric_alarm.firewall_passed_packets_zero[0].arn
+    received_packets_zero = aws_cloudwatch_metric_alarm.firewall_received_packets_zero[0].arn
+  } : {}
+}
+
 #------------------------------------------------------------------------------
 # Route 53 Outputs
 #------------------------------------------------------------------------------

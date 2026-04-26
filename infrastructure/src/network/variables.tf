@@ -176,6 +176,32 @@ variable "firewall_default_deny" {
   default     = true
 }
 
+variable "firewall_rule_group_capacities" {
+  description = "Capacity units for each Network Firewall rule group. Capacity CANNOT be changed after creation (requires rule group recreation). Set values higher than your expected rule count to allow headroom for growth."
+  type = object({
+    aws_services  = optional(number, 50)
+    egress_ip     = optional(number, 100)
+    egress_domain = optional(number, 100)
+    ingress_ip    = optional(number, 100)
+    drop_all      = optional(number, 10)
+  })
+  default = {}
+
+  validation {
+    condition = alltrue([
+      for k, v in var.firewall_rule_group_capacities :
+      v == null || (v >= 1 && v <= 30000)
+    ])
+    error_message = "Each capacity value must be between 1 and 30000."
+  }
+}
+
+variable "firewall_alert_sns_topic_arn" {
+  description = "ARN of the SNS topic for Network Firewall CloudWatch alarm notifications. If empty, alarms are created without actions."
+  type        = string
+  default     = ""
+}
+
 variable "allowed_egress_ips" {
   description = "List of allowed egress IP addresses with port and protocol. These IPs will be permitted through the firewall."
   type = list(object({
